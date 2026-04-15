@@ -3,9 +3,9 @@ export interface ApiResponse<T> {
   message?: string
 }
 
-export interface ApiError {
-  error: string
-  statusCode: number
+export interface ApiError extends Error {
+  statusCode?: number
+  errors?: { field: string; message: string }[]
 }
 
 export interface PaginatedResponse<T> {

@@ -1,2 +1,2 @@
-// Projects API — /api/projects
+// Projects service — /api/projects
 // getProjects, getProject, createProject, updateProject, deleteProject

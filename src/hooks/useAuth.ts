@@ -19,6 +19,7 @@ export function useAuth() {
 
     // Org context
     orgId:         user?.orgId ?? null,
+    orgName:       user?.orgName ?? null,
 
     // Logout helper
     logout: clearAuth,

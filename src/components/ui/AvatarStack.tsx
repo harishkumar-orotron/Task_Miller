@@ -11,9 +11,9 @@ interface AvatarStackProps {
 }
 
 export default function AvatarStack({ avatars, max = 3, size = 'sm' }: AvatarStackProps) {
-  const visible = avatars.slice(0, max)
+  const visible  = avatars.slice(0, max)
   const overflow = avatars.length - max
-  const dim = size === 'sm' ? 'w-7 h-7 text-xs' : 'w-8 h-8 text-sm'
+  const dim      = size === 'sm' ? 'w-7 h-7 text-xs' : 'w-8 h-8 text-sm'
 
   return (
     <div className="flex -space-x-2">

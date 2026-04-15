@@ -1,2 +1,2 @@
-// Uploads API — POST /api/uploads/presigned-url
+// Uploads service — POST /api/uploads/presigned-url
 // getPresignedUrl(fileName, fileType) → returns { url, key }

@@ -1,11 +1,11 @@
-import { post } from './client'
+import { post } from '../client'
 import { authStore } from '../../store/auth.store'
 import type { UserRole, AuthUser } from '../../store/auth.store'
 
 // ─── Response Types ────────────────────────────────────────────────────────────
 
 interface RawAuthData {
-  user: { id: string; name: string; email: string; role: UserRole }
+  user: { id: string; name: string; email: string; role: UserRole; orgId?: string; orgName?: string }
   tokens: { accessToken: string; refreshToken: string }
 }
 
@@ -33,7 +33,7 @@ function extractOrgId(token: string): string | undefined {
 }
 
 function enrichUser(raw: RawAuthData['user'], token: string): AuthUser {
-  return { ...raw, orgId: extractOrgId(token) }
+  return { ...raw, orgId: raw.orgId ?? extractOrgId(token) }
 }
 
 // ─── POST /api/auth/login ─────────────────────────────────────────────────────

@@ -1,49 +1,50 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate, Link } from '@tanstack/react-router'
-import { requestOtpApi, verifyOtpApi } from '../../lib/api/auth.api'
-import { setAuth } from '../../store/auth.store'
+import { useRequestOtpMutation, useVerifyOtpMutation } from '../../queries/auth.queries'
+import type { ApiError } from '../../types/api.types'
 
 type Step = 'request' | 'verify'
 
 export default function OtpForm() {
   const navigate = useNavigate()
 
-  const [step, setStep]       = useState<Step>('request')
-  const [email, setEmail]     = useState('')
-  const [otp, setOtp]         = useState('')
-  const [error, setError]     = useState('')
-  const [loading, setLoading] = useState(false)
-  const [info, setInfo]       = useState('')
+  const [step, setStep]   = useState<Step>('request')
+  const [email, setEmail] = useState('')
+  const [otp, setOtp]     = useState('')
+  const [info, setInfo]   = useState('')
 
-  const handleRequestOtp = async (e: React.FormEvent) => {
+  const {
+    mutate: requestOtp,
+    isPending: isRequesting,
+    error: requestError,
+  } = useRequestOtpMutation()
+
+  const {
+    mutate: verifyOtp,
+    isPending: isVerifying,
+    error: verifyError,
+  } = useVerifyOtpMutation()
+
+  const handleRequestOtp = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setError('')
-    setLoading(true)
-    try {
-      const result = await requestOtpApi(email)
-      setInfo(result.message)
-      setStep('verify')
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to send OTP')
-    } finally {
-      setLoading(false)
-    }
+    requestOtp(email, {
+      onSuccess: (result) => {
+        setInfo(result.message)
+        setStep('verify')
+      },
+    })
   }
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
+  const handleVerifyOtp = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setError('')
-    setLoading(true)
-    try {
-      const result = await verifyOtpApi(email, otp)
-      setAuth(result.user, result.tokens.accessToken, result.tokens.refreshToken)
-      navigate({ to: '/dashboard' })
-    } catch (err: any) {
-      setError(err?.message ?? 'Invalid or expired OTP')
-    } finally {
-      setLoading(false)
-    }
+    verifyOtp(
+      { email, otp },
+      { onSuccess: () => navigate({ to: '/dashboard' }) },
+    )
   }
+
+  const requestErrorMsg = (requestError as ApiError | null)?.message ?? null
+  const verifyErrorMsg  = (verifyError as ApiError | null)?.message ?? null
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -73,9 +74,9 @@ export default function OtpForm() {
             <h1 className="text-xl font-bold text-gray-800 mb-1">Sign in with OTP</h1>
             <p className="text-sm text-gray-500 mb-6">Enter your email to receive a 6-digit code</p>
 
-            {error && (
+            {requestErrorMsg && (
               <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2.5 rounded-lg mb-4">
-                {error}
+                {requestErrorMsg}
               </div>
             )}
 
@@ -93,10 +94,10 @@ export default function OtpForm() {
               </div>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={isRequesting}
                 className="w-full bg-orange-500 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {loading ? 'Sending...' : 'Send OTP'}
+                {isRequesting ? 'Sending...' : 'Send OTP'}
               </button>
             </form>
           </>
@@ -108,9 +109,9 @@ export default function OtpForm() {
               Code sent to <span className="font-medium text-gray-700">{email}</span>
             </p>
 
-            {error && (
+            {verifyErrorMsg && (
               <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2.5 rounded-lg mb-4">
-                {error}
+                {verifyErrorMsg}
               </div>
             )}
 
@@ -129,14 +130,14 @@ export default function OtpForm() {
               </div>
               <button
                 type="submit"
-                disabled={loading || otp.length !== 6}
+                disabled={isVerifying || otp.length !== 6}
                 className="w-full bg-orange-500 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {loading ? 'Verifying...' : 'Verify & Sign In'}
+                {isVerifying ? 'Verifying...' : 'Verify & Sign In'}
               </button>
               <button
                 type="button"
-                onClick={() => { setStep('request'); setOtp(''); setError('') }}
+                onClick={() => { setStep('request'); setOtp('') }}
                 className="w-full text-sm text-gray-500 hover:text-gray-700 py-1"
               >
                 ← Change email

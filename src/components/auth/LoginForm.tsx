@@ -1,27 +1,29 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate, Link } from '@tanstack/react-router'
-import { loginApi } from '../../lib/api/auth.api'
-import { setAuth } from '../../store/auth.store'
+import { useLoginMutation } from '../../queries/auth.queries'
+import type { ApiError } from '../../types/api.types'
 
 export default function LoginForm() {
   const navigate = useNavigate()
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError]       = useState('')
-  const [loading, setLoading]   = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { mutate: login, isPending, error } = useLoginMutation()
+
+  const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setError('')
-    setLoading(true)
-    try {
-      const result = await loginApi(email, password)
-      setAuth(result.user, result.tokens.accessToken, result.tokens.refreshToken)
-      navigate({ to: '/dashboard' })
-    } catch (err: any) {
-      setError(err?.message ?? 'Invalid email or password')
-    } finally {
-      setLoading(false)
+    login(
+      { email, password },
+      { onSuccess: () => navigate({ to: '/dashboard' }) },
+    )
+  }
+
+  const apiError = error as ApiError | null
+  const errorMessage = apiError?.message ?? null
+  const fieldErrors: Record<string, string> = {}
+  if (Array.isArray(apiError?.errors)) {
+    for (const e of apiError.errors) {
+      if (e.field) fieldErrors[e.field] = e.message
     }
   }
 
@@ -40,9 +42,9 @@ export default function LoginForm() {
         <h1 className="text-xl font-bold text-gray-800 mb-1">Welcome back</h1>
         <p className="text-sm text-gray-500 mb-6">Sign in to your account</p>
 
-        {error && (
+        {errorMessage && Object.keys(fieldErrors).length === 0 && (
           <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2.5 rounded-lg mb-4">
-            {error}
+            {errorMessage}
           </div>
         )}
 
@@ -50,13 +52,16 @@ export default function LoginForm() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
             <input
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
-              required
-              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-orange-400 transition-colors"
+              
+              className={`w-full border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-orange-400 transition-colors ${fieldErrors.email ? 'border-red-400' : 'border-gray-200'}`}
             />
+            {fieldErrors.email && (
+              <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
@@ -65,17 +70,20 @@ export default function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
-              required
-              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-orange-400 transition-colors"
+              
+              className={`w-full border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-orange-400 transition-colors ${fieldErrors.password ? 'border-red-400' : 'border-gray-200'}`}
             />
+            {fieldErrors.password && (
+              <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isPending}
             className="w-full bg-orange-500 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {isPending ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
