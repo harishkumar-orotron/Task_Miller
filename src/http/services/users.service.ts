@@ -11,6 +11,7 @@ export function getUsersApi(params: UsersParams = {}): Promise<UsersResponse> {
   if (params.search)     query.set('name',       params.search)
   if (params.status)     query.set('status',     params.status)
   if (params.role)       query.set('role',       params.role)
+  if (params.orgId)      query.set('orgId',      params.orgId)
   if (params.page)       query.set('page',       String(params.page))
   if (params.limit)      query.set('limit',      String(params.limit))
   if (params.unassigned) query.set('unassigned', 'true')

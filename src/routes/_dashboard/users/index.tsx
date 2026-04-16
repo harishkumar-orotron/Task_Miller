@@ -3,6 +3,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { authStore } from '../../../store/auth.store'
 import { Plus, Search, ChevronDown } from 'lucide-react'
 import { useUsers } from '../../../queries/users.queries'
+import { useOrgContext } from '../../../store/orgContext.store'
 import { useDebounce } from '../../../hooks/useDebounce'
 import { useAuth } from '../../../hooks/useAuth'
 import UserTable from '../../../components/users/UserTable'
@@ -22,13 +23,19 @@ export const Route = createFileRoute('/_dashboard/users/')({
 
 const LIMIT_OPTIONS = [5, 10, 20, 50, 100]
 
+type UserFilter = UserStatus | 'unassigned' | ''
+
 function UsersPage() {
-  const { isAdmin, user: me }   = useAuth()
-  const [search, setSearch]     = useState('')
-  const [status, setStatus]     = useState<UserStatus | ''>('')
-  const [page, setPage]         = useState(1)
-  const [limit, setLimit]       = useState(10)
-  const [showForm, setShowForm] = useState(false)
+  const { isAdmin, isSuperAdmin, user: me } = useAuth()
+  const { selectedOrg } = useOrgContext()
+  const [search,     setSearch]     = useState('')
+  const [filter,     setFilter]     = useState<UserFilter>('')
+  const [page,       setPage]       = useState(1)
+  const [limit,      setLimit]      = useState(10)
+  const [showForm,   setShowForm]   = useState(false)
+
+  // Reset page when selected org changes
+  useEffect(() => { setPage(1) }, [selectedOrg?.id])
 
   useEffect(() => {
     const handler = () => setShowForm(true)
@@ -39,8 +46,10 @@ function UsersPage() {
   const debouncedSearch = useDebounce(search, 400)
 
   const { data, isLoading, isFetching, error } = useUsers({
-    search: debouncedSearch || undefined,
-    status: status || undefined,
+    search:     debouncedSearch || undefined,
+    status:     filter === 'active' || filter === 'inactive' ? filter : undefined,
+    unassigned: filter === 'unassigned' ? true : undefined,
+    orgId:      isSuperAdmin && selectedOrg ? selectedOrg.id : undefined,
     page,
     limit,
   })
@@ -60,7 +69,7 @@ function UsersPage() {
   )
 
   const handleSearch = (val: string) => { setSearch(val); setPage(1) }
-  const handleStatus = (val: UserStatus | '') => { setStatus(val); setPage(1) }
+  const handleFilter = (val: UserFilter) => { setFilter(val); setPage(1) }
   const handleLimit  = (val: number) => { setLimit(val); setPage(1) }
 
   return (
@@ -69,23 +78,27 @@ function UsersPage() {
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
         <h2 className="font-semibold text-gray-800">
-          All <span className="text-gray-400 font-normal ml-1">({totalRecords})</span>
+          {isSuperAdmin && selectedOrg ? selectedOrg.name : 'All'}{' '}
+          <span className="text-gray-400 font-normal ml-1">({totalRecords})</span>
         </h2>
         <div className="flex items-center gap-2">
 
+          {/* Status / Unassigned filter */}
           <div className="relative">
             <select
-              value={status}
-              onChange={(e) => handleStatus(e.target.value as UserStatus | '')}
+              value={filter}
+              onChange={(e) => handleFilter(e.target.value as UserFilter)}
               className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-600 bg-gray-50 outline-none cursor-pointer"
             >
               <option value="">All Status</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
+              <option value="unassigned">Unassigned</option>
             </select>
             <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
           </div>
 
+          {/* Search */}
           <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-1.5 bg-gray-50">
             <input
               value={search}

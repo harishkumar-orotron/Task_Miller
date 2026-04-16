@@ -3,6 +3,7 @@ import {
   getUsersApi, getMeApi, getUserApi,
   createUserApi, updateMeApi, toggleUserStatusApi,
 } from '../http/services/users.service'
+import { authStore } from '../store/auth.store'
 import type { UsersParams, CreateUserBody, UpdateMeBody } from '../types/user.types'
 
 // ─── GET /api/users ───────────────────────────────────────────────────────────
@@ -12,6 +13,7 @@ export function useUsers(params: UsersParams = {}) {
     queryKey:        ['users', params],
     queryFn:         () => getUsersApi(params),
     placeholderData: (prev) => prev,
+    enabled:         !!authStore.state.accessToken,
   })
 }
 
@@ -21,6 +23,7 @@ export function useMe() {
   return useQuery({
     queryKey: ['me'],
     queryFn:  getMeApi,
+    enabled:  !!authStore.state.accessToken,
   })
 }
 
@@ -30,7 +33,7 @@ export function useUser(id: string) {
   return useQuery({
     queryKey: ['users', id],
     queryFn:  () => getUserApi(id),
-    enabled:  !!id,
+    enabled:  !!id && !!authStore.state.accessToken,
   })
 }
 

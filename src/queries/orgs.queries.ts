@@ -4,6 +4,7 @@ import {
   assignAdminApi, addDeveloperApi, removeMemberApi, deleteOrgApi,
 } from '../http/services/orgs.service'
 import { getUsersApi } from '../http/services/users.service'
+import { authStore } from '../store/auth.store'
 import type { OrgsParams } from '../types/org.types'
 
 // ─── GET /api/orgs ────────────────────────────────────────────────────────────
@@ -13,7 +14,7 @@ export function useOrgs(params: OrgsParams = {}, options?: { enabled?: boolean }
     queryKey:        ['orgs', params],
     queryFn:         () => getOrgsApi(params),
     placeholderData: (prev) => prev,
-    enabled:         options?.enabled !== false,
+    enabled:         !!authStore.state.accessToken && options?.enabled !== false,
   })
 }
 
@@ -23,7 +24,7 @@ export function useOrg(id: string) {
   return useQuery({
     queryKey: ['orgs', id],
     queryFn:  () => getOrgApi(id),
-    enabled:  !!id,
+    enabled:  !!id && !!authStore.state.accessToken,
   })
 }
 
@@ -45,6 +46,7 @@ export function useUnassignedUsers(role: 'admin' | 'developer') {
   return useQuery({
     queryKey: ['users', 'unassigned', role],
     queryFn:  () => getUsersApi({ unassigned: true, role }),
+    enabled:  !!authStore.state.accessToken,
   })
 }
 

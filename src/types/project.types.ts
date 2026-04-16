@@ -1,20 +1,66 @@
 export type ProjectStatus = 'active' | 'on_hold' | 'completed'
 
-export interface Project {
-  id: string
-  orgId: string
-  title: string
-  description?: string
-  logoUrl?: string
-  status: ProjectStatus
-  createdBy?: string
-  completedAt?: string
-  createdAt: string
+export interface ProjectMember {
+  id:        string
+  name:      string
+  email:     string
+  avatarUrl: string | null
 }
 
-export interface ProjectMember {
-  id: string
-  projectId: string
-  userId: string
-  joinedAt: string
+export interface ProjectCreator {
+  id:        string
+  name:      string
+  email:     string
+  avatarUrl: string | null
+}
+
+export interface Project {
+  id:          string
+  orgId:       string
+  title:       string
+  description: string | null
+  logoUrl:     string | null
+  status:      ProjectStatus
+  createdBy:   string
+  completedAt: string | null
+  createdAt:   string
+  updatedAt:   string
+  deletedAt:   string | null
+  members:     ProjectMember[]
+  creator:     ProjectCreator
+}
+
+export interface ProjectsPagination {
+  currentPage:  number
+  limit:        number
+  totalRecords: number
+  totalPages:   number
+  hasNextPage:  boolean
+  hasPrevPage:  boolean
+}
+
+export interface ProjectsResponse {
+  projects:   Project[]
+  pagination: ProjectsPagination
+}
+
+export interface ProjectsParams {
+  search?: string
+  status?: ProjectStatus
+  orgId?:  string
+  page?:   number
+  limit?:  number
+}
+
+export interface CreateProjectBody {
+  title:             string
+  description?:      string
+  orgId:             string
+  assignedUserIds?:  string[]
+}
+
+export interface UpdateProjectBody {
+  title?:       string
+  description?: string
+  status?:      ProjectStatus
 }

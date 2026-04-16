@@ -2,9 +2,10 @@
 // Following the pattern: query files export useMutation hooks,
 // components import from here — never directly from http/services/.
 
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { loginApi, requestOtpApi, verifyOtpApi, logoutApi } from '../http/services/auth.service'
 import { setAuth, clearAuth } from '../store/auth.store'
+import { setSelectedOrg } from '../store/orgContext.store'
 
 // ─── POST /api/auth/login ─────────────────────────────────────────────────────
 
@@ -41,10 +42,13 @@ export function useVerifyOtpMutation() {
 // ─── POST /api/auth/logout ────────────────────────────────────────────────────
 
 export function useLogoutMutation() {
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: logoutApi,
     onSuccess: () => {
       clearAuth()
+      setSelectedOrg(null)
+      queryClient.removeQueries()
     },
   })
 }

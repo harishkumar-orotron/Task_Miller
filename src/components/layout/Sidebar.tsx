@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { LayoutDashboard, CheckSquare, FolderKanban, Users, Building2, LogOut, RefreshCw } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useLogoutMutation } from '../../queries/auth.queries'
 import { useOrgs } from '../../queries/orgs.queries'
+import { setSelectedOrg, useOrgContext } from '../../store/orgContext.store'
 import type { Organization } from '../../types/org.types'
 
 const navItems = [
@@ -19,11 +20,19 @@ export default function Sidebar() {
   const navigate          = useNavigate()
   const { role, orgName } = useAuth()
   const { mutate: logout, isPending: isLoggingOut } = useLogoutMutation()
-  const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null)
-  const [orgOpen, setOrgOpen]         = useState(false)
+  const { selectedOrg } = useOrgContext()
+  const [orgOpen, setOrgOpen] = useState(false)
 
   const { data: orgsData } = useOrgs({}, { enabled: role === 'superadmin' })
   const orgs = orgsData?.organizations
+
+  // Set default org to Orotron when superadmin logs in and no org is selected yet
+  useEffect(() => {
+    if (role === 'superadmin' && orgs && orgs.length > 0 && !selectedOrg) {
+      const orotron = orgs.find((o) => o.name.toLowerCase() === 'orotron') ?? orgs[0]
+      setSelectedOrg(orotron)
+    }
+  }, [orgs, role, selectedOrg])
 
   const visibleNav = navItems.filter((item) =>
     role ? item.roles.includes(role as any) : false
@@ -35,7 +44,6 @@ export default function Sidebar() {
   const handleSwitchOrg = (org: Organization) => {
     setSelectedOrg(org)
     setOrgOpen(false)
-    navigate({ to: '/organizations/$orgId', params: { orgId: org.slug } })
   }
 
   return (

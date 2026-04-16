@@ -1,4 +1,72 @@
-// ProjectCard — shows project title, status badge, member avatars
-export default function ProjectCard() {
-  return <div>Project Card</div>
+import { useNavigate } from '@tanstack/react-router'
+import AvatarStack from '../ui/AvatarStack'
+import type { Project } from '../../types/project.types'
+
+interface ProjectCardProps {
+  project: Project
+  index:   number
+}
+
+const cardColors = [
+  'bg-teal-500',   'bg-gray-800',  'bg-blue-500',
+  'bg-violet-500', 'bg-cyan-600',  'bg-indigo-500',
+  'bg-pink-500',   'bg-orange-500','bg-green-600',
+  'bg-rose-500',   'bg-amber-500', 'bg-sky-500',
+]
+
+const statusBadge: Record<string, string> = {
+  active:    'bg-green-50 text-green-600',
+  on_hold:   'bg-yellow-50 text-yellow-600',
+  completed: 'bg-blue-50 text-blue-600',
+}
+
+const statusLabel: Record<string, string> = {
+  active:    'Active',
+  on_hold:   'On Hold',
+  completed: 'Completed',
+}
+
+export default function ProjectCard({ project, index }: ProjectCardProps) {
+  const navigate   = useNavigate()
+  const color      = cardColors[index % cardColors.length]
+  const initials   = project.title.slice(0, 2).toUpperCase()
+  const avatars    = project.members.map((m) => ({
+    id:    m.id,
+    name:  m.name,
+    color: cardColors[(index + project.members.indexOf(m) + 1) % cardColors.length],
+  }))
+
+  return (
+    <div
+      onClick={() => navigate({ to: '/projects/$projectId', params: { projectId: project.id } })}
+      className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md hover:border-orange-100 cursor-pointer transition-all group"
+    >
+      {/* Logo avatar */}
+      <div className={`w-10 h-10 rounded-lg ${color} flex items-center justify-center mb-3 flex-shrink-0`}>
+        <span className="text-white font-bold text-xs">{initials}</span>
+      </div>
+
+      {/* Title */}
+      <h3 className="font-semibold text-gray-800 text-sm mb-1 line-clamp-1 group-hover:text-orange-500 transition-colors">
+        {project.title}
+      </h3>
+
+      {/* Description */}
+      <p className="text-xs text-gray-400 line-clamp-2 mb-3 leading-relaxed">
+        {project.description ?? 'No description provided.'}
+      </p>
+
+      {/* Footer: avatars + status */}
+      <div className="flex items-center justify-between">
+        {avatars.length > 0 ? (
+          <AvatarStack avatars={avatars} max={4} size="sm" />
+        ) : (
+          <span className="text-xs text-gray-300">No members</span>
+        )}
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusBadge[project.status] ?? 'bg-gray-50 text-gray-500'}`}>
+          {statusLabel[project.status] ?? project.status}
+        </span>
+      </div>
+    </div>
+  )
 }

@@ -43,6 +43,7 @@ export interface UsersParams {
   search?:     string
   status?:     UserStatus
   role?:       UserRole
+  orgId?:      string
   page?:       number
   limit?:      number
   unassigned?: boolean
