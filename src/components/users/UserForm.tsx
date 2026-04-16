@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { X, Eye, EyeOff } from 'lucide-react'
 import { useCreateUserMutation } from '../../queries/users.queries'
+import { useAuth } from '../../hooks/useAuth'
 import type { ApiError } from '../../types/api.types'
 
 interface UserFormProps {
@@ -8,6 +9,7 @@ interface UserFormProps {
 }
 
 export default function UserForm({ onClose }: UserFormProps) {
+  const { isSuperAdmin } = useAuth()
   const [name,     setName]     = useState('')
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
@@ -98,26 +100,28 @@ export default function UserForm({ onClose }: UserFormProps) {
             {fieldErrors.password && <p className="text-xs text-red-500 mt-1">{fieldErrors.password}</p>}
           </div>
 
-          {/* Role */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-            <div className="flex gap-3">
-              {(['admin', 'developer'] as const).map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setRole(r)}
-                  className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors capitalize ${
-                    role === r
-                      ? 'bg-orange-500 text-white border-orange-500'
-                      : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  {r}
-                </button>
-              ))}
+          {/* Role — superadmin can pick, admin always creates as developer */}
+          {isSuperAdmin && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+              <div className="flex gap-3">
+                {(['admin', 'developer'] as const).map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setRole(r)}
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors capitalize ${
+                      role === r
+                        ? 'bg-orange-500 text-white border-orange-500'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex gap-3 pt-1">
             <button

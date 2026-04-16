@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
-import { LayoutDashboard, CheckSquare, FolderKanban, Users, Building2, ChevronUp, ChevronDown } from 'lucide-react'
+import { LayoutDashboard, CheckSquare, FolderKanban, Users, Building2, LogOut, RefreshCw } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
+import { useLogoutMutation } from '../../queries/auth.queries'
 import { useOrgs } from '../../queries/orgs.queries'
 import type { Organization } from '../../types/org.types'
 
@@ -9,29 +10,27 @@ const navItems = [
   { label: 'Dashboard',     icon: LayoutDashboard, to: '/dashboard',     roles: ['superadmin', 'admin', 'developer'] },
   { label: 'Tasks',         icon: CheckSquare,     to: '/tasks',         roles: ['superadmin', 'admin', 'developer'] },
   { label: 'Projects',      icon: FolderKanban,    to: '/projects',      roles: ['superadmin', 'admin', 'developer'] },
-  { label: 'Users',         icon: Users,           to: '/users',         roles: ['superadmin', 'admin', 'developer'] },
+  { label: 'Users',         icon: Users,           to: '/users',         roles: ['superadmin', 'admin'] },
   { label: 'Organizations', icon: Building2,       to: '/organizations', roles: ['superadmin'] },
 ] as const
 
 export default function Sidebar() {
-  const pathname              = useRouterState({ select: (s) => s.location.pathname })
-  const navigate              = useNavigate()
-  const { role, orgName }     = useAuth()
-  const [orgOpen, setOrgOpen] = useState(false)
+  const pathname          = useRouterState({ select: (s) => s.location.pathname })
+  const navigate          = useNavigate()
+  const { role, orgName } = useAuth()
+  const { mutate: logout, isPending: isLoggingOut } = useLogoutMutation()
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null)
+  const [orgOpen, setOrgOpen]         = useState(false)
 
-  // Only fetch for superadmin
-  const { data: orgsData } = useOrgs()
+  const { data: orgsData } = useOrgs({}, { enabled: role === 'superadmin' })
   const orgs = orgsData?.organizations
 
   const visibleNav = navItems.filter((item) =>
     role ? item.roles.includes(role as any) : false
   )
 
-  // Displayed org name — superadmin uses selected or first from list, others use profile
-  const displayOrg = role === 'superadmin'
-    ? (selectedOrg?.name ?? orgs?.[0]?.name ?? orgName ?? '')
-    : (orgName ?? '')
+  const activeOrgId   = selectedOrg?.id ?? orgs?.[0]?.id
+  const activeOrgName = selectedOrg?.name ?? orgs?.[0]?.name ?? orgName ?? ''
 
   const handleSwitchOrg = (org: Organization) => {
     setSelectedOrg(org)
@@ -40,7 +39,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-48 bg-white border-r border-gray-200 flex flex-col h-full flex-shrink-0">
+    <aside className="w-56 bg-white border-r border-gray-200 flex flex-col h-full flex-shrink-0">
 
       {/* Logo */}
       <div className="px-4 py-4 flex items-center gap-2 border-b border-gray-100">
@@ -50,78 +49,106 @@ export default function Sidebar() {
         <span className="font-bold text-gray-800 text-sm">Task Miller</span>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 p-3 space-y-0.5">
-        {visibleNav.map(({ label, icon: Icon, to }) => {
-          const active = pathname === to || pathname.startsWith(to + '/')
-          return (
-            <Link
-              key={to}
-              to={to}
-              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                active
-                  ? 'bg-orange-500 text-white'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
-              }`}
-            >
-              <Icon size={17} />
-              {label}
-            </Link>
-          )
-        })}
-      </nav>
+      {/* Nav + org button in the same flex-1 column */}
+      <div className="flex-1 flex flex-col p-3 min-h-0">
 
-      {/* Organization */}
-      {displayOrg && (
-        <div className="p-3 border-t border-gray-100 relative">
-
-          {/* Superadmin: dropdown with real org list */}
-          {role === 'superadmin' ? (
-            <>
-              {orgOpen && orgs && orgs.length > 0 && (
-                <div className="absolute bottom-14 left-3 right-3 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden max-h-48 overflow-y-auto">
-                  <p className="text-xs text-gray-400 px-3 pt-2 pb-1 font-medium">Switch Organization</p>
-                  {orgs.map((org) => (
-                    <button
-                      key={org.id}
-                      onClick={() => handleSwitchOrg(org)}
-                      className={`w-full text-left px-3 py-2 text-sm font-medium hover:bg-gray-50 transition-colors ${
-                        (selectedOrg?.id ?? orgs[0]?.id) === org.id
-                          ? 'text-orange-500'
-                          : 'text-gray-700'
-                      }`}
-                    >
-                      {org.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <button
-                onClick={() => setOrgOpen(!orgOpen)}
-                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+        {/* Nav items */}
+        <div className="space-y-0.5">
+          {visibleNav.map(({ label, icon: Icon, to }) => {
+            const active = pathname === to || pathname.startsWith(to + '/')
+            return (
+              <Link
+                key={to}
+                to={to}
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  active
+                    ? 'bg-orange-500 text-white'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
+                }`}
               >
-                <div className="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-xs font-bold">{displayOrg.charAt(0)}</span>
+                <Icon size={17} />
+                {label}
+              </Link>
+            )
+          })}
+        </div>
+
+        {/* Org button — centered in remaining empty space */}
+        <div className="flex-1 flex items-center pt-45 px-0 relative">
+
+          {/* Superadmin: switchable */}
+          {role === 'superadmin' && (
+            <div className="w-full relative">
+
+              {/* Floating popup above the button */}
+              {orgOpen && orgs && orgs.length > 0 && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setOrgOpen(false)} />
+                  <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+                    <p className="text-xs font-semibold text-gray-400 px-4 pt-3 pb-2">
+                      Switch Organization
+                    </p>
+                    <div className="pb-2">
+                      {orgs.map((org) => {
+                        const isActive = activeOrgId === org.id
+                        return (
+                          <button
+                            key={org.id}
+                            onClick={() => handleSwitchOrg(org)}
+                            className={`w-full text-left px-4 py-2 text-sm font-semibold transition-colors hover:bg-gray-50 ${
+                              isActive ? 'text-orange-500' : 'text-gray-800'
+                            }`}
+                          >
+                            {org.name}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Trigger button */}
+              <button
+                onClick={() => setOrgOpen((v) => !v)}
+                className="w-full flex items-center gap-2 bg-orange-50 hover:bg-orange-100 transition-colors rounded-xl px-2.5 py-2"
+              >
+                <div className="w-7 h-7 rounded-full bg-pink-100 flex items-center justify-center flex-shrink-0">
+                  <Building2 size={14} className="text-orange-500" />
                 </div>
-                <span className="text-sm text-gray-600 flex-1 text-left truncate">{displayOrg}</span>
-                {orgOpen
-                  ? <ChevronUp size={13} className="text-gray-400" />
-                  : <ChevronDown size={13} className="text-gray-400" />
-                }
+                <span className="flex-1 text-left text-sm font-semibold text-gray-700 truncate">
+                  {activeOrgName}
+                </span>
+                <RefreshCw size={14} className="text-orange-400 flex-shrink-0" />
               </button>
-            </>
-          ) : (
-            /* Admin / Developer: static display */
-            <div className="flex items-center gap-2 px-2 py-1.5">
-              <div className="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-xs font-bold">{displayOrg.charAt(0)}</span>
+
+            </div>
+          )}
+
+          {/* Admin / Developer: static only */}
+          {role !== 'superadmin' && orgName && (
+            <div className="w-full flex items-center gap-2 bg-orange-50 rounded-xl px-2.5 py-2">
+              <div className="w-7 h-7 rounded-full bg-pink-100 flex items-center justify-center flex-shrink-0">
+                <Building2 size={14} className="text-orange-500" />
               </div>
-              <span className="text-sm text-gray-600 flex-1 truncate">{displayOrg}</span>
+              <span className="flex-1 text-sm font-semibold text-gray-700 truncate">{orgName}</span>
             </div>
           )}
 
         </div>
-      )}
+      </div>
+
+      {/* Logout — fixed at bottom */}
+      <div className="border-t border-gray-100 px-3 py-3">
+        <button
+          onClick={() => logout(undefined, { onSuccess: () => navigate({ to: '/login' }) })}
+          disabled={isLoggingOut}
+          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <LogOut size={17} />
+          {isLoggingOut ? 'Logging out...' : 'Logout'}
+        </button>
+      </div>
 
     </aside>
   )

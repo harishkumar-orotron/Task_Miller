@@ -1,4 +1,5 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router'
+import { authStore } from '../../../store/auth.store'
 import { ArrowLeft, Mail, Phone, ShieldCheck, Calendar, Clock, Hash } from 'lucide-react'
 import { useUser, useToggleUserStatusMutation } from '../../../queries/users.queries'
 import { useAuth } from '../../../hooks/useAuth'
@@ -8,6 +9,10 @@ import { formatDate } from '../../../lib/utils'
 import type { ApiError } from '../../../types/api.types'
 
 export const Route = createFileRoute('/_dashboard/users/$userId')({
+  beforeLoad: () => {
+    const role = authStore.state.user?.role
+    if (role === 'developer') throw redirect({ to: '/dashboard' })
+  },
   component: UserDetailPage,
 })
 
@@ -26,7 +31,7 @@ const avatarColor: Record<string, string> = {
 function UserDetailPage() {
   const { userId } = Route.useParams()
   const navigate   = useNavigate()
-  const { isAdmin } = useAuth()
+  const { isAdmin, user: me } = useAuth()
 
   const { data: user, isLoading, error } = useUser(userId)
   const { mutate: toggleStatus, isPending: isToggling } = useToggleUserStatusMutation()
@@ -91,8 +96,8 @@ function UserDetailPage() {
                 </div>
               </div>
 
-              {/* Toggle button — admin+ only */}
-              {isAdmin && (
+              {/* Toggle button — admin+ only, not for own account */}
+              {isAdmin && user.id !== me?.id && (
                 <button
                   onClick={handleToggle}
                   disabled={isToggling}

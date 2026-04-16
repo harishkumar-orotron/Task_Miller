@@ -40,10 +40,12 @@ export interface UsersResponse {
 // ─── Request bodies ───────────────────────────────────────────────────────────
 
 export interface UsersParams {
-  search?: string
-  status?: UserStatus
-  page?:   number
-  limit?:  number
+  search?:     string
+  status?:     UserStatus
+  role?:       UserRole
+  page?:       number
+  limit?:      number
+  unassigned?: boolean
 }
 
 export interface CreateUserBody {

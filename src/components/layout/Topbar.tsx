@@ -22,11 +22,7 @@ const roleBadge: Record<string, string> = {
   developer:  'bg-green-100 text-green-700',
 }
 
-interface TopbarProps {
-  onAction?: () => void
-}
-
-export default function Topbar({ onAction }: TopbarProps) {
+export default function Topbar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const navigate = useNavigate()
   const { isAdmin, orgName } = useAuth()
@@ -60,7 +56,7 @@ export default function Topbar({ onAction }: TopbarProps) {
           {/* Action button — admin+ only */}
           {showAction && (
             <button
-              onClick={onAction}
+              onClick={() => window.dispatchEvent(new CustomEvent('topbar-action'))}
               className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
             >
               <Plus size={15} />
