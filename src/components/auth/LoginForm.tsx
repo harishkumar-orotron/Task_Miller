@@ -3,10 +3,21 @@ import { useNavigate, Link } from '@tanstack/react-router'
 import { useLoginMutation } from '../../queries/auth.queries'
 import type { ApiError } from '../../types/api.types'
 
+const TEST_CREDENTIALS = [
+  { role: 'Super Admin', email: 'superadmin@taskmiller.com', password: 'SuperAdmin@123' },
+  { role: 'Admin',       email: 'maheshbabubaddipudi@gmail.com', password: 'admin123' },
+  { role: 'Developer',   email: 'dev1@company.com', password: 'password123' },
+]
+
 export default function LoginForm() {
   const navigate = useNavigate()
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
+
+  const fillCredentials = (cred: typeof TEST_CREDENTIALS[number]) => {
+    setEmail(cred.email)
+    setPassword(cred.password)
+  }
 
   const { mutate: login, isPending, error } = useLoginMutation()
 
@@ -40,7 +51,24 @@ export default function LoginForm() {
         </div>
 
         <h1 className="text-xl font-bold text-gray-800 mb-1">Welcome back</h1>
-        <p className="text-sm text-gray-500 mb-6">Sign in to your account</p>
+        <p className="text-sm text-gray-500 mb-4">Sign in to your account</p>
+
+        {/* Test credentials */}
+        <div className="bg-orange-50 border border-orange-100 rounded-lg px-3 py-2.5 mb-6">
+          <p className="text-xs font-semibold text-orange-600 mb-2">Quick fill — test accounts</p>
+          <div className="flex gap-2 flex-wrap">
+            {TEST_CREDENTIALS.map((cred) => (
+              <button
+                key={cred.role}
+                type="button"
+                onClick={() => fillCredentials(cred)}
+                className="text-xs bg-white border border-orange-200 text-orange-600 font-medium px-2.5 py-1 rounded-md hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-colors"
+              >
+                {cred.role}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {errorMessage && Object.keys(fieldErrors).length === 0 && (
           <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2.5 rounded-lg mb-4">
