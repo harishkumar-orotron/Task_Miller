@@ -3,6 +3,7 @@ import { X, ChevronDown, Check } from 'lucide-react'
 import { useCreateProjectMutation, useUpdateProjectMutation } from '../../queries/projects.queries'
 import { useOrgs, useOrg } from '../../queries/orgs.queries'
 import { useAuth } from '../../hooks/useAuth'
+import { avatarColors } from '../../lib/utils'
 import type { Project, ProjectStatus } from '../../types/project.types'
 import type { ApiError } from '../../types/api.types'
 
@@ -15,11 +16,6 @@ const statusOptions: { value: ProjectStatus; label: string }[] = [
   { value: 'active',    label: 'Active'    },
   { value: 'on_hold',   label: 'On Hold'   },
   { value: 'completed', label: 'Completed' },
-]
-
-const avatarColors = [
-  'bg-blue-400', 'bg-violet-400', 'bg-pink-400',
-  'bg-teal-400', 'bg-orange-400', 'bg-rose-400',
 ]
 
 export default function ProjectForm({ onClose, project }: ProjectFormProps) {

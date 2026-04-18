@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { LayoutDashboard, CheckSquare, FolderKanban, Users, Building2, LogOut, RefreshCw } from 'lucide-react'
+import { useQueryClient, useIsFetching } from '@tanstack/react-query'
 import { useAuth } from '../../hooks/useAuth'
 import { useLogoutMutation } from '../../queries/auth.queries'
 import { useOrgs } from '../../queries/orgs.queries'
@@ -21,6 +22,8 @@ export default function Sidebar() {
   const { role, orgName } = useAuth()
   const { mutate: logout, isPending: isLoggingOut } = useLogoutMutation()
   const { selectedOrg } = useOrgContext()
+  const queryClient = useQueryClient()
+  const isFetching  = useIsFetching() > 0
   const [orgOpen, setOrgOpen] = useState(false)
 
   const { data: orgsData } = useOrgs({}, { enabled: role === 'superadmin' })
@@ -35,7 +38,7 @@ export default function Sidebar() {
   }, [orgs, role, selectedOrg])
 
   const visibleNav = navItems.filter((item) =>
-    role ? item.roles.includes(role as any) : false
+    role !== null && (item.roles as readonly string[]).includes(role)
   )
 
   const activeOrgId   = selectedOrg?.id ?? orgs?.[0]?.id
@@ -44,6 +47,15 @@ export default function Sidebar() {
   const handleSwitchOrg = (org: Organization) => {
     setSelectedOrg(org)
     setOrgOpen(false)
+    queryClient.removeQueries({ queryKey: ['tasks'] })
+    queryClient.removeQueries({ queryKey: ['projects'] })
+    queryClient.removeQueries({ queryKey: ['users'] })
+
+    // If on a detail page, go back to the section index so the
+    // old record's ID doesn't linger in the URL for the new org
+    const sectionRoots = ['/tasks', '/projects', '/users', '/organizations']
+    const match = sectionRoots.find((r) => pathname.startsWith(r + '/'))
+    if (match) navigate({ to: match as '/tasks' | '/projects' | '/users' | '/organizations' })
   }
 
   return (
@@ -118,8 +130,9 @@ export default function Sidebar() {
 
               {/* Trigger button */}
               <button
-                onClick={() => setOrgOpen((v) => !v)}
-                className="w-full flex items-center gap-2 bg-orange-50 hover:bg-orange-100 transition-colors rounded-xl px-2.5 py-2"
+                onClick={() => !isFetching && setOrgOpen((v) => !v)}
+                disabled={isFetching}
+                className="w-full flex items-center gap-2 bg-orange-50 hover:bg-orange-100 transition-colors rounded-xl px-2.5 py-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <div className="w-7 h-7 rounded-full bg-pink-100 flex items-center justify-center flex-shrink-0">
                   <Building2 size={14} className="text-orange-500" />
@@ -127,7 +140,7 @@ export default function Sidebar() {
                 <span className="flex-1 text-left text-sm font-semibold text-gray-700 truncate">
                   {activeOrgName}
                 </span>
-                <RefreshCw size={14} className="text-orange-400 flex-shrink-0" />
+                <RefreshCw size={14} className={`flex-shrink-0 ${isFetching ? 'text-orange-400 animate-spin' : 'text-orange-400'}`} />
               </button>
 
             </div>

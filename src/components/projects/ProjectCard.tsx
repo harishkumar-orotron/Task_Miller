@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import AvatarStack from '../ui/AvatarStack'
+import { projectStatusBadge } from '../../lib/utils'
 import type { Project } from '../../types/project.types'
 
 interface ProjectCardProps {
@@ -14,11 +15,6 @@ const cardColors = [
   'bg-rose-500',   'bg-amber-500', 'bg-sky-500',
 ]
 
-const statusBadge: Record<string, string> = {
-  active:    'bg-green-50 text-green-600',
-  on_hold:   'bg-yellow-50 text-yellow-600',
-  completed: 'bg-blue-50 text-blue-600',
-}
 
 const statusLabel: Record<string, string> = {
   active:    'Active',
@@ -63,7 +59,7 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
         ) : (
           <span className="text-xs text-gray-300">No members</span>
         )}
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusBadge[project.status] ?? 'bg-gray-50 text-gray-500'}`}>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${projectStatusBadge[project.status] ?? 'bg-gray-50 text-gray-500'}`}>
           {statusLabel[project.status] ?? project.status}
         </span>
       </div>

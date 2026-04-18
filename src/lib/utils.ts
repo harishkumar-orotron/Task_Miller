@@ -2,7 +2,8 @@
 
 // ─── Date formatting ──────────────────────────────────────────────────────────
 
-export function formatDate(dateStr: string): string {
+export function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return '—'
   return new Date(dateStr).toLocaleDateString('en-IN', {
     day:   '2-digit',
     month: 'short',
@@ -18,6 +19,43 @@ export function formatDateTime(dateStr: string): string {
     hour:   '2-digit',
     minute: '2-digit',
   })
+}
+
+// ─── Avatar helpers ───────────────────────────────────────────────────────────
+
+export const avatarColors = [
+  'bg-blue-400', 'bg-violet-400', 'bg-pink-400',
+  'bg-teal-400', 'bg-orange-400', 'bg-rose-400',
+]
+
+export function userColor(id: string): string {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash)
+  return avatarColors[Math.abs(hash) % avatarColors.length]
+}
+
+export function toAvatarShape(users: { id: string; name: string }[]) {
+  return users.map((u) => ({ id: u.id, name: u.name, color: userColor(u.id) }))
+}
+
+// ─── Badge / color maps ───────────────────────────────────────────────────────
+
+export const roleBadgeClasses: Record<string, string> = {
+  superadmin: 'bg-purple-100 text-purple-700',
+  admin:      'bg-blue-100 text-blue-700',
+  developer:  'bg-green-100 text-green-700',
+}
+
+export const roleAvatarColor: Record<string, string> = {
+  superadmin: 'bg-purple-500',
+  admin:      'bg-blue-500',
+  developer:  'bg-teal-500',
+}
+
+export const projectStatusBadge: Record<string, string> = {
+  active:    'bg-green-50 text-green-600 border border-green-100',
+  on_hold:   'bg-yellow-50 text-yellow-600 border border-yellow-100',
+  completed: 'bg-blue-50 text-blue-600 border border-blue-100',
 }
 
 // ─── String helpers ───────────────────────────────────────────────────────────

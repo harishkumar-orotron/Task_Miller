@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardRouteImport } from './routes/_dashboard'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DashboardProfileRouteImport } from './routes/_dashboard/profile'
 import { Route as DashboardDashboardRouteImport } from './routes/_dashboard/dashboard'
 import { Route as AuthOtpRouteImport } from './routes/_auth/otp'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
@@ -37,11 +36,6 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardProfileRoute = DashboardProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardDashboardRoute = DashboardDashboardRouteImport.update({
   id: '/dashboard',
@@ -107,7 +101,6 @@ export interface FileRoutesByFullPath {
   '/login': typeof AuthLoginRoute
   '/otp': typeof AuthOtpRoute
   '/dashboard': typeof DashboardDashboardRoute
-  '/profile': typeof DashboardProfileRoute
   '/organizations/$orgId': typeof DashboardOrganizationsOrgIdRoute
   '/projects/$projectId': typeof DashboardProjectsProjectIdRoute
   '/tasks/$taskId': typeof DashboardTasksTaskIdRoute
@@ -122,7 +115,6 @@ export interface FileRoutesByTo {
   '/login': typeof AuthLoginRoute
   '/otp': typeof AuthOtpRoute
   '/dashboard': typeof DashboardDashboardRoute
-  '/profile': typeof DashboardProfileRoute
   '/organizations/$orgId': typeof DashboardOrganizationsOrgIdRoute
   '/projects/$projectId': typeof DashboardProjectsProjectIdRoute
   '/tasks/$taskId': typeof DashboardTasksTaskIdRoute
@@ -140,7 +132,6 @@ export interface FileRoutesById {
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/otp': typeof AuthOtpRoute
   '/_dashboard/dashboard': typeof DashboardDashboardRoute
-  '/_dashboard/profile': typeof DashboardProfileRoute
   '/_dashboard/organizations/$orgId': typeof DashboardOrganizationsOrgIdRoute
   '/_dashboard/projects/$projectId': typeof DashboardProjectsProjectIdRoute
   '/_dashboard/tasks/$taskId': typeof DashboardTasksTaskIdRoute
@@ -157,7 +148,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/otp'
     | '/dashboard'
-    | '/profile'
     | '/organizations/$orgId'
     | '/projects/$projectId'
     | '/tasks/$taskId'
@@ -172,7 +162,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/otp'
     | '/dashboard'
-    | '/profile'
     | '/organizations/$orgId'
     | '/projects/$projectId'
     | '/tasks/$taskId'
@@ -189,7 +178,6 @@ export interface FileRouteTypes {
     | '/_auth/login'
     | '/_auth/otp'
     | '/_dashboard/dashboard'
-    | '/_dashboard/profile'
     | '/_dashboard/organizations/$orgId'
     | '/_dashboard/projects/$projectId'
     | '/_dashboard/tasks/$taskId'
@@ -228,13 +216,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_dashboard/profile': {
-      id: '/_dashboard/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof DashboardProfileRouteImport
-      parentRoute: typeof DashboardRoute
     }
     '/_dashboard/dashboard': {
       id: '/_dashboard/dashboard'
@@ -330,7 +311,6 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface DashboardRouteChildren {
   DashboardDashboardRoute: typeof DashboardDashboardRoute
-  DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardOrganizationsOrgIdRoute: typeof DashboardOrganizationsOrgIdRoute
   DashboardProjectsProjectIdRoute: typeof DashboardProjectsProjectIdRoute
   DashboardTasksTaskIdRoute: typeof DashboardTasksTaskIdRoute
@@ -343,7 +323,6 @@ interface DashboardRouteChildren {
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardDashboardRoute: DashboardDashboardRoute,
-  DashboardProfileRoute: DashboardProfileRoute,
   DashboardOrganizationsOrgIdRoute: DashboardOrganizationsOrgIdRoute,
   DashboardProjectsProjectIdRoute: DashboardProjectsProjectIdRoute,
   DashboardTasksTaskIdRoute: DashboardTasksTaskIdRoute,

@@ -1,6 +1,6 @@
 import { get, post, patch, del } from '../client'
 import type {
-  Project, ProjectsResponse, ProjectsParams,
+  Project, ProjectDetail, ProjectsResponse, ProjectsParams,
   CreateProjectBody, UpdateProjectBody,
 } from '../../types/project.types'
 
@@ -19,8 +19,8 @@ export function getProjectsApi(params: ProjectsParams = {}): Promise<ProjectsRes
 
 // ─── GET /api/projects/:id ────────────────────────────────────────────────────
 
-export function getProjectApi(id: string): Promise<Project> {
-  return get<Project>(`/api/projects/${id}`)
+export function getProjectApi(id: string): Promise<ProjectDetail> {
+  return get<ProjectDetail>(`/api/projects/${id}`)
 }
 
 // ─── POST /api/projects ───────────────────────────────────────────────────────

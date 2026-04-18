@@ -5,7 +5,7 @@ import { useUser, useToggleUserStatusMutation } from '../../../queries/users.que
 import { useAuth } from '../../../hooks/useAuth'
 import LoadingSpinner from '../../../components/common/LoadingSpinner'
 import ErrorMessage from '../../../components/common/ErrorMessage'
-import { formatDate } from '../../../lib/utils'
+import { formatDate, roleBadgeClasses, roleAvatarColor } from '../../../lib/utils'
 import type { ApiError } from '../../../types/api.types'
 
 export const Route = createFileRoute('/_dashboard/users/$userId')({
@@ -15,18 +15,6 @@ export const Route = createFileRoute('/_dashboard/users/$userId')({
   },
   component: UserDetailPage,
 })
-
-const roleBadge: Record<string, string> = {
-  superadmin: 'bg-purple-100 text-purple-700',
-  admin:      'bg-blue-100 text-blue-700',
-  developer:  'bg-green-100 text-green-700',
-}
-
-const avatarColor: Record<string, string> = {
-  superadmin: 'bg-purple-500',
-  admin:      'bg-blue-500',
-  developer:  'bg-teal-500',
-}
 
 function UserDetailPage() {
   const { userId } = Route.useParams()
@@ -79,13 +67,13 @@ function UserDetailPage() {
           <div className="bg-white rounded-xl border border-gray-100 p-5">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className={`w-14 h-14 rounded-xl ${avatarColor[user.role] ?? 'bg-gray-400'} flex items-center justify-center flex-shrink-0`}>
+                <div className={`w-14 h-14 rounded-xl ${roleAvatarColor[user.role] ?? 'bg-gray-400'} flex items-center justify-center flex-shrink-0`}>
                   <span className="text-white font-bold text-2xl">{user.name.charAt(0).toUpperCase()}</span>
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-gray-800 leading-tight">{user.name}</h2>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className={`text-xs px-2 py-0.5 rounded font-medium capitalize ${roleBadge[user.role] ?? 'bg-gray-100 text-gray-600'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded font-medium capitalize ${roleBadgeClasses[user.role] ?? 'bg-gray-100 text-gray-600'}`}>
                       {user.role}
                     </span>
                     <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${user.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>

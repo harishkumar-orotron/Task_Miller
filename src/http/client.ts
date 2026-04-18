@@ -1,4 +1,5 @@
 import { authStore, clearAuth, setAuth } from '../store/auth.store'
+import { router } from '../router'
 import type { ApiError } from '../types/api.types'
 
 export const BASE_URL = import.meta.env.VITE_API_URL
@@ -10,20 +11,40 @@ export const BASE_URL = import.meta.env.VITE_API_URL
 //
 // This function unwraps `.data` on success and throws the error body on failure.
 
+const TIMEOUT_MS = 15_000
+
+async function fetchWithTimeout(url: string, options: RequestInit): Promise<Response> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
+  try {
+    return await fetch(url, { ...options, signal: controller.signal })
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 export async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
   const token = authStore.state.accessToken
 
-  const res = await fetch(`${BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers ?? {}),
-    },
-  })
+  let res: Response
+  try {
+    res = await fetchWithTimeout(`${BASE_URL}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options.headers ?? {}),
+      },
+    })
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw Object.assign(new Error('Request timed out. Please try again.'), { statusCode: 408 }) as ApiError
+    }
+    throw err
+  }
 
   // Try silent token refresh on 401 — only when a session exists
   if (res.status === 401 && token) {
@@ -31,7 +52,7 @@ export async function request<T>(
     if (refreshed) {
       // Retry original request with new token
       const newToken = authStore.state.accessToken
-      const retry = await fetch(`${BASE_URL}${path}`, {
+      const retry = await fetchWithTimeout(`${BASE_URL}${path}`, {
         ...options,
         headers: {
           'Content-Type': 'application/json',
@@ -49,7 +70,7 @@ export async function request<T>(
 
     // Refresh also failed — log out and redirect
     clearAuth()
-    window.location.href = '/login'
+    router.navigate({ to: '/login' })
     throw new Error('Session expired')
   }
 
@@ -86,8 +107,9 @@ async function tryRefresh(): Promise<boolean> {
     if (!res.ok) return false
 
     const body = await res.json()
-    const { tokens } = body.data   // unwrap { success, data: { tokens } }
-    const user = authStore.state.user!
+    const { tokens } = body.data
+    const user = authStore.state.user
+    if (!user) return false
     setAuth(user, tokens.accessToken, tokens.refreshToken)
     return true
   } catch {

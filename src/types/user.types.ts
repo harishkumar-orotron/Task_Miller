@@ -4,15 +4,19 @@ export type UserStatus = 'active' | 'inactive'
 // ─── Core user shape (list items) ────────────────────────────────────────────
 
 export interface User {
-  id:          string
-  name:        string
-  email:       string
-  role:        UserRole
-  status:      UserStatus
-  phone:       string | null
-  avatarUrl:   string | null
-  lastLoginAt: string | null
-  createdAt:   string
+  id:              string
+  name:            string
+  email:           string
+  role:            UserRole
+  status:          UserStatus
+  phone:           string | null
+  avatarUrl:       string | null
+  lastLoginAt:     string | null
+  createdAt:       string
+  projectCount:    number
+  taskCount:       number
+  inProgressCount: number
+  toDoCount:       number
 }
 
 // ─── Full user (GET /me, GET /:id) ───────────────────────────────────────────
@@ -44,6 +48,8 @@ export interface UsersParams {
   status?:     UserStatus
   role?:       UserRole
   orgId?:      string
+  sortBy?:     string
+  sortOrder?:  'asc' | 'desc'
   page?:       number
   limit?:      number
   unassigned?: boolean

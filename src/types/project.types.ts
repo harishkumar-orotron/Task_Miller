@@ -1,10 +1,20 @@
 export type ProjectStatus = 'active' | 'on_hold' | 'completed'
 
 export interface ProjectMember {
-  id:        string
-  name:      string
-  email:     string
-  avatarUrl: string | null
+  id:                 string
+  name:               string
+  email:              string
+  avatarUrl:          string | null
+  totalTasksAssigned: number
+}
+
+export interface ProjectTaskStats {
+  total:      number
+  pending:    number
+  inProgress: number
+  onHold:     number
+  overdue:    number
+  completed:  number
 }
 
 export interface ProjectCreator {
@@ -28,6 +38,10 @@ export interface Project {
   deletedAt:   string | null
   members:     ProjectMember[]
   creator:     ProjectCreator
+}
+
+export interface ProjectDetail extends Project {
+  taskStats: ProjectTaskStats
 }
 
 export interface ProjectsPagination {

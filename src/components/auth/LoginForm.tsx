@@ -80,7 +80,7 @@ export default function LoginForm() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
             <input
-              type="text"
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"

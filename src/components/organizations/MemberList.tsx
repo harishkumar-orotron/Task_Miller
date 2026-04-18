@@ -1,6 +1,6 @@
 import { Users } from 'lucide-react'
 import type { OrgMember } from '../../types/org.types'
-import { formatDate } from '../../lib/utils'
+import { avatarColors, formatDate } from '../../lib/utils'
 
 interface MemberListProps {
   members: OrgMember[]
@@ -10,11 +10,6 @@ const roleBadge: Record<string, string> = {
   admin:     'bg-blue-50 text-blue-600 border border-blue-100',
   developer: 'bg-green-50 text-green-600 border border-green-100',
 }
-
-const avatarColors = [
-  'bg-blue-400', 'bg-violet-400', 'bg-pink-400',
-  'bg-teal-400', 'bg-orange-400', 'bg-rose-400',
-]
 
 export default function MemberList({ members }: MemberListProps) {
   if (members.length === 0) {

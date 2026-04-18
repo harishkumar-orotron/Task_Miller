@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X, Search, UserPlus, ShieldCheck, Code2 } from 'lucide-react'
 import { useUnassignedUsers, useAssignAdminMutation, useAddDeveloperMutation } from '../../queries/orgs.queries'
+import { avatarColors } from '../../lib/utils'
 import type { ApiError } from '../../types/api.types'
 
 interface AddMemberModalProps {
@@ -8,11 +9,6 @@ interface AddMemberModalProps {
   orgId:   string
   onClose: () => void
 }
-
-const avatarColors = [
-  'bg-blue-400', 'bg-violet-400', 'bg-pink-400',
-  'bg-teal-400', 'bg-orange-400', 'bg-rose-400',
-]
 
 export default function AddMemberModal({ mode, orgId, onClose }: AddMemberModalProps) {
   const [search,     setSearch]     = useState('')

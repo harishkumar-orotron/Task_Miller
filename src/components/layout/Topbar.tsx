@@ -5,7 +5,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useLogoutMutation } from '../../queries/auth.queries'
 import { useMe } from '../../queries/users.queries'
 import UpdateProfileForm from '../users/UpdateProfileForm'
-import { formatDate } from '../../lib/utils'
+import { formatDate, roleBadgeClasses } from '../../lib/utils'
 
 const pageConfig: Record<string, { title: string; action?: string }> = {
   '/dashboard':    { title: 'Dashboard',     action: 'Add Task' },
@@ -13,14 +13,8 @@ const pageConfig: Record<string, { title: string; action?: string }> = {
   '/projects':     { title: 'Projects',      action: 'Add Project' },
   '/users':        { title: 'Users',         action: 'Add User' },
   '/organizations':{ title: 'Organizations' },
-  '/profile':      { title: 'Profile' },
 }
 
-const roleBadge: Record<string, string> = {
-  superadmin: 'bg-purple-100 text-purple-700',
-  admin:      'bg-blue-100 text-blue-700',
-  developer:  'bg-green-100 text-green-700',
-}
 
 export default function Topbar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
@@ -36,7 +30,8 @@ export default function Topbar() {
     .sort((a, b) => b.length - a.length)[0]
 
   const config     = matchedKey ? pageConfig[matchedKey] : { title: 'Task Miller' }
-  const showAction = isAdmin && config.action
+  const isIndexPage = pathname === matchedKey
+  const showAction  = isAdmin && config.action && isIndexPage
 
   const handleLogout = () => {
     logout(undefined, { onSuccess: () => navigate({ to: '/login' }) })
@@ -84,7 +79,7 @@ export default function Topbar() {
               <div className="text-left">
                 <p className="text-sm font-medium text-gray-700 leading-none">{displayName}</p>
                 {displayRole && (
-                  <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${roleBadge[displayRole]}`}>
+                  <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${roleBadgeClasses[displayRole]}`}>
                     {displayRole}
                   </span>
                 )}
@@ -109,7 +104,7 @@ export default function Topbar() {
                   {profile?.role && (
                     <div className="flex items-center gap-2">
                       <ShieldCheck size={13} className="text-gray-400 flex-shrink-0" />
-                      <span className={`text-xs px-1.5 py-0.5 rounded font-medium capitalize ${roleBadge[profile.role]}`}>
+                      <span className={`text-xs px-1.5 py-0.5 rounded font-medium capitalize ${roleBadgeClasses[profile.role]}`}>
                         {profile.role}
                       </span>
                     </div>
