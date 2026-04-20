@@ -52,7 +52,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
   const [memberOpen,  setMemberOpen]  = useState(false)
 
   const { data: projectsData } = useProjects({ limit: 100, orgId })
-  const { data: usersData }    = useUsers({ limit: 100, orgId })
+  const { data: usersData }    = useUsers({ limit: 100, orgId, role: 'developer' })
 
   const { mutate: createTask, isPending: isCreating, error: createError } = useCreateTaskMutation()
   const { mutate: updateTask, isPending: isUpdating, error: updateError } = useUpdateTaskMutation()
@@ -67,7 +67,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
   ) ?? {}
 
   const projects      = projectsData?.projects ?? []
-  const users         = usersData?.users       ?? []
+  const users         = (usersData?.users ?? []).filter((u) => u.role === 'developer')
   const selectedProj  = projects.find((p) => p.id === selectedProject)
 
   const toggleUser = (userId: string) => {
@@ -84,10 +84,11 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
           id: task.id,
           body: {
             title,
-            description: description || undefined,
+            description:     description || undefined,
             status,
             priority,
-            dueDate:     dueDate || undefined,
+            dueDate:         dueDate || undefined,
+            assignedUserIds: selectedUserIds.length > 0 ? selectedUserIds : undefined,
           },
         },
         { onSuccess: onClose },
@@ -108,9 +109,9 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl w-full max-w-md px-6 pb-6 shadow-xl max-h-[90vh] overflow-y-auto">
 
-        <div className="flex items-center justify-between mb-5">
+        <div className="sticky top-0 bg-white z-10 flex items-center justify-between pt-6 pb-4">
           <h2 className="text-base font-semibold text-gray-800">
             {isEdit ? 'Edit Task' : isSubtask ? 'Add Subtask' : 'Create Task'}
           </h2>
@@ -144,7 +145,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description <span className="text-gray-400 font-normal">(optional)</span>
+              Description 
             </label>
             <textarea
               value={description}
@@ -228,7 +229,6 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
                 >
                   {allStatusOptions
                     .filter((opt) => {
-                      if (isSuperAdmin) return true
                       const current = task?.status
                       if (current === 'in_progress' && opt.value === 'to_do') return false
                       if (current === 'on_hold' && opt.value !== 'in_progress' && opt.value !== 'on_hold') return false
@@ -247,11 +247,12 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
           {/* Due Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Due Date <span className="text-gray-400 font-normal">(optional)</span>
+              Due Date 
             </label>
             <input
               type="date"
               value={dueDate}
+              min={new Date().toISOString().slice(0, 10)}
               onChange={(e) => setDueDate(e.target.value)}
               className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-orange-400 transition-colors"
             />
@@ -261,7 +262,6 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Assignees{' '}
-              <span className="text-gray-400 font-normal">(optional)</span>
               {selectedUserIds.length > 0 && (
                 <span className="ml-1.5 text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-medium">
                   {selectedUserIds.length}

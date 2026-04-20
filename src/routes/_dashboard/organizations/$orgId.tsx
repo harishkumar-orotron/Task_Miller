@@ -9,7 +9,7 @@ import AddMemberModal from '../../../components/organizations/AddMemberModal'
 import { useAuth } from '../../../hooks/useAuth'
 import LoadingSpinner from '../../../components/common/LoadingSpinner'
 import ErrorMessage from '../../../components/common/ErrorMessage'
-import { avatarColors, formatDate } from '../../../lib/utils'
+import { userColor, formatDate } from '../../../lib/utils'
 import type { OrgMember } from '../../../types/org.types'
 import type { ApiError } from '../../../types/api.types'
 
@@ -333,7 +333,7 @@ function MemberRow({
 }: MemberRowProps) {
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-      <div className={`w-8 h-8 rounded-full ${avatarColors[index % avatarColors.length]} flex items-center justify-center flex-shrink-0`}>
+      <div className={`w-8 h-8 rounded-full ${userColor(member.userId)} flex items-center justify-center flex-shrink-0`}>
         <span className="text-white text-xs font-semibold">{member.name.charAt(0).toUpperCase()}</span>
       </div>
       <div className="flex-1 min-w-0">

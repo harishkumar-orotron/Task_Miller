@@ -29,9 +29,9 @@ export default function OrgForm({ onClose }: OrgFormProps) {
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl">
+      <div className="bg-white rounded-2xl w-full max-w-md px-6 pb-6 shadow-xl max-h-[90vh] overflow-y-auto">
 
-        <div className="flex items-center justify-between mb-5">
+        <div className="sticky top-0 bg-white z-10 flex items-center justify-between pt-6 pb-4">
           <h2 className="text-base font-semibold text-gray-800">Create Organization</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X size={18} />

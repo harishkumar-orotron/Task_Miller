@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import {
   Search, ChevronDown,
-  FolderKanban, CheckCircle2, Clock, AlertCircle, TrendingUp, ListTodo, Timer, PauseCircle,
+  FolderKanban, CheckCircle2, Clock, AlertCircle, TrendingUp, ListTodo, Timer, PauseCircle, Hourglass,
 } from 'lucide-react'
 import { type SortingState } from '@tanstack/react-table'
 import { useTasks } from '../../queries/tasks.queries'
@@ -63,13 +63,16 @@ function DashboardPage() {
   const { data: projectsCountData } = useProjects({ orgId, limit: 1 })
   const { data: projectsListData }  = useProjects({ orgId, limit: 100 })
 
-  const taskStats     = tasksData?.stats
-  const totalTasks    = taskStats?.total      ?? 0
-  const completedCount = taskStats?.completed ?? 0
-  const overdueCount  = taskStats?.overdue    ?? 0
-  const onHoldCount   = taskStats?.onHold     ?? 0
-  const pendingCount  = (taskStats?.todo ?? 0) + (taskStats?.inProgress ?? 0)
-  const totalProjects = projectsCountData?.pagination.totalRecords ?? 0
+  const taskStats      = tasksData?.stats
+  const totalTasks     = taskStats?.total       ?? 0
+  const completedCount = taskStats?.completed   ?? 0
+  const todoCount      = taskStats?.todo        ?? 0
+  const inProgressCount = taskStats?.inProgress ?? 0
+  const onHoldCount    = taskStats?.onHold      ?? 0
+  const overdueCount   = taskStats?.overdue     ?? 0
+  const onTimeCount    = taskStats?.onTime      ?? 0
+  const offTimeCount   = taskStats?.offTime     ?? 0
+  const totalProjects  = projectsCountData?.pagination.totalRecords ?? 0
 
   const tasks      = tasksData?.tasks      ?? []
   const pagination = tasksData?.pagination
@@ -83,18 +86,20 @@ function DashboardPage() {
   const endEntry     = Math.min(activePage * activeLimit, totalRecords)
 
   const stats = [
-    { label: 'Projects',        value: totalProjects,  iconBg: 'bg-pink-100',   icon: <FolderKanban size={18} className="text-pink-500"   /> },
-    { label: 'Tasks',           value: totalTasks,     iconBg: 'bg-orange-100', icon: <ListTodo     size={18} className="text-orange-500" /> },
-    { label: 'Completed',       value: completedCount, iconBg: 'bg-green-100',  icon: <CheckCircle2 size={18} className="text-green-500"  /> },
-    { label: 'On Time',         value: completedCount, iconBg: 'bg-blue-100',   icon: <Clock        size={18} className="text-blue-500"   /> },
-    { label: 'On Hold',         value: onHoldCount,    iconBg: 'bg-yellow-100', icon: <PauseCircle  size={18} className="text-yellow-500" /> },
-    { label: 'Pending',         value: pendingCount,   iconBg: 'bg-gray-100',   icon: <Timer        size={18} className="text-gray-500"   /> },
-    { label: 'Overdue',         value: overdueCount,   iconBg: 'bg-red-100',    icon: <AlertCircle  size={18} className="text-red-500"    /> },
+    { label: 'Projects',         value: totalProjects,   iconBg: 'bg-pink-100',   icon: <FolderKanban size={18} className="text-pink-500"   /> },
+    { label: 'Tasks',            value: totalTasks,      iconBg: 'bg-orange-100', icon: <ListTodo     size={18} className="text-orange-500" /> },
+    { label: 'Completed',        value: completedCount,  iconBg: 'bg-green-100',  icon: <CheckCircle2 size={18} className="text-green-500"  /> },
+    { label: 'To Do',            value: todoCount,       iconBg: 'bg-gray-100',   icon: <Hourglass    size={18} className="text-gray-500"   /> },
+    { label: 'In Progress',      value: inProgressCount, iconBg: 'bg-blue-100',   icon: <Timer        size={18} className="text-blue-500"   /> },
+    { label: 'On Hold',          value: onHoldCount,     iconBg: 'bg-yellow-100', icon: <PauseCircle  size={18} className="text-yellow-500" /> },
+    { label: 'Overdue',          value: overdueCount,    iconBg: 'bg-red-100',    icon: <AlertCircle  size={18} className="text-red-500"    /> },
+    { label: 'On Time',          value: onTimeCount,     iconBg: 'bg-teal-100',   icon: <Clock        size={18} className="text-teal-500"   /> },
+    { label: 'Off Time',         value: offTimeCount,    iconBg: 'bg-purple-100', icon: <Timer        size={18} className="text-purple-500" /> },
     {
-      label: 'Completion Rate',
-      value: totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0,
-      iconBg: 'bg-purple-100',
-      icon: <TrendingUp size={18} className="text-purple-500" />,
+      label: 'Completion\nRate',
+      value: `${totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0}%`,
+      iconBg: 'bg-indigo-100',
+      icon: <TrendingUp size={18} className="text-indigo-500" />,
     },
   ]
 
@@ -108,7 +113,7 @@ function DashboardPage() {
     <div className="space-y-5">
 
       {/* Stats */}
-      <div className="flex gap-3 overflow-x-auto pb-1">
+      <div className="grid grid-cols-10 gap-2">
         {stats.map((s) => <StatsCard key={s.label} {...s} />)}
       </div>
 

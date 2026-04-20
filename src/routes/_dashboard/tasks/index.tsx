@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import {
   Plus, Search, ChevronDown,
   CheckCircle2, ListTodo, Timer, AlertCircle, PauseCircle,
@@ -25,7 +25,6 @@ export const Route = createFileRoute('/_dashboard/tasks/')({
 })
 
 function TasksPage() {
-  const navigate= useNavigate()
   const { isAdmin, isSuperAdmin, isDeveloper, user } = useAuth()
   const { selectedOrg }                     = useOrgContext()
 

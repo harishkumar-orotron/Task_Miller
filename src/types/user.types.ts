@@ -21,8 +21,44 @@ export interface User {
 
 // ─── Full user (GET /me, GET /:id) ───────────────────────────────────────────
 
+export interface UserStats {
+  totalProjects: number
+  totalTasks:    number
+  completed:     number
+  pending:       number
+  inProgress:    number
+  onHold:        number
+  overdue:       number
+  onTime:        number
+  offTime:       number
+}
+
+export interface UserProjectTask {
+  id:          string
+  title:       string
+  status:      string
+  priority:    string
+  dueDate:     string | null
+  projectId:   string
+  completedAt: string | null
+  createdAt:   string
+  assignees?:  { id: string; name: string; email: string }[]
+}
+
+export interface UserProject {
+  id:          string
+  title:       string
+  description: string | null
+  logoUrl:     string | null
+  status:      string
+  createdAt:   string
+  tasks:       UserProjectTask[]
+}
+
 export interface UserDetail extends User {
   updatedAt: string
+  stats?:    UserStats
+  projects?: UserProject[]
 }
 
 // ─── List response ────────────────────────────────────────────────────────────

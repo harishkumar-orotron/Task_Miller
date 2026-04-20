@@ -5,7 +5,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useLogoutMutation } from '../../queries/auth.queries'
 import { useMe } from '../../queries/users.queries'
 import UpdateProfileForm from '../users/UpdateProfileForm'
-import { formatDate, roleBadgeClasses } from '../../lib/utils'
+import { formatDate, roleBadgeClasses, userColor } from '../../lib/utils'
 
 const pageConfig: Record<string, { title: string; action?: string }> = {
   '/dashboard':    { title: 'Dashboard',     action: 'Add Task' },
@@ -71,7 +71,7 @@ export default function Topbar() {
               onClick={() => setMenuOpen(!menuOpen)}
               className="flex items-center gap-2 hover:bg-gray-50 px-2 py-1 rounded-lg transition-colors"
             >
-              <div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className={`w-8 h-8 ${userColor(profile?.id ?? '')} rounded-full flex items-center justify-center flex-shrink-0`}>
                 <span className="text-white text-sm font-semibold">
                   {displayName.charAt(0).toUpperCase()}
                 </span>

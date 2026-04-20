@@ -106,7 +106,7 @@ export default function TaskTable({
             >
               <Eye size={13} />
             </button>
-            {isAdmin && onEdit && (
+            {isAdmin && onEdit && task.status !== 'completed' && (
               <button
                 onClick={() => onEdit(task)}
                 className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-500 transition-colors"

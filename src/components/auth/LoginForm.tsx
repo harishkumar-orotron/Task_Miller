@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from '@tanstack/react-router'
+import { Eye, EyeOff } from 'lucide-react'
 import { useLoginMutation } from '../../queries/auth.queries'
 import type { ApiError } from '../../types/api.types'
 
@@ -11,8 +12,9 @@ const TEST_CREDENTIALS = [
 
 export default function LoginForm() {
   const navigate = useNavigate()
-  const [email, setEmail]       = useState('')
-  const [password, setPassword] = useState('')
+  const [email,       setEmail]       = useState('')
+  const [password,    setPassword]    = useState('')
+  const [showPass,    setShowPass]    = useState(false)
 
   const fillCredentials = (cred: typeof TEST_CREDENTIALS[number]) => {
     setEmail(cred.email)
@@ -93,14 +95,22 @@ export default function LoginForm() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              
-              className={`w-full border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-orange-400 transition-colors ${fieldErrors.password ? 'border-red-400' : 'border-gray-200'}`}
-            />
+            <div className="relative">
+              <input
+                type={showPass ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                className={`w-full border rounded-lg px-3 py-2.5 pr-10 text-sm outline-none focus:border-orange-400 transition-colors ${fieldErrors.password ? 'border-red-400' : 'border-gray-200'}`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {showPass ? <Eye size={15} /> : <EyeOff size={15} />}
+              </button>
+            </div>
             {fieldErrors.password && (
               <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>
             )}

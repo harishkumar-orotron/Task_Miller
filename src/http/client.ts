@@ -93,8 +93,21 @@ export const patch = <T>(path: string, body: unknown) => request<T>(path, { meth
 export const del   = <T>(path: string) => request<T>(path, { method: 'DELETE' })
 
 // ─── Silent refresh ───────────────────────────────────────────────────────────
+//
+// A single shared promise is reused for the duration of any in-flight refresh.
+// Without this, concurrent 401s each call the refresh endpoint independently —
+// if the backend rotates refresh tokens (single-use), only the first succeeds
+// and the rest invalidate the session, causing an unexpected logout.
 
-async function tryRefresh(): Promise<boolean> {
+let refreshPromise: Promise<boolean> | null = null
+
+function tryRefresh(): Promise<boolean> {
+  if (refreshPromise) return refreshPromise
+  refreshPromise = doRefresh().finally(() => { refreshPromise = null })
+  return refreshPromise
+}
+
+async function doRefresh(): Promise<boolean> {
   const refreshToken = authStore.state.refreshToken
   if (!refreshToken) return false
 

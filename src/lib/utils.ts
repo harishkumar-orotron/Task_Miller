@@ -34,8 +34,8 @@ export function userColor(id: string): string {
   return avatarColors[Math.abs(hash) % avatarColors.length]
 }
 
-export function toAvatarShape(users: { id: string; name: string }[]) {
-  return users.map((u) => ({ id: u.id, name: u.name, color: userColor(u.id) }))
+export function toAvatarShape(users: { id: string; name: string; email?: string }[]) {
+  return users.map((u) => ({ id: u.id, name: u.name, email: u.email ?? '', color: userColor(u.id) }))
 }
 
 // ─── Badge / color maps ───────────────────────────────────────────────────────

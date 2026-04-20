@@ -73,6 +73,8 @@ export interface TasksStats {
   onHold:     number
   overdue:    number
   completed:  number
+  onTime:     number
+  offTime:    number
 }
 
 export interface TasksResponse {
@@ -108,9 +110,10 @@ export interface CreateTaskBody {
 }
 
 export interface UpdateTaskBody {
-  title?:       string
-  description?: string
-  status?:      TaskStatus
-  priority?:    TaskPriority
-  dueDate?:     string
+  title?:            string
+  description?:      string
+  status?:           TaskStatus
+  priority?:         TaskPriority
+  dueDate?:          string
+  assignedUserIds?:  string[]
 }

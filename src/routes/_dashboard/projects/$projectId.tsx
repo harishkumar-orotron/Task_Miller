@@ -9,7 +9,7 @@ import { useAuth } from '../../../hooks/useAuth'
 import ProjectForm from '../../../components/projects/ProjectForm'
 import LoadingSpinner from '../../../components/common/LoadingSpinner'
 import ErrorMessage from '../../../components/common/ErrorMessage'
-import { avatarColors, formatDate, projectStatusBadge } from '../../../lib/utils'
+import { userColor, formatDate, projectStatusBadge } from '../../../lib/utils'
 import type { ApiError } from '../../../types/api.types'
 
 export const Route = createFileRoute('/_dashboard/projects/$projectId')({
@@ -165,7 +165,7 @@ function ProjectViewPage() {
               <div className="bg-gray-50 rounded-lg px-4 py-3">
                 <p className="text-xs text-gray-400 mb-1">Created By</p>
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-blue-400 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className={`w-6 h-6 ${userColor(project.creator.id)} rounded-full flex items-center justify-center flex-shrink-0`}>
                     <span className="text-white text-xs font-semibold">{project.creator.name.charAt(0).toUpperCase()}</span>
                   </div>
                   <p className="text-sm font-medium text-gray-700 truncate">{project.creator.name}</p>
@@ -213,7 +213,7 @@ function ProjectViewPage() {
                         <td className="px-5 py-3 text-gray-400 text-xs">{String(i + 1).padStart(2, '0')}</td>
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-2.5">
-                            <div className={`w-8 h-8 rounded-full ${avatarColors[i % avatarColors.length]} flex items-center justify-center flex-shrink-0`}>
+                            <div className={`w-8 h-8 rounded-full ${userColor(m.id)} flex items-center justify-center flex-shrink-0`}>
                               <span className="text-white text-xs font-semibold">{m.name.charAt(0).toUpperCase()}</span>
                             </div>
                             <span className="font-medium text-gray-700 whitespace-nowrap">{m.name}</span>

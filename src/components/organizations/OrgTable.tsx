@@ -1,7 +1,7 @@
 import { useNavigate } from '@tanstack/react-router'
 import { Building2, ArrowRight, Calendar } from 'lucide-react'
 import type { Organization } from '../../types/org.types'
-import { avatarColors, formatDate } from '../../lib/utils'
+import { userColor, formatDate } from '../../lib/utils'
 
 interface OrgTableProps {
   orgs: Organization[]
@@ -24,8 +24,8 @@ export default function OrgTable({ orgs }: OrgTableProps) {
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 p-5">
-      {orgs.map((org, i) => {
-        const color = avatarColors[i % avatarColors.length]
+      {orgs.map((org) => {
+        const color = userColor(org.id)
         return (
           <div
             key={org.id}
