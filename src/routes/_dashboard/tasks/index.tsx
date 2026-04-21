@@ -13,7 +13,6 @@ import { useDebounce } from '../../../hooks/useDebounce'
 import StatsCard from '../../../components/ui/StatsCard'
 import Pagination from '../../../components/ui/Pagination'
 import TaskTable from '../../../components/tasks/TaskTable'
-import TaskForm from '../../../components/tasks/TaskForm'
 import ConfirmDeleteModal from '../../../components/common/ConfirmDeleteModal'
 import LoadingSpinner from '../../../components/common/LoadingSpinner'
 import ErrorMessage from '../../../components/common/ErrorMessage'
@@ -21,6 +20,15 @@ import type { Task, TaskStatus } from '../../../types/task.types'
 import type { ApiError } from '../../../types/api.types'
 
 export const Route = createFileRoute('/_dashboard/tasks/')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    search:    (search.search as string) || '',
+    status:    ((search.status as string) || '') as TaskStatus | '',
+    projectId: (search.projectId as string) || '',
+    sortBy:    (search.sortBy as string) || '',
+    sortDir:   (search.sortDir as 'asc' | 'desc') || 'asc',
+    page:      Number(search.page)  || 1,
+    limit:     Number(search.limit) || 10,
+  }),
   component: TasksPage,
 })
 
@@ -31,36 +39,30 @@ function TasksPage() {
   const orgId          = isSuperAdmin && selectedOrg ? selectedOrg.id : undefined
   const assignedUserId = isDeveloper ? (user?.id ?? undefined) : undefined
 
-  const [search,     setSearch]     = useState('')
-  const [status,     setStatus]     = useState<TaskStatus | ''>('')
-  const [projectId,  setProjectId]  = useState('')
-  const [page,       setPage]       = useState(1)
-  const [limit,      setLimit]      = useState(10)
-  const [sorting,    setSorting]    = useState<SortingState>([])
-  const [showCreate, setShowCreate] = useState(false)
-  const [editTask,   setEditTask]   = useState<Task | null>(null)
+  const navigate = Route.useNavigate()
+  const { search, status, projectId, sortBy, sortDir, page, limit } = Route.useSearch()
   const [deleteTask, setDeleteTask] = useState<Task | null>(null)
 
-  useEffect(() => { setPage(1) }, [selectedOrg?.id])
+  const setParams = (params: Partial<{ search: string; status: TaskStatus | ''; projectId: string; sortBy: string; sortDir: 'asc' | 'desc'; page: number; limit: number }>) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    navigate({ search: (prev) => ({ ...prev, ...params }) as any })
 
-  useEffect(() => {
-    const handler = () => setShowCreate(true)
-    window.addEventListener('topbar-action', handler)
-    return () => window.removeEventListener('topbar-action', handler)
-  }, [])
+  const sorting: SortingState = sortBy ? [{ id: sortBy, desc: sortDir === 'desc' }] : []
+
+  useEffect(() => { setParams({ page: 1 }) }, [selectedOrg?.id])
+
 
   const debouncedSearch = useDebounce(search, 400)
 
-  const sortBy    = sorting[0]?.id
-  const sortOrder = sorting[0] ? (sorting[0].desc ? 'desc' : 'asc') : undefined
+  const sortOrder = sortBy ? sortDir : undefined
 
   const { data, isLoading, isFetching, isError, error } = useTasks({
     search:    debouncedSearch || undefined,
-    status:    status    || undefined,
-    projectId: projectId || undefined,
+    status:    status     || undefined,
+    projectId: projectId  || undefined,
     orgId,
     assignedUserId,
-    sortBy,
+    sortBy:    sortBy     || undefined,
     sortOrder,
     page,
     limit,
@@ -85,32 +87,32 @@ function TasksPage() {
   const taskStats = data?.stats
 
   const stats = [
-    { label: 'Total Tasks',  value: taskStats?.total      ?? 0, iconBg: 'bg-purple-100', icon: <ListTodo     size={18} className="text-purple-500" /> },
-    { label: 'To Do',        value: taskStats?.todo        ?? 0, iconBg: 'bg-blue-100',   icon: <ListTodo     size={18} className="text-blue-500"   /> },
-    { label: 'In Progress',  value: taskStats?.inProgress  ?? 0, iconBg: 'bg-orange-100', icon: <Timer        size={18} className="text-orange-500" /> },
-    { label: 'On Hold',      value: taskStats?.onHold      ?? 0, iconBg: 'bg-yellow-100', icon: <PauseCircle  size={18} className="text-yellow-500" /> },
-    { label: 'Overdue',      value: taskStats?.overdue     ?? 0, iconBg: 'bg-red-100',    icon: <AlertCircle  size={18} className="text-red-500"    /> },
-    { label: 'Completed',    value: taskStats?.completed   ?? 0, iconBg: 'bg-green-100',  icon: <CheckCircle2 size={18} className="text-green-500"  /> },
+    { label: 'Total Tasks',  value: taskStats?.total      ?? 0, iconBg: 'bg-purple-100', icon: <ListTodo     size={17} className="text-purple-500" /> },
+    { label: 'To Do',        value: taskStats?.todo        ?? 0, iconBg: 'bg-blue-100',   icon: <ListTodo     size={17} className="text-blue-500"   /> },
+    { label: 'In Progress',  value: taskStats?.inProgress  ?? 0, iconBg: 'bg-orange-100', icon: <Timer        size={17} className="text-orange-500" /> },
+    { label: 'On Hold',      value: taskStats?.onHold      ?? 0, iconBg: 'bg-yellow-100', icon: <PauseCircle  size={17} className="text-yellow-500" /> },
+    { label: 'Overdue',      value: taskStats?.overdue     ?? 0, iconBg: 'bg-red-100',    icon: <AlertCircle  size={17} className="text-red-500"    /> },
+    { label: 'Completed',    value: taskStats?.completed   ?? 0, iconBg: 'bg-green-100',  icon: <CheckCircle2 size={17} className="text-green-500"  /> },
   ]
 
   const handleDelete        = () => {
     if (!deleteTask) return
     deleteTaskMutation(deleteTask.id, { onSuccess: () => setDeleteTask(null) })
   }
-  const handleSearch        = (val: string) => { setSearch(val);  setPage(1) }
-  const handleStatusChange  = (val: string) => { setStatus(val as TaskStatus | ''); setPage(1) }
-  const handleProjectChange = (val: string) => { setProjectId(val); setPage(1) }
-  const handleLimit         = (val: number) => { setLimit(val);  setPage(1) }
+  const handleSearch        = (val: string) => setParams({ search: val, page: 1 })
+  const handleStatusChange  = (val: string) => setParams({ status: val as TaskStatus | '', page: 1 })
+  const handleProjectChange = (val: string) => setParams({ projectId: val, page: 1 })
+  const handleLimit         = (val: number) => setParams({ limit: val, page: 1 })
   const handleSorting       = (updater: any) => {
-    setSorting(updater)
-    setPage(1)
+    const next: SortingState = typeof updater === 'function' ? updater(sorting) : updater
+    setParams({ sortBy: next[0]?.id || '', sortDir: next[0]?.desc ? 'desc' : 'asc', page: 1 })
   }
 
   return (
     <div className="space-y-5">
 
       {/* Stats */}
-      <div className="flex gap-3 overflow-x-auto pb-1">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
         {stats.map((s) => <StatsCard key={s.label} {...s} />)}
       </div>
 
@@ -141,7 +143,7 @@ function TasksPage() {
                 onChange={(e) => handleStatusChange(e.target.value)}
                 className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-500 bg-gray-50 outline-none cursor-pointer"
               >
-                <option value="">Select Status</option>
+                <option value="">All Status</option>
                 <option value="to_do">To Do</option>
                 <option value="in_progress">In Progress</option>
                 <option value="on_hold">On Hold</option>
@@ -157,7 +159,7 @@ function TasksPage() {
                 onChange={(e) => handleProjectChange(e.target.value)}
                 className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-500 bg-gray-50 outline-none cursor-pointer"
               >
-                <option value="">Select Project</option>
+                <option value="">All Projects</option>
                 {projects.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
               </select>
               <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
@@ -165,7 +167,7 @@ function TasksPage() {
 
             {isAdmin && (
               <button
-                onClick={() => setShowCreate(true)}
+                onClick={() => navigate({ to: '/tasks/new' })}
                 className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800"
               >
                 <Plus size={13} /> Add Task
@@ -190,7 +192,7 @@ function TasksPage() {
             isAdmin={isAdmin}
             sorting={sorting}
             onSortingChange={handleSorting}
-            onEdit={setEditTask}
+            onEdit={(task) => navigate({ to: '/tasks/$taskId/edit', params: { taskId: task.id } })}
             onDelete={setDeleteTask}
           />
         )}
@@ -206,14 +208,12 @@ function TasksPage() {
             limit={limit}
             hasPrevPage={pagination?.hasPrevPage}
             hasNextPage={pagination?.hasNextPage}
-            onPageChange={setPage}
+            onPageChange={(p) => setParams({ page: p })}
             onLimitChange={handleLimit}
           />
         )}
       </div>
 
-      {showCreate  && <TaskForm onClose={() => setShowCreate(false)} />}
-      {editTask    && <TaskForm task={editTask} onClose={() => setEditTask(null)} />}
       {deleteTask  && (
         <ConfirmDeleteModal
           title="Delete Task"

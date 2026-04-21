@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import {
   Search, ChevronDown,
@@ -13,10 +13,18 @@ import { useDebounce } from '../../hooks/useDebounce'
 import StatsCard from '../../components/ui/StatsCard'
 import Pagination from '../../components/ui/Pagination'
 import TaskTable from '../../components/tasks/TaskTable'
-import TaskForm from '../../components/tasks/TaskForm'
 import type { TaskStatus } from '../../types/task.types'
 
 export const Route = createFileRoute('/_dashboard/dashboard')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    search:        (search.search as string) || '',
+    statusFilter:  ((search.statusFilter as string) || '') as TaskStatus | '',
+    projectFilter: (search.projectFilter as string) || '',
+    sortBy:        (search.sortBy as string) || '',
+    sortDir:       (search.sortDir as 'asc' | 'desc') || 'asc',
+    page:          Number(search.page)  || 1,
+    limit:         Number(search.limit) || 10,
+  }),
   component: DashboardPage,
 })
 
@@ -27,26 +35,19 @@ function DashboardPage() {
   const orgId          = isSuperAdmin && selectedOrg ? selectedOrg.id : undefined
   const assignedUserId = isDeveloper ? (user?.id ?? undefined) : undefined
 
-  const [search,        setSearch]        = useState('')
-  const [statusFilter,  setStatusFilter]  = useState<TaskStatus | ''>('')
-  const [projectFilter, setProjectFilter] = useState('')
-  const [page,          setPage]          = useState(1)
-  const [limit,         setLimit]         = useState(10)
-  const [sorting,       setSorting]       = useState<SortingState>([])
-  const [showCreate,    setShowCreate]    = useState(false)
+  const navigate = Route.useNavigate()
+  const { search, statusFilter, projectFilter, sortBy, sortDir, page, limit } = Route.useSearch()
+  const setParams = (params: Partial<{ search: string; statusFilter: TaskStatus | ''; projectFilter: string; sortBy: string; sortDir: 'asc' | 'desc'; page: number; limit: number }>) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    navigate({ search: (prev) => ({ ...prev, ...params }) as any })
 
-  useEffect(() => { setPage(1) }, [selectedOrg?.id])
+  const sorting: SortingState = sortBy ? [{ id: sortBy, desc: sortDir === 'desc' }] : []
 
-  useEffect(() => {
-    const handler = () => setShowCreate(true)
-    window.addEventListener('topbar-action', handler)
-    return () => window.removeEventListener('topbar-action', handler)
-  }, [])
+  useEffect(() => { setParams({ page: 1 }) }, [selectedOrg?.id])
 
   const debouncedSearch = useDebounce(search, 400)
 
-  const sortBy    = sorting[0]?.id
-  const sortOrder = sorting[0] ? (sorting[0].desc ? 'desc' : 'asc') : undefined
+  const sortOrder = sortBy ? sortDir : undefined
 
   const { data: tasksData, isLoading: isLoadingTasks, isFetching } = useTasks({
     search:    debouncedSearch || undefined,
@@ -54,7 +55,7 @@ function DashboardPage() {
     projectId: projectFilter   || undefined,
     orgId,
     assignedUserId,
-    sortBy,
+    sortBy:    sortBy || undefined,
     sortOrder,
     page,
     limit,
@@ -86,34 +87,37 @@ function DashboardPage() {
   const endEntry     = Math.min(activePage * activeLimit, totalRecords)
 
   const stats = [
-    { label: 'Projects',         value: totalProjects,   iconBg: 'bg-pink-100',   icon: <FolderKanban size={18} className="text-pink-500"   /> },
-    { label: 'Tasks',            value: totalTasks,      iconBg: 'bg-orange-100', icon: <ListTodo     size={18} className="text-orange-500" /> },
-    { label: 'Completed',        value: completedCount,  iconBg: 'bg-green-100',  icon: <CheckCircle2 size={18} className="text-green-500"  /> },
-    { label: 'To Do',            value: todoCount,       iconBg: 'bg-gray-100',   icon: <Hourglass    size={18} className="text-gray-500"   /> },
-    { label: 'In Progress',      value: inProgressCount, iconBg: 'bg-blue-100',   icon: <Timer        size={18} className="text-blue-500"   /> },
-    { label: 'On Hold',          value: onHoldCount,     iconBg: 'bg-yellow-100', icon: <PauseCircle  size={18} className="text-yellow-500" /> },
-    { label: 'Overdue',          value: overdueCount,    iconBg: 'bg-red-100',    icon: <AlertCircle  size={18} className="text-red-500"    /> },
-    { label: 'On Time',          value: onTimeCount,     iconBg: 'bg-teal-100',   icon: <Clock        size={18} className="text-teal-500"   /> },
-    { label: 'Off Time',         value: offTimeCount,    iconBg: 'bg-purple-100', icon: <Timer        size={18} className="text-purple-500" /> },
+    { label: 'Projects',         value: totalProjects,   iconBg: 'bg-pink-100',   icon: <FolderKanban size={17} className="text-pink-500"   /> },
+    { label: 'Tasks',            value: totalTasks,      iconBg: 'bg-orange-100', icon: <ListTodo     size={17} className="text-orange-500" /> },
+    { label: 'Completed',        value: completedCount,  iconBg: 'bg-green-100',  icon: <CheckCircle2 size={17} className="text-green-500"  /> },
+    { label: 'To Do',            value: todoCount,       iconBg: 'bg-gray-100',   icon: <Hourglass    size={17} className="text-gray-500"   /> },
+    { label: 'In Progress',      value: inProgressCount, iconBg: 'bg-blue-100',   icon: <Timer        size={17} className="text-blue-500"   /> },
+    { label: 'On Hold',          value: onHoldCount,     iconBg: 'bg-yellow-100', icon: <PauseCircle  size={17} className="text-yellow-500" /> },
+    { label: 'Overdue',          value: overdueCount,    iconBg: 'bg-red-100',    icon: <AlertCircle  size={17} className="text-red-500"    /> },
+    { label: 'On Time',          value: onTimeCount,     iconBg: 'bg-teal-100',   icon: <Clock        size={17} className="text-teal-500"   /> },
+    { label: 'Off Time',         value: offTimeCount,    iconBg: 'bg-purple-100', icon: <Timer        size={17} className="text-purple-500" /> },
     {
       label: 'Completion\nRate',
       value: `${totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0}%`,
       iconBg: 'bg-indigo-100',
-      icon: <TrendingUp size={18} className="text-indigo-500" />,
+      icon: <TrendingUp size={17} className="text-indigo-500" />,
     },
   ]
 
-  const handleSearch        = (val: string)          => { setSearch(val);        setPage(1) }
-  const handleStatusChange  = (val: TaskStatus | '') => { setStatusFilter(val);  setPage(1) }
-  const handleProjectChange = (val: string)          => { setProjectFilter(val); setPage(1) }
-  const handleLimit         = (val: number)          => { setLimit(val);         setPage(1) }
-  const handleSorting       = (updater: any)         => { setSorting(updater);   setPage(1) }
+  const handleSearch        = (val: string)          => setParams({ search: val,        page: 1 })
+  const handleStatusChange  = (val: TaskStatus | '') => setParams({ statusFilter: val,  page: 1 })
+  const handleProjectChange = (val: string)          => setParams({ projectFilter: val, page: 1 })
+  const handleLimit         = (val: number)          => setParams({ limit: val,         page: 1 })
+  const handleSorting       = (updater: any)         => {
+    const next: SortingState = typeof updater === 'function' ? updater(sorting) : updater
+    setParams({ sortBy: next[0]?.id || '', sortDir: next[0]?.desc ? 'desc' : 'asc', page: 1 })
+  }
 
   return (
     <div className="space-y-5">
 
       {/* Stats */}
-      <div className="grid grid-cols-10 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-5 xl:grid-cols-10 gap-3">
         {stats.map((s) => <StatsCard key={s.label} {...s} />)}
       </div>
 
@@ -196,14 +200,13 @@ function DashboardPage() {
             limit={limit}
             hasPrevPage={pagination?.hasPrevPage}
             hasNextPage={pagination?.hasNextPage}
-            onPageChange={setPage}
+            onPageChange={(p) => setParams({ page: p })}
             onLimitChange={handleLimit}
           />
         )}
 
       </div>
 
-      {showCreate && <TaskForm onClose={() => setShowCreate(false)} />}
     </div>
   )
 }

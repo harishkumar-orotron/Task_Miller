@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Plus, Search, ChevronDown } from 'lucide-react'
 import { useOrgs } from '../../../queries/orgs.queries'
 import { useDebounce } from '../../../hooks/useDebounce'
 import OrgTable from '../../../components/organizations/OrgTable'
 import Pagination from '../../../components/ui/Pagination'
-import OrgForm from '../../../components/organizations/OrgForm'
 import LoadingSpinner from '../../../components/common/LoadingSpinner'
 import ErrorMessage from '../../../components/common/ErrorMessage'
 import type { ApiError } from '../../../types/api.types'
@@ -26,7 +25,7 @@ function OrganizationsPage() {
   const [sortIdx,   setSortIdx]   = useState(2)
   const [page,      setPage]      = useState(1)
   const [limit,     setLimit]     = useState(10)
-  const [showForm,  setShowForm]  = useState(false)
+  const navigate = useNavigate()
 
   const debouncedSearch = useDebounce(search, 400)
   const { sortBy, order } = sortOptions[sortIdx]
@@ -89,7 +88,7 @@ function OrganizationsPage() {
             </div>
 
             <button
-              onClick={() => setShowForm(true)}
+              onClick={() => navigate({ to: '/organizations/new' })}
               className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors"
             >
               <Plus size={13} /> Add Organization
@@ -129,7 +128,6 @@ function OrganizationsPage() {
 
       </div>
 
-      {showForm && <OrgForm onClose={() => setShowForm(false)} />}
     </div>
   )
 }

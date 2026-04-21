@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { authStore } from '../../../store/auth.store'
 import { Plus, Search, ChevronDown } from 'lucide-react'
@@ -9,7 +9,6 @@ import { useDebounce } from '../../../hooks/useDebounce'
 import { useAuth } from '../../../hooks/useAuth'
 import UserTable from '../../../components/users/UserTable'
 import Pagination from '../../../components/ui/Pagination'
-import UserForm from '../../../components/users/UserForm'
 import LoadingSpinner from '../../../components/common/LoadingSpinner'
 import ErrorMessage from '../../../components/common/ErrorMessage'
 import type { ApiError } from '../../../types/api.types'
@@ -18,8 +17,16 @@ import type { UserStatus } from '../../../types/user.types'
 export const Route = createFileRoute('/_dashboard/users/')({
   beforeLoad: () => {
     const role = authStore.state.user?.role
-    if (role === 'developer') throw redirect({ to: '/dashboard' })
+    if (role === 'developer') throw redirect({ to: '/dashboard', search: {} as any })
   },
+  validateSearch: (search: Record<string, unknown>) => ({
+    search:  (search.search as string) || '',
+    filter:  (search.filter as UserFilter) || '' as UserFilter,
+    sortBy:  (search.sortBy as string) || '',
+    sortDir: (search.sortDir as 'asc' | 'desc') || 'asc',
+    page:    Number(search.page)  || 1,
+    limit:   Number(search.limit) || 10,
+  }),
   component: UsersPage,
 })
 
@@ -28,33 +35,28 @@ type UserFilter = UserStatus | 'unassigned' | ''
 function UsersPage() {
   const { isAdmin, isSuperAdmin, user: me } = useAuth()
   const { selectedOrg } = useOrgContext()
-  const [search,     setSearch]     = useState('')
-  const [filter,     setFilter]     = useState<UserFilter>('')
-  const [page,       setPage]       = useState(1)
-  const [limit,      setLimit]      = useState(10)
-  const [sorting,    setSorting]    = useState<SortingState>([])
-  const [showForm,   setShowForm]   = useState(false)
+  const navigate = Route.useNavigate()
+  const { search, filter, sortBy, sortDir, page, limit } = Route.useSearch()
 
-  // Reset page when selected org changes
-  useEffect(() => { setPage(1) }, [selectedOrg?.id])
+  const setParams = (params: Partial<{ search: string; filter: UserFilter; sortBy: string; sortDir: 'asc' | 'desc'; page: number; limit: number }>) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    navigate({ search: (prev) => ({ ...prev, ...params }) as any })
 
-  useEffect(() => {
-    const handler = () => setShowForm(true)
-    window.addEventListener('topbar-action', handler)
-    return () => window.removeEventListener('topbar-action', handler)
-  }, [])
+  const sorting: SortingState = sortBy ? [{ id: sortBy, desc: sortDir === 'desc' }] : []
+
+  useEffect(() => { setParams({ page: 1 }) }, [selectedOrg?.id])
+
 
   const debouncedSearch = useDebounce(search, 400)
 
-  const sortBy    = sorting[0]?.id
-  const sortOrder = sorting[0] ? (sorting[0].desc ? 'desc' : 'asc') : undefined
+  const sortOrder = sortBy ? sortDir : undefined
 
   const { data, isLoading, isFetching, error } = useUsers({
     search:     debouncedSearch || undefined,
     status:     filter === 'active' || filter === 'inactive' ? filter : undefined,
     unassigned: filter === 'unassigned' ? true : undefined,
     orgId:      isSuperAdmin && selectedOrg ? selectedOrg.id : undefined,
-    sortBy,
+    sortBy:     sortBy || undefined,
     sortOrder,
     page,
     limit,
@@ -70,10 +72,13 @@ function UsersPage() {
   const startEntry   = totalRecords === 0 ? 0 : (activePage - 1) * activeLimit + 1
   const endEntry     = Math.min(activePage * activeLimit, totalRecords)
 
-  const handleSearch  = (val: string)     => { setSearch(val);  setPage(1) }
-  const handleFilter  = (val: UserFilter) => { setFilter(val);  setPage(1) }
-  const handleLimit   = (val: number)     => { setLimit(val);   setPage(1) }
-  const handleSorting = (updater: any)    => { setSorting(updater); setPage(1) }
+  const handleSearch  = (val: string)     => setParams({ search: val, page: 1 })
+  const handleFilter  = (val: UserFilter) => setParams({ filter: val, page: 1 })
+  const handleLimit   = (val: number)     => setParams({ limit: val, page: 1 })
+  const handleSorting = (updater: any)    => {
+    const next: SortingState = typeof updater === 'function' ? updater(sorting) : updater
+    setParams({ sortBy: next[0]?.id || '', sortDir: next[0]?.desc ? 'desc' : 'asc', page: 1 })
+  }
 
   return (
     <div className="bg-white rounded-xl border border-gray-100">
@@ -114,7 +119,7 @@ function UsersPage() {
 
           {isAdmin && (
             <button
-              onClick={() => setShowForm(true)}
+              onClick={() => navigate({ to: '/users/new' })}
               className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors"
             >
               <Plus size={13} /> Add User
@@ -160,12 +165,11 @@ function UsersPage() {
           limit={limit}
           hasPrevPage={pagination?.hasPrevPage}
           hasNextPage={pagination?.hasNextPage}
-          onPageChange={setPage}
+          onPageChange={(p) => setParams({ page: p })}
           onLimitChange={handleLimit}
         />
       )}
 
-      {showForm && <UserForm onClose={() => setShowForm(false)} />}
     </div>
   )
 }

@@ -7,12 +7,12 @@ import { useMe } from '../../queries/users.queries'
 import UpdateProfileForm from '../users/UpdateProfileForm'
 import { formatDate, roleBadgeClasses, userColor } from '../../lib/utils'
 
-const pageConfig: Record<string, { title: string; action?: string }> = {
-  '/dashboard':    { title: 'Dashboard',     action: 'Add Task' },
-  '/tasks':        { title: 'Tasks',         action: 'Add Task' },
-  '/projects':     { title: 'Projects',      action: 'Add Project' },
-  '/users':        { title: 'Users',         action: 'Add User' },
-  '/organizations':{ title: 'Organizations' },
+const pageConfig: Record<string, { title: string; action?: string; actionTo?: string }> = {
+  '/dashboard':    { title: 'Dashboard',     action: 'Add Task',    actionTo: '/tasks/new'         },
+  '/tasks':        { title: 'Tasks',         action: 'Add Task',    actionTo: '/tasks/new'         },
+  '/projects':     { title: 'Projects',      action: 'Add Project', actionTo: '/projects/new'      },
+  '/users':        { title: 'Users',         action: 'Add User',    actionTo: '/users/new'         },
+  '/organizations':{ title: 'Organizations'                                                        },
 }
 
 
@@ -49,9 +49,9 @@ export default function Topbar() {
         <div className="flex items-center gap-3">
 
           {/* Action button — admin+ only */}
-          {showAction && (
+          {showAction && config.actionTo && (
             <button
-              onClick={() => window.dispatchEvent(new CustomEvent('topbar-action'))}
+              onClick={() => navigate({ to: config.actionTo as any })}
               className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
             >
               <Plus size={15} />

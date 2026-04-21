@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Search, UserPlus, ShieldCheck, Code2 } from 'lucide-react'
+import { Search, UserPlus, ShieldCheck, Code2 } from 'lucide-react'
 import { useUnassignedUsers, useAssignAdminMutation, useAddDeveloperMutation } from '../../queries/orgs.queries'
 import { avatarColors } from '../../lib/utils'
 import type { ApiError } from '../../types/api.types'
@@ -48,20 +48,14 @@ export default function AddMemberModal({ mode, orgId, onClose }: AddMemberModalP
     : 'bg-green-600 hover:bg-green-700'
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl flex flex-col max-h-[80vh]">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-2.5">
-            <div className={`w-7 h-7 rounded-lg ${iconBg} flex items-center justify-center flex-shrink-0`}>
-              <Icon size={14} className={iconCls} />
-            </div>
-            <h2 className="text-base font-semibold text-gray-800">{title}</h2>
+        <div className="flex items-center gap-2.5 px-5 py-4 border-b border-gray-100">
+          <div className={`w-7 h-7 rounded-lg ${iconBg} flex items-center justify-center flex-shrink-0`}>
+            <Icon size={14} className={iconCls} />
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={18} />
-          </button>
+          <h2 className="text-base font-semibold text-gray-800">{title}</h2>
         </div>
 
         {/* Search */}
@@ -148,7 +142,6 @@ export default function AddMemberModal({ mode, orgId, onClose }: AddMemberModalP
           </button>
         </div>
 
-      </div>
     </div>
   )
 }

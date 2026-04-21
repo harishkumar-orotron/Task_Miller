@@ -21,7 +21,7 @@ import type { ApiError }                      from '../../../types/api.types'
 export const Route = createFileRoute('/_dashboard/users/$userId')({
   beforeLoad: () => {
     const role = authStore.state.user?.role
-    if (role === 'developer') throw redirect({ to: '/dashboard' })
+    if (role === 'developer') throw redirect({ to: '/dashboard', search: {} as any })
   },
   component: UserDetailPage,
 })
@@ -145,7 +145,7 @@ function UserDetailPage() {
 
   if (error || !user) return (
     <div className="space-y-4">
-      <button onClick={() => navigate({ to: '/users' })} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700">
+      <button onClick={() => navigate({ to: '/users', search: {} as any })} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700">
         <ArrowLeft size={15} /> Back to Users
       </button>
       <ErrorMessage message={(error as ApiError)?.message ?? 'User not found'} />
@@ -175,7 +175,7 @@ function UserDetailPage() {
 
       {/* Back */}
       <button
-        onClick={() => navigate({ to: '/users' })}
+        onClick={() => navigate({ to: '/users', search: {} as any })}
         className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700"
       >
         <ArrowLeft size={15} /> Back to Users

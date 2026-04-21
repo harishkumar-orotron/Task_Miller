@@ -5,7 +5,6 @@ import {
   Plus, Trash2, AlertTriangle, UserPlus,
 } from 'lucide-react'
 import { useOrg, useOrgs, useRemoveMemberMutation, useDeleteOrgMutation } from '../../../queries/orgs.queries'
-import AddMemberModal from '../../../components/organizations/AddMemberModal'
 import { useAuth } from '../../../hooks/useAuth'
 import LoadingSpinner from '../../../components/common/LoadingSpinner'
 import ErrorMessage from '../../../components/common/ErrorMessage'
@@ -31,7 +30,6 @@ function OrgDetailPage() {
   const { mutate: removeMember, isPending: isRemoving } = useRemoveMemberMutation()
   const { mutate: deleteOrg,   isPending: isDeleting  } = useDeleteOrgMutation()
 
-  const [modal,         setModal]         = useState<'admin' | 'developer' | null>(null)
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -142,7 +140,7 @@ function OrgDetailPage() {
               </h3>
               {isSuperAdmin && (
                 <button
-                  onClick={() => setModal('admin')}
+                  onClick={() => navigate({ to: '/organizations/$orgId/add-member', params: { orgId: slug }, search: { mode: 'admin' } })}
                   disabled={!!adminMember}
                   title={adminMember ? 'This org already has an admin' : 'Assign admin'}
                   className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
@@ -184,7 +182,7 @@ function OrgDetailPage() {
               </h3>
               {isAdmin && (
                 <button
-                  onClick={() => setModal('developer')}
+                  onClick={() => navigate({ to: '/organizations/$orgId/add-member', params: { orgId: slug }, search: { mode: 'developer' } })}
                   className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-green-200 text-green-600 hover:bg-green-50 transition-colors"
                 >
                   <Plus size={13} /> Add Developer
@@ -301,14 +299,6 @@ function OrgDetailPage() {
         </div>
 
       </div>
-
-      {modal && (
-        <AddMemberModal
-          mode={modal}
-          orgId={resolvedId}
-          onClose={() => setModal(null)}
-        />
-      )}
 
     </div>
   )

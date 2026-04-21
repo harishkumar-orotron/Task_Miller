@@ -9,13 +9,13 @@ interface StatsCardProps {
 
 export default function StatsCard({ label, value, iconBg, icon }: StatsCardProps) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex items-center gap-3 min-w-[130px]">
-      <div className={`w-10 h-10 rounded-full ${iconBg} flex items-center justify-center flex-shrink-0`}>
+    <div className="bg-white rounded-xl border border-gray-100 px-4 py-4 flex flex-col gap-3">
+      <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center`}>
         {icon}
       </div>
       <div>
-        <p className="text-xs text-gray-500 font-medium">{label}</p>
-        <p className="text-xl font-bold text-gray-800">{value}</p>
+        <p className="text-2xl font-bold text-gray-800 leading-none">{value}</p>
+        <p className="text-xs text-gray-400 font-medium mt-1 leading-tight">{label}</p>
       </div>
     </div>
   )

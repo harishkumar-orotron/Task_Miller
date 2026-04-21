@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, ChevronDown, Check } from 'lucide-react'
+import { ChevronDown, Check } from 'lucide-react'
 import { useCreateTaskMutation, useUpdateTaskMutation } from '../../queries/tasks.queries'
 import { useProjects } from '../../queries/projects.queries'
 import { useUsers } from '../../queries/users.queries'
@@ -108,16 +108,12 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md px-6 pb-6 shadow-xl max-h-[90vh] overflow-y-auto">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 pb-6">
 
-        <div className="sticky top-0 bg-white z-10 flex items-center justify-between pt-6 pb-4">
+        <div className="flex items-center pt-6 pb-4 border-b border-gray-100 mb-2">
           <h2 className="text-base font-semibold text-gray-800">
             {isEdit ? 'Edit Task' : isSubtask ? 'Add Subtask' : 'Create Task'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={18} />
-          </button>
         </div>
 
         {errorMessage && Object.keys(fieldErrors).length === 0 && (
@@ -173,7 +169,9 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
                 </button>
 
                 {projectOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                  <>
+                  <div className="fixed inset-0 z-[9]" onClick={() => setProjectOpen(false)} />
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[10] max-h-48 overflow-y-auto">
                     {projects.length === 0 ? (
                       <p className="text-sm text-gray-400 px-3 py-3">No projects found</p>
                     ) : (
@@ -190,6 +188,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
                       ))
                     )}
                   </div>
+                  </>
                 )}
               </div>
               {fieldErrors.projectId && <p className="text-xs text-red-500 mt-1">{fieldErrors.projectId}</p>}
@@ -283,7 +282,9 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
               </button>
 
               {memberOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-52 overflow-y-auto">
+                <>
+                <div className="fixed inset-0 z-[9]" onClick={() => setMemberOpen(false)} />
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[10] max-h-52 overflow-y-auto">
                   {users.length === 0 ? (
                     <p className="text-sm text-gray-400 px-3 py-3">No users found</p>
                   ) : (
@@ -308,6 +309,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
                     ))
                   )}
                 </div>
+                </>
               )}
             </div>
           </div>
@@ -332,7 +334,6 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
           </div>
 
         </form>
-      </div>
     </div>
   )
 }

@@ -9,7 +9,6 @@ import { useAuth } from '../../../hooks/useAuth'
 import StatusBadge from '../../../components/ui/StatusBadge'
 import PriorityBadge from '../../../components/ui/PriorityBadge'
 import AvatarStack from '../../../components/ui/AvatarStack'
-import TaskForm from '../../../components/tasks/TaskForm'
 import CommentsSection from '../../../components/tasks/CommentsSection'
 import LoadingSpinner from '../../../components/common/LoadingSpinner'
 import ErrorMessage from '../../../components/common/ErrorMessage'
@@ -39,9 +38,10 @@ const statusSelectClass: Record<TaskStatus, string> = {
 
 function allowedStatuses(current: TaskStatus): TaskStatus[] {
   return allStatusOptions.filter((s) => {
-    if (current === 'in_progress' && s === 'to_do') return false
-    if (current === 'on_hold' && s !== 'in_progress' && s !== 'on_hold') return false
-    if (current === 'completed' && s === 'to_do') return false
+    if (current === 'in_progress' && s === 'to_do')  return false
+    if (current === 'on_hold'   && s !== 'in_progress' && s !== 'on_hold') return false
+    if (current === 'completed' && s === 'to_do')    return false
+    if (current === 'overdue'   && s === 'to_do')    return false
     return true
   })
 }
@@ -82,6 +82,9 @@ function SubtaskCard({
               onChange={(e) => onStatusChange(subtask.id, e.target.value as TaskStatus)}
               className={`appearance-none border rounded-full pl-3 pr-6 py-1 text-xs font-medium outline-none cursor-pointer transition-colors ${statusSelectClass[subtask.status]}`}
             >
+              {subtask.status === 'overdue' && (
+                <option value="overdue" disabled>Overdue</option>
+              )}
               {allowedStatuses(subtask.status).map((s) => (
                 <option key={s} value={s}>{statusLabel(s)}</option>
               ))}
@@ -124,11 +127,8 @@ function TaskViewPage() {
   const navigate   = useNavigate()
   const { isAdmin, isDeveloper, user } = useAuth()
 
-  const [activeTab,      setActiveTab]      = useState<Tab>('subtasks')
-  const [showEditTask,   setShowEditTask]   = useState(false)
-  const [showAddSubtask, setShowAddSubtask] = useState(false)
-  const [editSubtask,    setEditSubtask]    = useState<Subtask | null>(null)
-  const [statusError,    setStatusError]    = useState<string | null>(null)
+  const [activeTab,   setActiveTab]   = useState<Tab>('subtasks')
+  const [statusError, setStatusError] = useState<string | null>(null)
 
   const { data: task, isLoading, isError, error } = useTask(taskId)
   const { data: projectsData } = useProjects({ limit: 100 })
@@ -168,7 +168,7 @@ function TaskViewPage() {
 
   if (isError || !task) return (
     <div className="py-8">
-      <button onClick={() => navigate({ to: '/tasks' })} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4">
+      <button onClick={() => navigate({ to: '/tasks', search: {} as any })} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4">
         <ArrowLeft size={15} /> Back to Tasks
       </button>
       <ErrorMessage message={(error as ApiError)?.message ?? 'Task not found'} />
@@ -180,7 +180,7 @@ function TaskViewPage() {
 
       {/* Back */}
       <button
-        onClick={() => navigate({ to: '/tasks' })}
+        onClick={() => navigate({ to: '/tasks', search: {} as any })}
         className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700"
       >
         <ArrowLeft size={15} /> Back to Tasks
@@ -206,6 +206,9 @@ function TaskViewPage() {
                         onChange={(e) => handleStatusChange(e.target.value as TaskStatus)}
                         className={`appearance-none border rounded-lg pl-3 pr-8 py-1.5 text-sm font-medium outline-none cursor-pointer ${statusSelectClass[task.status]}`}
                       >
+                        {task.status === 'overdue' && (
+                          <option value="overdue" disabled>Overdue</option>
+                        )}
                         {allowedStatuses(task.status).map((s) => (
                           <option key={s} value={s}>{statusLabel(s)}</option>
                         ))}
@@ -214,7 +217,7 @@ function TaskViewPage() {
                     </div>
                     {isAdmin && (
                       <button
-                        onClick={() => setShowEditTask(true)}
+                        onClick={() => navigate({ to: '/tasks/$taskId/edit', params: { taskId } })}
                         className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-colors"
                         title="Edit task"
                       >
@@ -329,7 +332,7 @@ function TaskViewPage() {
               <div className="mt-4 space-y-3">
                 {isAdmin && task.status !== 'completed' && (
                   <button
-                    onClick={() => setShowAddSubtask(true)}
+                    onClick={() => navigate({ to: '/tasks/$taskId/subtask', params: { taskId } })}
                     className="flex items-center gap-1.5 text-xs font-medium text-orange-500 hover:text-orange-600 border border-orange-200 bg-orange-50 rounded-lg px-3 py-1.5 transition-colors"
                   >
                     <Plus size={13} /> Add Subtask
@@ -342,7 +345,7 @@ function TaskViewPage() {
                     <SubtaskCard
                       key={s.id}
                       subtask={s}
-                      onEdit={(sub) => setEditSubtask(sub)}
+                      onEdit={(sub) => navigate({ to: '/tasks/$taskId/edit', params: { taskId: sub.id } })}
                       onStatusChange={handleSubtaskStatusChange}
                       isAdmin={isAdmin}
                     />
@@ -401,33 +404,6 @@ function TaskViewPage() {
         </div>
 
       </div>
-
-      {/* Edit task modal */}
-      {showEditTask && (
-        <TaskForm task={task} onClose={() => setShowEditTask(false)} />
-      )}
-
-      {/* Add subtask modal */}
-      {showAddSubtask && (
-        <TaskForm
-          parentTaskId={task.id}
-          projectId={task.projectId}
-          onClose={() => setShowAddSubtask(false)}
-        />
-      )}
-
-      {/* Edit subtask modal */}
-      {editSubtask && (
-        <TaskForm
-          task={{
-            ...editSubtask,
-            parentTaskId: editSubtask.parentTaskId,
-            creator: task.creator,
-            deletedAt: null,
-          }}
-          onClose={() => setEditSubtask(null)}
-        />
-      )}
 
     </div>
   )

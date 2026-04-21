@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { X } from 'lucide-react'
 import { useCreateOrgMutation } from '../../queries/orgs.queries'
 import { toSlug } from '../../lib/utils'
 import type { ApiError } from '../../types/api.types'
@@ -28,14 +27,10 @@ export default function OrgForm({ onClose }: OrgFormProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md px-6 pb-6 shadow-xl max-h-[90vh] overflow-y-auto">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 pb-6">
 
-        <div className="sticky top-0 bg-white z-10 flex items-center justify-between pt-6 pb-4">
+        <div className="flex items-center pt-6 pb-4 border-b border-gray-100 mb-2">
           <h2 className="text-base font-semibold text-gray-800">Create Organization</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={18} />
-          </button>
         </div>
 
         {errorMessage && (
@@ -92,7 +87,6 @@ export default function OrgForm({ onClose }: OrgFormProps) {
           </div>
         </form>
 
-      </div>
     </div>
   )
 }

@@ -27,6 +27,7 @@ function NotFound() {
         <p className="text-sm text-gray-500 mb-6">The page you're looking for doesn't exist.</p>
         <Link
           to="/dashboard"
+          search={{} as any}
           className="inline-flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
         >
           Back to Dashboard

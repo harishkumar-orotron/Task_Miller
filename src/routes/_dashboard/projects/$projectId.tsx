@@ -6,7 +6,6 @@ import {
 } from 'lucide-react'
 import { useProject, useDeleteProjectMutation } from '../../../queries/projects.queries'
 import { useAuth } from '../../../hooks/useAuth'
-import ProjectForm from '../../../components/projects/ProjectForm'
 import LoadingSpinner from '../../../components/common/LoadingSpinner'
 import ErrorMessage from '../../../components/common/ErrorMessage'
 import { userColor, formatDate, projectStatusBadge } from '../../../lib/utils'
@@ -38,12 +37,11 @@ function ProjectViewPage() {
   const { mutate: deleteProject, isPending: isDeleting } = useDeleteProjectMutation()
 
 
-  const [showEdit,      setShowEdit]      = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const handleDelete = () => {
     deleteProject(projectId, {
-      onSuccess: () => navigate({ to: '/projects' }),
+      onSuccess: () => navigate({ to: '/projects', search: {} as any }),
     })
   }
 
@@ -58,7 +56,7 @@ function ProjectViewPage() {
   if (error || !project) {
     return (
       <div className="space-y-4">
-        <button onClick={() => navigate({ to: '/projects' })} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700">
+        <button onClick={() => navigate({ to: '/projects', search: {} as any })} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700">
           <ArrowLeft size={15} /> Back to Projects
         </button>
         <ErrorMessage message={(error as ApiError)?.message ?? 'Project not found'} />
@@ -84,7 +82,7 @@ function ProjectViewPage() {
 
       {/* Back */}
       <button
-        onClick={() => navigate({ to: '/projects' })}
+        onClick={() => navigate({ to: '/projects', search: {} as any })}
         className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
       >
         <ArrowLeft size={15} /> Back to Projects
@@ -127,7 +125,7 @@ function ProjectViewPage() {
               {isAdmin && (
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
-                    onClick={() => setShowEdit(true)}
+                    onClick={() => navigate({ to: '/projects/$projectId/edit', params: { projectId } })}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <Pencil size={13} /> Edit
@@ -260,12 +258,6 @@ function ProjectViewPage() {
 
       </div>
 
-      {showEdit && (
-        <ProjectForm
-          project={project}
-          onClose={() => setShowEdit(false)}
-        />
-      )}
     </div>
   )
 }

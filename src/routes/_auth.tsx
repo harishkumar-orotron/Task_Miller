@@ -6,7 +6,7 @@ export const Route = createFileRoute('/_auth')({
   beforeLoad: () => {
     if (typeof window === 'undefined') return
     const token = authStore.state.accessToken
-    if (token) throw redirect({ to: '/dashboard' })
+    if (token) throw redirect({ to: '/dashboard', search: {} as any })
   },
   component: () => <Outlet />,
 })

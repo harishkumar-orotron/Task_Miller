@@ -14,8 +14,9 @@ export function useComments(taskId: string) {
 export function useAddCommentMutation(taskId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (body: string) => addCommentApi(taskId, body),
-    onSuccess:  () => qc.invalidateQueries({ queryKey: key(taskId) }),
+    mutationFn: ({ body, parentCommentId }: { body: string; parentCommentId?: string }) =>
+      addCommentApi(taskId, body, parentCommentId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: key(taskId) }),
   })
 }
 

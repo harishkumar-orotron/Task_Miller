@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { Plus, Search, ChevronDown } from 'lucide-react'
 import { useProjects } from '../../../queries/projects.queries'
@@ -7,13 +7,18 @@ import { useDebounce } from '../../../hooks/useDebounce'
 import { useAuth } from '../../../hooks/useAuth'
 import ProjectList from '../../../components/projects/ProjectList'
 import Pagination from '../../../components/ui/Pagination'
-import ProjectForm from '../../../components/projects/ProjectForm'
 import LoadingSpinner from '../../../components/common/LoadingSpinner'
 import ErrorMessage from '../../../components/common/ErrorMessage'
 import type { ApiError } from '../../../types/api.types'
 import type { ProjectStatus } from '../../../types/project.types'
 
 export const Route = createFileRoute('/_dashboard/projects/')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    search: (search.search as string) || '',
+    status: (search.status as ProjectStatus) || '',
+    page:   Number(search.page)  || 1,
+    limit:  Number(search.limit) || 10,
+  }),
   component: ProjectsPage,
 })
 
@@ -21,20 +26,13 @@ export const Route = createFileRoute('/_dashboard/projects/')({
 function ProjectsPage() {
   const { isAdmin, isSuperAdmin } = useAuth()
   const { selectedOrg } = useOrgContext()
-  const [search,    setSearch]   = useState('')
-  const [status,    setStatus]   = useState<ProjectStatus | ''>('')
-  const [page,      setPage]     = useState(1)
-  const [limit,     setLimit]    = useState(10)
-  const [showForm,  setShowForm] = useState(false)
+  const navigate = Route.useNavigate()
+  const { search, status, page, limit } = Route.useSearch()
+  const setParams = (params: Partial<{ search: string; status: ProjectStatus | ''; page: number; limit: number }>) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    navigate({ search: (prev) => ({ ...prev, ...params }) as any })
 
-  // Reset page when selected org changes
-  useEffect(() => { setPage(1) }, [selectedOrg?.id])
-
-  useEffect(() => {
-    const handler = () => setShowForm(true)
-    window.addEventListener('topbar-action', handler)
-    return () => window.removeEventListener('topbar-action', handler)
-  }, [])
+  useEffect(() => { setParams({ page: 1 }) }, [selectedOrg?.id])
 
   const debouncedSearch = useDebounce(search, 400)
 
@@ -56,9 +54,9 @@ function ProjectsPage() {
   const startEntry   = totalRecords === 0 ? 0 : (activePage - 1) * activeLimit + 1
   const endEntry     = Math.min(activePage * activeLimit, totalRecords)
 
-  const handleSearch = (val: string) => { setSearch(val); setPage(1) }
-  const handleStatus = (val: ProjectStatus | '') => { setStatus(val); setPage(1) }
-  const handleLimit  = (val: number) => { setLimit(val); setPage(1) }
+  const handleSearch = (val: string)          => setParams({ search: val, page: 1 })
+  const handleStatus = (val: ProjectStatus | '') => setParams({ status: val, page: 1 })
+  const handleLimit  = (val: number)          => setParams({ limit: val, page: 1 })
 
   return (
     <div className="bg-white rounded-xl border border-gray-100">
@@ -100,7 +98,7 @@ function ProjectsPage() {
           {/* Add Project — admin+ only */}
           {isAdmin && (
             <button
-              onClick={() => setShowForm(true)}
+              onClick={() => navigate({ to: '/projects/new' })}
               className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors"
             >
               <Plus size={13} /> Add Project
@@ -134,12 +132,11 @@ function ProjectsPage() {
           limit={limit}
           hasPrevPage={pagination?.hasPrevPage}
           hasNextPage={pagination?.hasNextPage}
-          onPageChange={setPage}
+          onPageChange={(p) => setParams({ page: p })}
           onLimitChange={handleLimit}
         />
       )}
 
-      {showForm && <ProjectForm onClose={() => setShowForm(false)} />}
     </div>
   )
 }

@@ -39,7 +39,7 @@ export default function OtpForm() {
     e.preventDefault()
     verifyOtp(
       { email, otp },
-      { onSuccess: () => navigate({ to: '/dashboard' }) },
+      { onSuccess: () => navigate({ to: '/dashboard', search: {} as any }) },
     )
   }
 

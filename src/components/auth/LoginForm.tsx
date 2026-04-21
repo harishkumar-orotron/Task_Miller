@@ -27,7 +27,7 @@ export default function LoginForm() {
     e.preventDefault()
     login(
       { email, password },
-      { onSuccess: () => navigate({ to: '/dashboard' }) },
+      { onSuccess: () => navigate({ to: '/dashboard', search: {} as any }) },
     )
   }
 

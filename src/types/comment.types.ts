@@ -6,14 +6,16 @@ export interface CommentAuthor {
 }
 
 export interface Comment {
-  id:        string
-  taskId:    string
-  authorId:  string
-  body:      string
-  createdAt: string
-  updatedAt: string
-  deletedAt: string | null
-  author:    CommentAuthor
+  id:              string
+  taskId:          string
+  authorId:        string
+  parentCommentId: string | null
+  body:            string
+  createdAt:       string
+  updatedAt:       string
+  deletedAt:       string | null
+  author:          CommentAuthor
+  replies:         Comment[]
 }
 
 export interface CommentListResponse {

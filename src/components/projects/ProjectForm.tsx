@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, ChevronDown, Check } from 'lucide-react'
+import { ChevronDown, Check } from 'lucide-react'
 import { useCreateProjectMutation, useUpdateProjectMutation } from '../../queries/projects.queries'
 import { useOrgs, useOrg } from '../../queries/orgs.queries'
 import { useAuth } from '../../hooks/useAuth'
@@ -79,16 +79,12 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md px-6 pb-6 shadow-xl max-h-[90vh] overflow-y-auto">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 pb-6">
 
-        <div className="sticky top-0 bg-white z-10 flex items-center justify-between pt-6 pb-4">
+        <div className="flex items-center pt-6 pb-4 border-b border-gray-100 mb-2">
           <h2 className="text-base font-semibold text-gray-800">
             {isEdit ? 'Edit Project' : 'Create Project'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={18} />
-          </button>
         </div>
 
         {errorMessage && Object.keys(fieldErrors).length === 0 && (
@@ -145,7 +141,9 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
                 </button>
 
                 {orgOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                  <>
+                  <div className="fixed inset-0 z-[9]" onClick={() => setOrgOpen(false)} />
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[10] max-h-48 overflow-y-auto">
                     {orgs.length === 0 ? (
                       <p className="text-sm text-gray-400 px-3 py-3">No organizations found</p>
                     ) : (
@@ -166,6 +164,7 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
                       ))
                     )}
                   </div>
+                  </>
                 )}
               </div>
               {fieldErrors.orgId && <p className="text-xs text-red-500 mt-1">{fieldErrors.orgId}</p>}
@@ -199,7 +198,9 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
                 </button>
 
                 {memberOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-52 overflow-y-auto">
+                  <>
+                  <div className="fixed inset-0 z-[9]" onClick={() => setMemberOpen(false)} />
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[10] max-h-52 overflow-y-auto">
                     {members.length === 0 ? (
                       <p className="text-sm text-gray-400 px-3 py-3">No members in this org</p>
                     ) : (
@@ -224,6 +225,7 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
                       ))
                     )}
                   </div>
+                  </>
                 )}
               </div>
             </div>
@@ -270,7 +272,6 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
           </div>
 
         </form>
-      </div>
     </div>
   )
 }
