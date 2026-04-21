@@ -20,7 +20,7 @@ export default function ProjectList({ projects }: ProjectListProps) {
   }
 
   return (
-    <div className="p-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {projects.map((project, i) => (
         <ProjectCard key={project.id} project={project} index={i} />
       ))}

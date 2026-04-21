@@ -59,10 +59,10 @@ function ProjectsPage() {
   const handleLimit  = (val: number)          => setParams({ limit: val, page: 1 })
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100">
+    <div className="space-y-4">
 
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
+      <div className="flex items-center justify-between">
         <h2 className="font-semibold text-gray-800">
           {isSuperAdmin && selectedOrg ? selectedOrg.name : 'All'}{' '}
           <span className="text-gray-400 font-normal ml-1">({totalRecords})</span>
@@ -74,7 +74,7 @@ function ProjectsPage() {
             <select
               value={status}
               onChange={(e) => handleStatus(e.target.value as ProjectStatus | '')}
-              className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-600 bg-gray-50 outline-none cursor-pointer"
+              className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-600 bg-white outline-none cursor-pointer"
             >
               <option value="">All Status</option>
               <option value="active">Active</option>
@@ -85,7 +85,7 @@ function ProjectsPage() {
           </div>
 
           {/* Search */}
-          <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-1.5 bg-gray-50">
+          <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-1.5 bg-white">
             <input
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
@@ -114,27 +114,27 @@ function ProjectsPage() {
           <LoadingSpinner />
         </div>
       ) : error ? (
-        <div className="p-5">
-          <ErrorMessage message={(error as ApiError)?.message ?? 'Failed to load projects'} />
-        </div>
+        <ErrorMessage message={(error as ApiError)?.message ?? 'Failed to load projects'} />
       ) : (
         <ProjectList projects={projects} />
       )}
 
       {/* Pagination */}
       {!isLoading && !error && totalPages > 0 && (
-        <Pagination
-          page={page}
-          totalPages={totalPages}
-          totalRecords={totalRecords}
-          startEntry={startEntry}
-          endEntry={endEntry}
-          limit={limit}
-          hasPrevPage={pagination?.hasPrevPage}
-          hasNextPage={pagination?.hasNextPage}
-          onPageChange={(p) => setParams({ page: p })}
-          onLimitChange={handleLimit}
-        />
+        <div className="bg-white rounded-xl border border-gray-100">
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            startEntry={startEntry}
+            endEntry={endEntry}
+            limit={limit}
+            hasPrevPage={pagination?.hasPrevPage}
+            hasNextPage={pagination?.hasNextPage}
+            onPageChange={(p) => setParams({ page: p })}
+            onLimitChange={handleLimit}
+          />
+        </div>
       )}
 
     </div>

@@ -5,6 +5,13 @@ export interface CommentAuthor {
   avatarUrl: string | null
 }
 
+export interface MentionUser {
+  id:        string
+  name:      string
+  email:     string
+  avatarUrl: string | null
+}
+
 export interface Comment {
   id:              string
   taskId:          string
@@ -15,6 +22,7 @@ export interface Comment {
   updatedAt:       string
   deletedAt:       string | null
   author:          CommentAuthor
+  mentions:        MentionUser[]
   replies:         Comment[]
 }
 

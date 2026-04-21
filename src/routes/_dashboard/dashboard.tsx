@@ -152,7 +152,6 @@ function DashboardPage() {
                 <option value="to_do">To Do</option>
                 <option value="in_progress">In Progress</option>
                 <option value="on_hold">On Hold</option>
-                <option value="overdue">Overdue</option>
                 <option value="completed">Completed</option>
               </select>
               <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />

@@ -8,12 +8,12 @@ import type { UsersParams, CreateUserBody, UpdateMeBody } from '../types/user.ty
 
 // ─── GET /api/users ───────────────────────────────────────────────────────────
 
-export function useUsers(params: UsersParams = {}) {
+export function useUsers(params: UsersParams = {}, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey:        ['users', params],
     queryFn:         () => getUsersApi(params),
     placeholderData: (prev) => prev,
-    enabled:         !!authStore.state.accessToken,
+    enabled:         (options?.enabled ?? true) && !!authStore.state.accessToken,
   })
 }
 

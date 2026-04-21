@@ -15,7 +15,6 @@ const cardColors = [
   'bg-rose-500',   'bg-amber-500', 'bg-sky-500',
 ]
 
-
 const statusLabel: Record<string, string> = {
   active:    'Active',
   on_hold:   'On Hold',
@@ -23,32 +22,32 @@ const statusLabel: Record<string, string> = {
 }
 
 export default function ProjectCard({ project, index }: ProjectCardProps) {
-  const navigate   = useNavigate()
-  const color      = cardColors[index % cardColors.length]
-  const initials   = project.title.slice(0, 2).toUpperCase()
-  const avatars    = project.members.map((m) => ({
+  const navigate = useNavigate()
+  const color    = cardColors[index % cardColors.length]
+  const initials = project.title.slice(0, 2).toUpperCase()
+  const avatars  = project.members.map((m, i) => ({
     id:    m.id,
     name:  m.name,
-    color: cardColors[(index + project.members.indexOf(m) + 1) % cardColors.length],
+    color: cardColors[(index + i + 1) % cardColors.length],
   }))
 
   return (
     <div
       onClick={() => navigate({ to: '/projects/$projectId', params: { projectId: project.id } })}
-      className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md hover:border-orange-100 cursor-pointer transition-all group"
+      className="bg-white border border-gray-100 rounded-xl p-5 hover:shadow-md hover:border-orange-100 cursor-pointer transition-all group"
     >
-      {/* Logo avatar */}
-      <div className={`w-10 h-10 rounded-lg ${color} flex items-center justify-center mb-3 flex-shrink-0`}>
-        <span className="text-white font-bold text-xs">{initials}</span>
+      {/* Logo */}
+      <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center mb-4 flex-shrink-0`}>
+        <span className="text-white font-bold text-sm">{initials}</span>
       </div>
 
       {/* Title */}
-      <h3 className="font-semibold text-gray-800 text-sm mb-1 line-clamp-1 group-hover:text-orange-500 transition-colors">
+      <h3 className="font-bold text-gray-800 text-sm mb-1 line-clamp-1 group-hover:text-orange-500 transition-colors">
         {project.title}
       </h3>
 
       {/* Description */}
-      <p className="text-xs text-gray-400 line-clamp-2 mb-3 leading-relaxed">
+      <p className="text-xs text-gray-400 line-clamp-2 mb-4 leading-relaxed min-h-[2rem]">
         {project.description ?? 'No description provided.'}
       </p>
 
@@ -59,7 +58,7 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
         ) : (
           <span className="text-xs text-gray-300">No members</span>
         )}
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${projectStatusBadge[project.status] ?? 'bg-gray-50 text-gray-500'}`}>
+        <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${projectStatusBadge[project.status] ?? 'bg-gray-50 text-gray-500'}`}>
           {statusLabel[project.status] ?? project.status}
         </span>
       </div>
