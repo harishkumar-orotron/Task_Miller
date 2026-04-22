@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { loginApi, requestOtpApi, verifyOtpApi, logoutApi } from '../http/services/auth.service'
 import { setAuth, clearAuth } from '../store/auth.store'
 import { setSelectedOrg } from '../store/orgContext.store'
+import { router } from '../router'
 
 // ─── POST /api/auth/login ─────────────────────────────────────────────────────
 
@@ -46,9 +47,11 @@ export function useLogoutMutation() {
   return useMutation({
     mutationFn: logoutApi,
     onSuccess: () => {
-      clearAuth()
-      setSelectedOrg(null)
-      queryClient.removeQueries()
+      router.navigate({ to: '/login' }).finally(() => {
+        clearAuth()
+        setSelectedOrg(null)
+        queryClient.removeQueries()
+      })
     },
   })
 }

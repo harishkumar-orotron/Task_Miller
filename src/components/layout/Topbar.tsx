@@ -35,7 +35,7 @@ export default function Topbar() {
   const showAction  = isAdmin && config.action && isIndexPage
 
   const handleLogout = () => {
-    logout(undefined, { onSuccess: () => navigate({ to: '/login' }) })
+    logout()
   }
 
   const displayName = profile?.name  ?? '...'

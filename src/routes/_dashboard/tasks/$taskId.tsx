@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, ChevronDown, Pencil, Plus, X, AlignLeft, Eye } from 'lucide-react'
 import { useTask, useUpdateTaskMutation } from '../../../queries/tasks.queries'
+import { useAttachments } from '../../../queries/attachments.queries'
 import { useProjects } from '../../../queries/projects.queries'
 import { useAuth } from '../../../hooks/useAuth'
 import StatusBadge from '../../../components/ui/StatusBadge'
@@ -9,6 +10,7 @@ import PriorityBadge from '../../../components/ui/PriorityBadge'
 import AvatarStack from '../../../components/ui/AvatarStack'
 import S3Image from '../../../components/ui/S3Image'
 import CommentsSection from '../../../components/tasks/CommentsSection'
+import AttachmentsSection from '../../../components/tasks/AttachmentsSection'
 import LoadingSpinner from '../../../components/common/LoadingSpinner'
 import ErrorMessage from '../../../components/common/ErrorMessage'
 import { userColor, toAvatarShape, formatDate } from '../../../lib/utils'
@@ -28,22 +30,22 @@ function statusLabel(s: TaskStatus) {
 }
 
 const statusButtonClass: Record<string, string> = {
-  to_do:       'border-purple-300 text-purple-600 bg-white hover:bg-purple-50',
+  to_do: 'border-purple-300 text-purple-600 bg-white hover:bg-purple-50',
   in_progress: 'border-blue-300   text-blue-600   bg-white hover:bg-blue-50',
-  on_hold:     'border-amber-300  text-amber-600  bg-white hover:bg-amber-50',
-  overdue:     'border-red-300    text-red-600    bg-white hover:bg-red-50',
-  completed:   'border-green-300  text-green-600  bg-white hover:bg-green-50',
+  on_hold: 'border-amber-300  text-amber-600  bg-white hover:bg-amber-50',
+  overdue: 'border-red-300    text-red-600    bg-white hover:bg-red-50',
+  completed: 'border-green-300  text-green-600  bg-white hover:bg-green-50',
 }
 
 const statusButtonFallback = 'border-gray-300 text-gray-600 bg-white hover:bg-gray-50'
 
 function allowedStatuses(current: string): TaskStatus[] {
   return allStatusOptions.filter((s) => {
-    if (s === current)                                          return false
-    if (current === 'in_progress' && s === 'to_do')            return false
-    if (current === 'on_hold' && s !== 'in_progress')          return false
-    if (current === 'completed' && s === 'to_do')              return false
-    if (current === 'overdue'   && s !== 'completed')          return false
+    if (s === current) return false
+    if (current === 'in_progress' && s === 'to_do') return false
+    if (current === 'on_hold' && s !== 'in_progress') return false
+    if (current === 'completed' && s === 'to_do') return false
+    if (current === 'overdue' && s !== 'completed') return false
     return true
   })
 }
@@ -51,19 +53,19 @@ function allowedStatuses(current: string): TaskStatus[] {
 function SubtaskCard({
   subtask, parentOnHold, onEdit, onView, onStatusChange, isAdmin,
 }: {
-  subtask:          Subtask
-  parentOnHold:     boolean
-  onEdit:           (s: Subtask) => void
-  onView:           (s: Subtask) => void
-  onStatusChange:   (id: string, status: TaskStatus) => void
-  isAdmin:          boolean
+  subtask: Subtask
+  parentOnHold: boolean
+  onEdit: (s: Subtask) => void
+  onView: (s: Subtask) => void
+  onStatusChange: (id: string, status: TaskStatus) => void
+  isAdmin: boolean
 }) {
   const statusSelectClass: Record<string, string> = {
-    to_do:       'border-purple-300 text-purple-600 bg-purple-50',
+    to_do: 'border-purple-300 text-purple-600 bg-purple-50',
     in_progress: 'border-blue-300   text-blue-600   bg-blue-50',
-    on_hold:     'border-amber-300  text-amber-600  bg-amber-50',
-    overdue:     'border-red-300    text-red-600    bg-red-50',
-    completed:   'border-green-300  text-green-600  bg-green-50',
+    on_hold: 'border-amber-300  text-amber-600  bg-amber-50',
+    overdue: 'border-red-300    text-red-600    bg-red-50',
+    completed: 'border-green-300  text-green-600  bg-green-50',
   }
 
   return (
@@ -142,31 +144,33 @@ function SubtaskCard({
 
 function TaskViewPage() {
   const { taskId } = Route.useParams()
-  const navigate   = useNavigate()
+  const navigate = useNavigate()
   const { isAdmin, isDeveloper, user } = useAuth()
 
-  const [activeTab,   setActiveTab]   = useState<Tab>('subtasks')
-  const [statusOpen,  setStatusOpen]  = useState(false)
+  const [activeTab, setActiveTab] = useState<Tab>('subtasks')
+  const [statusOpen, setStatusOpen] = useState(false)
   const [statusError, setStatusError] = useState<string | null>(null)
 
   const { data: task, isLoading, isError, error } = useTask(taskId)
   const { data: projectsData } = useProjects({ limit: 100 })
+  const { data: attachmentsData } = useAttachments(taskId)
   const { mutate: updateTask } = useUpdateTaskMutation()
 
-  const projects        = projectsData?.projects ?? []
-  const proj            = projects.find((p) => p.id === task?.projectId)
+  const projects = projectsData?.projects ?? []
+  const proj = projects.find((p) => p.id === task?.projectId)
   const visibleSubtasks = task
     ? isDeveloper && user
       ? task.subtasks.filter((s) => s.assignees.some((a) => a.id === user.id))
       : task.subtasks
     : []
+  const attachmentCount = attachmentsData?.attachments.length ?? 0
 
   const tabs: { key: Tab; label: string; count: number }[] = task
     ? [
-        { key: 'subtasks',    label: 'Subtasks',    count: visibleSubtasks.length },
-        { key: 'assignTo',    label: 'Assign To',   count: task.assignees.length },
-        { key: 'attachments', label: 'Attachments', count: 0 },
-      ]
+      { key: 'subtasks', label: 'Subtasks', count: visibleSubtasks.length },
+      { key: 'assignTo', label: 'Assign To', count: task.assignees.length },
+      { key: 'attachments', label: 'Attachments', count: attachmentCount },
+    ]
     : []
 
   const handleStatusChange = (newStatus: TaskStatus) => {
@@ -280,6 +284,8 @@ function TaskViewPage() {
             <p className="text-sm font-bold text-gray-800">{proj?.title ?? '—'}</p>
           </div>
 
+          <hr className="border-gray-300" />
+
           {/* Description + Created By + Due Date */}
           <div className="flex gap-6 items-start">
             {/* Description */}
@@ -334,16 +340,14 @@ function TaskViewPage() {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                    activeTab === tab.key
-                      ? 'border-orange-500 text-orange-500'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
+                  className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.key
+                    ? 'border-orange-500 text-orange-500'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
                 >
                   {tab.label}
-                  <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
-                    activeTab === tab.key ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'
-                  }`}>
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${activeTab === tab.key ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'
+                    }`}>
                     {String(tab.count).padStart(2, '0')}
                   </span>
                 </button>
@@ -420,7 +424,7 @@ function TaskViewPage() {
 
             {/* Attachments tab */}
             {activeTab === 'attachments' && (
-              <p className="text-sm text-gray-400 py-8 text-center">No attachments yet</p>
+              <AttachmentsSection taskId={taskId} />
             )}
           </div>
 

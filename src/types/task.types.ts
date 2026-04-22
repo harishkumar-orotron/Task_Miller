@@ -117,3 +117,29 @@ export interface UpdateTaskBody {
   dueDate?:          string
   assignedUserIds?:  string[]
 }
+
+// ─── Attachments ──────────────────────────────────────────────────────────────
+
+export interface Attachment {
+  id:         string
+  taskId:     string
+  uploadedBy: string
+  s3Key:      string
+  fileName:   string
+  mimeType:   string
+  fileSize:   number
+  createdAt:  string
+  uploader:   TaskUser
+}
+
+export interface AddAttachmentBody {
+  s3Key:    string
+  fileName: string
+  mimeType: string
+  fileSize: number
+}
+
+export interface AttachmentsResponse {
+  attachments: Attachment[]
+  pagination:  TasksPagination
+}
