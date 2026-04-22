@@ -1,5 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { getPresignedUrlApi, getDownloadUrlApi, uploadToS3 } from '../http/services/uploads.service'
+import { authStore } from '../store/auth.store'
+import { useStore } from '@tanstack/react-store'
 
 export function useUploadFile() {
   return useMutation({
@@ -17,10 +19,11 @@ export function useUploadFile() {
 }
 
 export function useDownloadUrl(key: string | undefined | null) {
+  const accessToken = useStore(authStore, (s) => s.accessToken)
   return useQuery({
     queryKey: ['download-url', key],
     queryFn: () => getDownloadUrlApi(key!),
-    enabled: !!key,
-    staleTime: 55 * 60 * 1000, // slightly under 1 hour (URL expires in 3600s)
+    enabled: !!key && !!accessToken,
+    staleTime: 55 * 60 * 1000,
   })
 }

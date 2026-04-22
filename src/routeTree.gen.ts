@@ -13,6 +13,7 @@ import { Route as DashboardRouteImport } from './routes/_dashboard'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardDashboardRouteImport } from './routes/_dashboard/dashboard'
+import { Route as DashboardAuditLogsRouteImport } from './routes/_dashboard/audit-logs'
 import { Route as AuthOtpRouteImport } from './routes/_auth/otp'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as DashboardUsersIndexRouteImport } from './routes/_dashboard/users/index'
@@ -48,6 +49,11 @@ const IndexRoute = IndexRouteImport.update({
 const DashboardDashboardRoute = DashboardDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAuditLogsRoute = DashboardAuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
   getParentRoute: () => DashboardRoute,
 } as any)
 const AuthOtpRoute = AuthOtpRouteImport.update({
@@ -153,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof AuthLoginRoute
   '/otp': typeof AuthOtpRoute
+  '/audit-logs': typeof DashboardAuditLogsRoute
   '/dashboard': typeof DashboardDashboardRoute
   '/organizations/$orgId': typeof DashboardOrganizationsOrgIdRoute
   '/organizations/new': typeof DashboardOrganizationsNewRoute
@@ -175,6 +182,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof AuthLoginRoute
   '/otp': typeof AuthOtpRoute
+  '/audit-logs': typeof DashboardAuditLogsRoute
   '/dashboard': typeof DashboardDashboardRoute
   '/organizations/$orgId': typeof DashboardOrganizationsOrgIdRoute
   '/organizations/new': typeof DashboardOrganizationsNewRoute
@@ -200,6 +208,7 @@ export interface FileRoutesById {
   '/_dashboard': typeof DashboardRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/otp': typeof AuthOtpRoute
+  '/_dashboard/audit-logs': typeof DashboardAuditLogsRoute
   '/_dashboard/dashboard': typeof DashboardDashboardRoute
   '/_dashboard/organizations/$orgId': typeof DashboardOrganizationsOrgIdRoute
   '/_dashboard/organizations/new': typeof DashboardOrganizationsNewRoute
@@ -224,6 +233,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/otp'
+    | '/audit-logs'
     | '/dashboard'
     | '/organizations/$orgId'
     | '/organizations/new'
@@ -246,6 +256,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/otp'
+    | '/audit-logs'
     | '/dashboard'
     | '/organizations/$orgId'
     | '/organizations/new'
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '/_dashboard'
     | '/_auth/login'
     | '/_auth/otp'
+    | '/_dashboard/audit-logs'
     | '/_dashboard/dashboard'
     | '/_dashboard/organizations/$orgId'
     | '/_dashboard/organizations/new'
@@ -323,6 +335,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardDashboardRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/audit-logs': {
+      id: '/_dashboard/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/audit-logs'
+      preLoaderRoute: typeof DashboardAuditLogsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_auth/otp': {
@@ -467,6 +486,7 @@ const AuthRouteChildren: AuthRouteChildren = {
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface DashboardRouteChildren {
+  DashboardAuditLogsRoute: typeof DashboardAuditLogsRoute
   DashboardDashboardRoute: typeof DashboardDashboardRoute
   DashboardOrganizationsOrgIdRoute: typeof DashboardOrganizationsOrgIdRoute
   DashboardOrganizationsNewRoute: typeof DashboardOrganizationsNewRoute
@@ -487,6 +507,7 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAuditLogsRoute: DashboardAuditLogsRoute,
   DashboardDashboardRoute: DashboardDashboardRoute,
   DashboardOrganizationsOrgIdRoute: DashboardOrganizationsOrgIdRoute,
   DashboardOrganizationsNewRoute: DashboardOrganizationsNewRoute,

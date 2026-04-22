@@ -1,5 +1,5 @@
 import { useRouterState, useNavigate } from '@tanstack/react-router'
-import { Bell, ChevronDown, Plus, LogOut, Building2, Mail, ShieldCheck, Phone, Clock, UserCog } from 'lucide-react'
+import { ChevronDown, Plus, LogOut, Building2, Mail, ShieldCheck, Phone, Clock, UserCog } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { useLogoutMutation } from '../../queries/auth.queries'
@@ -7,6 +7,7 @@ import { useMe } from '../../queries/users.queries'
 import UpdateProfileForm from '../users/UpdateProfileForm'
 import S3Image from '../ui/S3Image'
 import { formatDate, roleBadgeClasses, userColor } from '../../lib/utils'
+import NotificationPanel from '../notifications/NotificationPanel'
 
 const pageConfig: Record<string, { title: string; action?: string; actionTo?: string }> = {
   '/dashboard':    { title: 'Dashboard',     action: 'Add Task',    actionTo: '/tasks/new'         },
@@ -14,6 +15,7 @@ const pageConfig: Record<string, { title: string; action?: string; actionTo?: st
   '/projects':     { title: 'Projects',      action: 'Add Project', actionTo: '/projects/new'      },
   '/users':        { title: 'Users',         action: 'Add User',    actionTo: '/users/new'         },
   '/organizations':{ title: 'Organizations'                                                        },
+  '/audit-logs':   { title: 'Audit Logs'                                                           },
 }
 
 
@@ -61,10 +63,7 @@ export default function Topbar() {
           )}
 
           {/* Notifications */}
-          <button className="relative flex items-center gap-1 bg-pink-500 text-white px-3 py-1.5 rounded-full text-sm font-medium hover:bg-pink-600 transition-colors">
-            <Bell size={14} />
-            <span>15</span>
-          </button>
+          <NotificationPanel />
 
           {/* User menu */}
           <div className="relative">

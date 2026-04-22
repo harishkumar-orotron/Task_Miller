@@ -47,9 +47,10 @@ export function useLogoutMutation() {
   return useMutation({
     mutationFn: logoutApi,
     onSuccess: () => {
+      clearAuth()
+      setSelectedOrg(null)
+      queryClient.cancelQueries()
       router.navigate({ to: '/login' }).finally(() => {
-        clearAuth()
-        setSelectedOrg(null)
         queryClient.removeQueries()
       })
     },

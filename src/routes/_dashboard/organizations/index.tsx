@@ -53,11 +53,9 @@ function OrganizationsPage() {
   const handleLimit  = (val: number) => { setLimit(val); setPage(1) }
 
   return (
-    <div className="space-y-5">
-      <div className="bg-white rounded-xl border border-gray-100">
-
+    <div className="space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
+        <div className="flex items-center justify-between">
           <h2 className="font-semibold text-gray-800">
             All <span className="text-gray-400 font-normal ml-1">({totalRecords})</span>
           </h2>
@@ -68,7 +66,7 @@ function OrganizationsPage() {
               <select
                 value={sortIdx}
                 onChange={(e) => handleSort(Number(e.target.value))}
-                className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-600 bg-gray-50 outline-none cursor-pointer"
+                className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-600 bg-white outline-none cursor-pointer"
               >
                 {sortOptions.map((o, i) => (
                   <option key={i} value={i}>{o.label}</option>
@@ -77,7 +75,7 @@ function OrganizationsPage() {
               <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
             </div>
 
-            <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-1.5 bg-gray-50">
+            <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-1.5 bg-white">
               <input
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
@@ -126,7 +124,7 @@ function OrganizationsPage() {
           />
         )}
 
-      </div>
+    
 
     </div>
   )

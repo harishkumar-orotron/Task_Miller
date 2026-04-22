@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
-import { LayoutDashboard, CheckSquare, FolderKanban, Users, Building2, LogOut, RefreshCw } from 'lucide-react'
+import { LayoutDashboard, CheckSquare, FolderKanban, Users, Building2, LogOut, RefreshCw, ScrollText } from 'lucide-react'
 import { useQueryClient, useIsFetching } from '@tanstack/react-query'
 import { useAuth } from '../../hooks/useAuth'
 import { useLogoutMutation } from '../../queries/auth.queries'
@@ -14,6 +14,7 @@ const navItems = [
   { label: 'Projects',      icon: FolderKanban,    to: '/projects',      roles: ['superadmin', 'admin', 'developer'] },
   { label: 'Users',         icon: Users,           to: '/users',         roles: ['superadmin', 'admin'] },
   { label: 'Organizations', icon: Building2,       to: '/organizations', roles: ['superadmin'] },
+  { label: 'Audit Logs',    icon: ScrollText,      to: '/audit-logs',    roles: ['superadmin', 'admin'] },
 ] as const
 
 export default function Sidebar() {

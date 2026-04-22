@@ -3,10 +3,10 @@ import { createPortal } from 'react-dom'
 import S3Image from './S3Image'
 
 interface Avatar {
-  id:    string
-  name:  string
-  email?: string
-  color: string
+  id:        string
+  name:      string
+  email?:    string
+  color:     string
   avatarUrl?: string | null
 }
 
@@ -16,6 +16,12 @@ interface AvatarStackProps {
   size?:   'sm' | 'md'
 }
 
+function initials(name: string): string {
+  const words = name.trim().split(/\s+/)
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase()
+  return (words[0][0] + words[words.length - 1][0]).toUpperCase()
+}
+
 export default function AvatarStack({ avatars, max = 3, size = 'sm' }: AvatarStackProps) {
   const [open, setOpen]   = useState(false)
   const [pos,  setPos]    = useState({ top: 0, left: 0 })
@@ -23,7 +29,7 @@ export default function AvatarStack({ avatars, max = 3, size = 'sm' }: AvatarSta
 
   const visible  = avatars.slice(0, max)
   const overflow = avatars.length - max
-  const dim      = size === 'sm' ? 'w-7 h-7 text-xs' : 'w-8 h-8 text-sm'
+  const dim      = size === 'sm' ? 'w-7 h-7 text-[10px]' : 'w-8 h-8 text-xs'
 
   useEffect(() => {
     if (!open) return
@@ -58,16 +64,16 @@ export default function AvatarStack({ avatars, max = 3, size = 'sm' }: AvatarSta
           <div
             key={a.id}
             title={a.name}
-            className={`${dim} ${a.color} rounded-full border-2 border-white flex items-center justify-center font-medium text-white flex-shrink-0 overflow-hidden relative`}
+            className={`${dim} ${a.color} rounded-full border-2 border-white flex items-center justify-center font-semibold text-white flex-shrink-0 overflow-hidden relative`}
           >
             {a.avatarUrl ? (
-              <S3Image 
-                storageKey={a.avatarUrl} 
-                fallbackInitials={a.name.charAt(0).toUpperCase()} 
-                className="w-full h-full object-cover" 
+              <S3Image
+                storageKey={a.avatarUrl}
+                fallbackInitials={initials(a.name)}
+                className="w-full h-full object-cover"
               />
             ) : (
-              a.name.charAt(0).toUpperCase()
+              initials(a.name)
             )}
           </div>
         ))}
@@ -85,15 +91,15 @@ export default function AvatarStack({ avatars, max = 3, size = 'sm' }: AvatarSta
         >
           {avatars.map((a) => (
             <div key={a.id} className="flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50">
-              <div className={`w-7 h-7 rounded-full ${a.color} flex items-center justify-center flex-shrink-0 overflow-hidden`}>
+              <div className={`w-7 h-7 rounded-full ${a.color} flex items-center justify-center flex-shrink-0 overflow-hidden text-[10px] font-semibold text-white`}>
                 {a.avatarUrl ? (
-                  <S3Image 
-                    storageKey={a.avatarUrl} 
-                    fallbackInitials={a.name.charAt(0).toUpperCase()} 
-                    className="w-full h-full object-cover text-xs" 
+                  <S3Image
+                    storageKey={a.avatarUrl}
+                    fallbackInitials={initials(a.name)}
+                    className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-white text-xs font-semibold">{a.name.charAt(0).toUpperCase()}</span>
+                  initials(a.name)
                 )}
               </div>
               <div className="min-w-0">
