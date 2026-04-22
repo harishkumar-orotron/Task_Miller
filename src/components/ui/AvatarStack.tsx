@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import S3Image from './S3Image'
 
 interface Avatar {
   id:    string
   name:  string
   email?: string
   color: string
+  avatarUrl?: string | null
 }
 
 interface AvatarStackProps {
@@ -56,13 +58,21 @@ export default function AvatarStack({ avatars, max = 3, size = 'sm' }: AvatarSta
           <div
             key={a.id}
             title={a.name}
-            className={`${dim} ${a.color} rounded-full border-2 border-white flex items-center justify-center font-medium text-white flex-shrink-0`}
+            className={`${dim} ${a.color} rounded-full border-2 border-white flex items-center justify-center font-medium text-white flex-shrink-0 overflow-hidden relative`}
           >
-            {a.name.charAt(0).toUpperCase()}
+            {a.avatarUrl ? (
+              <S3Image 
+                storageKey={a.avatarUrl} 
+                fallbackInitials={a.name.charAt(0).toUpperCase()} 
+                className="w-full h-full object-cover" 
+              />
+            ) : (
+              a.name.charAt(0).toUpperCase()
+            )}
           </div>
         ))}
         {overflow > 0 && (
-          <div className={`${dim} bg-orange-100 text-orange-600 rounded-full border-2 border-white flex items-center justify-center font-semibold flex-shrink-0`}>
+          <div className={`${dim} bg-orange-100 text-orange-600 rounded-full border-2 border-white flex items-center justify-center font-semibold flex-shrink-0 relative z-10`}>
             +{overflow}
           </div>
         )}
@@ -75,8 +85,16 @@ export default function AvatarStack({ avatars, max = 3, size = 'sm' }: AvatarSta
         >
           {avatars.map((a) => (
             <div key={a.id} className="flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50">
-              <div className={`w-7 h-7 rounded-full ${a.color} flex items-center justify-center flex-shrink-0`}>
-                <span className="text-white text-xs font-semibold">{a.name.charAt(0).toUpperCase()}</span>
+              <div className={`w-7 h-7 rounded-full ${a.color} flex items-center justify-center flex-shrink-0 overflow-hidden`}>
+                {a.avatarUrl ? (
+                  <S3Image 
+                    storageKey={a.avatarUrl} 
+                    fallbackInitials={a.name.charAt(0).toUpperCase()} 
+                    className="w-full h-full object-cover text-xs" 
+                  />
+                ) : (
+                  <span className="text-white text-xs font-semibold">{a.name.charAt(0).toUpperCase()}</span>
+                )}
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-medium text-gray-700 truncate">{a.name}</p>

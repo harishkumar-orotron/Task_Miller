@@ -13,6 +13,7 @@ interface CommentsSectionProps {
   taskId:     string
   userId:     string
   userName:   string
+  avatarUrl?: string | null
   assignees?: MentionCandidate[]
 }
 
@@ -53,12 +54,18 @@ function renderBody(body: string, mentions: MentionUser[]) {
 
 
 
+import S3Image from '../ui/S3Image'
+
 // ─── Avatar ───────────────────────────────────────────────────────────────────
 
-function Avatar({ name, id, small }: { name: string; id: string; small?: boolean }) {
+function Avatar({ name, id, avatarUrl, small }: { name: string; id: string; avatarUrl?: string | null; small?: boolean }) {
   return (
-    <div className={`${small ? 'w-7 h-7 text-xs' : 'w-9 h-9 text-sm'} ${userColor(id)} rounded-full flex items-center justify-center flex-shrink-0`}>
-      <span className="text-white font-semibold">{name.charAt(0).toUpperCase()}</span>
+    <div className={`${small ? 'w-7 h-7 text-xs' : 'w-9 h-9 text-sm'} ${userColor(id)} rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden`}>
+      {avatarUrl ? (
+        <S3Image storageKey={avatarUrl} fallbackInitials={name.charAt(0).toUpperCase()} className="w-full h-full object-cover" />
+      ) : (
+        <span className="text-white font-semibold">{name.charAt(0).toUpperCase()}</span>
+      )}
     </div>
   )
 }
@@ -162,13 +169,14 @@ function MentionInput({ value, onChange, onSubmit, placeholder, inputClass, cand
 interface ReplyInputProps {
   userName:   string
   userId:     string
+  avatarUrl?: string | null
   isAdding:   boolean
   candidates: MentionCandidate[]
   onSubmit:   (body: string) => void
   onCancel:   () => void
 }
 
-function ReplyInput({ userName, userId, isAdding, candidates, onSubmit, onCancel }: ReplyInputProps) {
+function ReplyInput({ userName, userId, avatarUrl, isAdding, candidates, onSubmit, onCancel }: ReplyInputProps) {
   const [text, setText] = useState('')
 
   const submit = () => {
@@ -180,7 +188,7 @@ function ReplyInput({ userName, userId, isAdding, candidates, onSubmit, onCancel
 
   return (
     <div className="flex gap-2 items-center mt-2.5">
-      <Avatar name={userName} id={userId} small />
+      <Avatar name={userName} id={userId} avatarUrl={avatarUrl} small />
       <div className="flex-1 flex items-center gap-2 border border-teal-300 rounded-xl px-3 py-1.5 bg-teal-50 focus-within:border-teal-400 transition-colors">
         <MentionInput
           value={text}
@@ -217,6 +225,7 @@ interface ReplyRowProps {
   replyingTo:       string | null
   userId:           string
   userName:         string
+  avatarUrl?:       string | null
   isAdding:         boolean
   candidates:       MentionCandidate[]
   onReply:          (id: string) => void
@@ -231,7 +240,7 @@ interface ReplyRowProps {
 
 function ReplyRow({
   reply, isOwn, isEditingThis, isEditing, editText,
-  replyingTo, userId, userName, isAdding, candidates,
+  replyingTo, userId, userName, avatarUrl, isAdding, candidates,
   onReply, onCancelReply, onSubmitReply,
   onEdit, onDelete, onCancelEdit, onEditTextChange, onSaveEdit,
 }: ReplyRowProps) {
@@ -240,7 +249,7 @@ function ReplyRow({
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
       <div className="flex gap-2.5">
-        <Avatar name={reply.author.name} id={reply.author.id} small />
+        <Avatar name={reply.author.name} id={reply.author.id} avatarUrl={reply.author.avatarUrl} small />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
@@ -301,6 +310,7 @@ function ReplyRow({
           <ReplyInput
             userName={userName}
             userId={userId}
+            avatarUrl={avatarUrl}
             isAdding={isAdding}
             candidates={candidates}
             onSubmit={onSubmitReply}
@@ -320,6 +330,7 @@ interface CommentItemProps {
   isOwn:            boolean
   userId:           string
   userName:         string
+  avatarUrl?:       string | null
   candidates:       MentionCandidate[]
   replyingTo:       string | null
   editComment:      Comment | null
@@ -337,7 +348,7 @@ interface CommentItemProps {
 }
 
 function CommentItem({
-  comment, replies, isOwn, userId, userName, candidates,
+  comment, replies, isOwn, userId, userName, avatarUrl, candidates,
   replyingTo, editComment, editText, isAdding, isEditing,
   onReply, onCancelReply, onSubmitReply,
   onEdit, onCancelEdit, onEditTextChange, onSaveEdit, onDelete,
@@ -350,7 +361,7 @@ function CommentItem({
   return (
     <div>
       <div className="flex gap-3" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
-        <Avatar name={comment.author.name} id={comment.author.id} />
+        <Avatar name={comment.author.name} id={comment.author.id} avatarUrl={comment.author.avatarUrl} />
         <div className="flex-1 min-w-0">
 
           {/* Author + time + actions */}
@@ -411,6 +422,7 @@ function CommentItem({
             <ReplyInput
               userName={userName}
               userId={userId}
+              avatarUrl={avatarUrl}
               isAdding={isAdding}
               candidates={candidates}
               onSubmit={onSubmitReply}
@@ -445,6 +457,7 @@ function CommentItem({
               replyingTo={replyingTo}
               userId={userId}
               userName={userName}
+              avatarUrl={avatarUrl}
               isAdding={isAdding}
               candidates={candidates}
               onReply={onReply}
@@ -465,7 +478,7 @@ function CommentItem({
 
 // ─── CommentsSection ──────────────────────────────────────────────────────────
 
-export default function CommentsSection({ taskId, userId, userName, assignees = [] }: CommentsSectionProps) {
+export default function CommentsSection({ taskId, userId, userName, avatarUrl, assignees = [] }: CommentsSectionProps) {
   const [text,        setText]        = useState('')
   const [editComment, setEditComment] = useState<Comment | null>(null)
   const [editText,    setEditText]    = useState('')
@@ -548,6 +561,7 @@ export default function CommentsSection({ taskId, userId, userName, assignees = 
               isOwn={c.author.id === userId}
               userId={userId}
               userName={userName}
+              avatarUrl={avatarUrl}
               candidates={candidates}
               replyingTo={replyingTo}
               editComment={editComment}
@@ -570,7 +584,7 @@ export default function CommentsSection({ taskId, userId, userName, assignees = 
       {/* Add comment */}
       <div className="px-5 py-4 border-t border-gray-100 flex-shrink-0">
         <div className="flex gap-3 items-center">
-          <Avatar name={userName} id={userId} />
+          <Avatar name={userName} id={userId} avatarUrl={avatarUrl} />
           <div className="flex-1 flex items-center gap-2 border border-gray-200 rounded-2xl px-4 py-2.5 bg-gray-50 focus-within:border-orange-400 transition-colors">
             <MentionInput
               value={text}

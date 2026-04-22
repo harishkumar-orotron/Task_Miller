@@ -12,6 +12,7 @@ export interface AuthUser {
   role: UserRole
   orgId?: string
   orgName?: string
+  avatarUrl?: string | null
 }
 
 interface AuthState {

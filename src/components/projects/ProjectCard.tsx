@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import AvatarStack from '../ui/AvatarStack'
+import S3Image from '../ui/S3Image'
 import { projectStatusBadge } from '../../lib/utils'
 import type { Project } from '../../types/project.types'
 
@@ -29,6 +30,7 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
     id:    m.id,
     name:  m.name,
     color: cardColors[(index + i + 1) % cardColors.length],
+    avatarUrl: m.avatarUrl,
   }))
 
   return (
@@ -37,8 +39,12 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
       className="bg-white border border-gray-100 rounded-xl p-5 hover:shadow-md hover:border-orange-100 cursor-pointer transition-all group"
     >
       {/* Logo */}
-      <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center mb-4 flex-shrink-0`}>
-        <span className="text-white font-bold text-sm">{initials}</span>
+      <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center mb-4 flex-shrink-0 relative overflow-hidden`}>
+        {project.logoUrl ? (
+          <S3Image storageKey={project.logoUrl} fallbackInitials={initials} className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-white font-bold text-sm">{initials}</span>
+        )}
       </div>
 
       {/* Title */}

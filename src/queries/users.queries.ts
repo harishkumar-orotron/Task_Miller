@@ -57,6 +57,9 @@ export function useUpdateMeMutation() {
     mutationFn: (body: UpdateMeBody) => updateMeApi(body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['me'] })
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
   })
 }

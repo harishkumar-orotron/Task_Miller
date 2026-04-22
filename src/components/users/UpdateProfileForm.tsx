@@ -1,7 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { X } from 'lucide-react'
 import { useUpdateMeMutation } from '../../queries/users.queries'
+import { useUploadFile } from '../../queries/uploads.queries'
 import type { UserDetail } from '../../types/user.types'
+import S3Image from '../ui/S3Image'
+import ImageCropperModal from '../ui/ImageCropperModal'
 import type { ApiError } from '../../types/api.types'
 
 interface UpdateProfileFormProps {
@@ -12,8 +15,17 @@ interface UpdateProfileFormProps {
 export default function UpdateProfileForm({ profile, onClose }: UpdateProfileFormProps) {
   const [name,  setName]  = useState(profile.name)
   const [phone, setPhone] = useState(profile.phone ?? '')
+  const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl ?? null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  
+  // Cropper state
+  const [selectedFileForCrop, setSelectedFileForCrop] = useState<{ file: File; dataUrl: string } | null>(null)
+  
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const { mutate: updateMe, isPending, error } = useUpdateMeMutation()
+  const { mutate: updateMe, isPending: isUpdating, error } = useUpdateMeMutation()
+  const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile()
+  const isPending = isUpdating || isUploading
 
   const apiError     = error as ApiError | null
   const errorMessage = apiError?.message ?? null
@@ -25,9 +37,41 @@ export default function UpdateProfileForm({ profile, onClose }: UpdateProfileFor
   const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     updateMe(
-      { name: name.trim(), phone: phone.trim() || undefined },
+      { name: name.trim(), phone: phone.trim() || undefined, avatarUrl: avatarUrl || undefined },
       { onSuccess: onClose },
     )
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError('File size must be less than 10MB')
+      return
+    }
+    setUploadError(null)
+
+    // Read the file as a data URL for the cropper preview
+    const reader = new FileReader()
+    reader.onload = () => {
+      setSelectedFileForCrop({ file, dataUrl: reader.result as string })
+    }
+    reader.readAsDataURL(file)
+    
+    // Clear the input so selecting the same file again triggers change event
+    e.target.value = ''
+  }
+
+  const handleCroppedSave = async (croppedFile: File) => {
+    setSelectedFileForCrop(null)
+    setUploadError(null)
+    
+    try {
+      const key = await uploadFile({ folder: 'avatars', file: croppedFile })
+      setAvatarUrl(key)
+    } catch (err) {
+      setUploadError('Failed to upload image. Please try again.')
+    }
   }
 
   return (
@@ -46,6 +90,48 @@ export default function UpdateProfileForm({ profile, onClose }: UpdateProfileFor
             {errorMessage}
           </div>
         )}
+
+        {uploadError && (
+          <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2.5 rounded-lg mb-4">
+            {uploadError}
+          </div>
+        )}
+
+        <div className="flex flex-col items-center mb-6">
+          <div className="relative group">
+            <div className="w-24 h-24 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 text-2xl font-bold overflow-hidden border-4 border-white shadow-sm">
+              {avatarUrl ? (
+                <S3Image storageKey={avatarUrl} className="w-full h-full object-cover" />
+              ) : (
+                profile.name.charAt(0).toUpperCase()
+              )}
+            </div>
+            
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+            >
+              <span className="text-white text-xs font-medium">Change</span>
+            </button>
+            
+            {isUploading && (
+              <div className="absolute inset-0 bg-white/60 rounded-full flex items-center justify-center">
+                <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
+          
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept="image/*"
+            onChange={handleFileChange}
+          />
+          <p className="text-xs text-gray-400 mt-2">JPG, PNG or GIF (Max. 10MB)</p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
@@ -108,6 +194,16 @@ export default function UpdateProfileForm({ profile, onClose }: UpdateProfileFor
 
         </form>
       </div>
+
+      {selectedFileForCrop && (
+        <ImageCropperModal
+          imageSrc={selectedFileForCrop.dataUrl}
+          fileName={selectedFileForCrop.file.name}
+          fileType={selectedFileForCrop.file.type}
+          onCancel={() => setSelectedFileForCrop(null)}
+          onSave={handleCroppedSave}
+        />
+      )}
     </div>
   )
 }

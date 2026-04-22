@@ -14,6 +14,7 @@ import StatusBadge                            from '../../../components/ui/Statu
 import PriorityBadge                          from '../../../components/ui/PriorityBadge'
 import { formatDate, roleAvatarColor, roleBadgeClasses, toAvatarShape } from '../../../lib/utils'
 import AvatarStack                               from '../../../components/ui/AvatarStack'
+import S3Image                                   from '../../../components/ui/S3Image'
 import type { TaskStatus, TaskPriority }      from '../../../types/task.types'
 import type { UserProjectTask }               from '../../../types/user.types'
 import type { ApiError }                      from '../../../types/api.types'
@@ -185,8 +186,12 @@ function UserDetailPage() {
       <div className="bg-white rounded-xl border border-gray-100 p-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className={`w-11 h-11 rounded-xl ${roleAvatarColor[user.role] ?? 'bg-gray-400'} flex items-center justify-center flex-shrink-0`}>
-              <span className="text-white font-bold text-lg">{user.name.charAt(0).toUpperCase()}</span>
+            <div className={`w-11 h-11 rounded-xl ${roleAvatarColor[user.role] ?? 'bg-gray-400'} flex items-center justify-center flex-shrink-0 overflow-hidden`}>
+              {user.avatarUrl ? (
+                <S3Image storageKey={user.avatarUrl} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-white font-bold text-lg">{user.name.charAt(0).toUpperCase()}</span>
+              )}
             </div>
             <div>
               <h2 className="text-base font-bold text-gray-800 leading-tight">{user.name}</h2>

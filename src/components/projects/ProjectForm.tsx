@@ -1,9 +1,12 @@
-import React, { useState } from 'react'
-import { ChevronDown, Check } from 'lucide-react'
+import React, { useState, useRef } from 'react'
+import { ChevronDown, Check, Camera, Loader2, X } from 'lucide-react'
 import { useCreateProjectMutation, useUpdateProjectMutation } from '../../queries/projects.queries'
 import { useOrgs, useOrg } from '../../queries/orgs.queries'
+import { useUploadFile } from '../../queries/uploads.queries'
 import { useAuth } from '../../hooks/useAuth'
 import { avatarColors } from '../../lib/utils'
+import S3Image from '../ui/S3Image'
+import ImageCropperModal from '../ui/ImageCropperModal'
 import type { Project, ProjectStatus } from '../../types/project.types'
 import type { ApiError } from '../../types/api.types'
 
@@ -25,20 +28,25 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
   const [title,           setTitle]           = useState(project?.title       ?? '')
   const [description,     setDescription]     = useState(project?.description ?? '')
   const [status,          setStatus]          = useState<ProjectStatus>(project?.status ?? 'active')
+  const [logoUrl,         setLogoUrl]         = useState<string | null>(project?.logoUrl ?? null)
   const [orgId,           setOrgId]           = useState(project?.orgId ?? (!isSuperAdmin ? (adminOrgId ?? '') : ''))
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>(
     project?.members.map((m) => m.id) ?? [],
   )
   const [orgOpen,    setOrgOpen]    = useState(false)
   const [memberOpen, setMemberOpen] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [selectedFileForCrop, setSelectedFileForCrop] = useState<{ file: File; dataUrl: string } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { data: orgsData } = useOrgs({ limit: 100 }, { enabled: isSuperAdmin })
   const { data: orgDetail } = useOrg(orgId)
 
   const { mutate: createProject, isPending: isCreating, error: createError } = useCreateProjectMutation()
   const { mutate: updateProject, isPending: isUpdating, error: updateError } = useUpdateProjectMutation()
+  const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile()
 
-  const isPending = isCreating || isUpdating
+  const isPending = isCreating || isUpdating || isUploading
   const error     = (createError ?? updateError) as ApiError | null
 
   const errorMessage = error?.message ?? null
@@ -58,11 +66,38 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
     )
   }
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError('File size must be less than 10MB')
+      return
+    }
+    setUploadError(null)
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setSelectedFileForCrop({ file, dataUrl: reader.result as string })
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
+  const handleCropComplete = async (croppedFile: File) => {
+    try {
+      setSelectedFileForCrop(null)
+      const key = await uploadFile({ folder: 'logos', file: croppedFile })
+      setLogoUrl(key)
+    } catch (err: any) {
+      setUploadError(err.message || 'Failed to upload image')
+    }
+  }
+
   const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (isEdit) {
       updateProject(
-        { id: project.id, body: { title, description: description || undefined, status } },
+        { id: project.id, body: { title, description: description || undefined, status, logoUrl: logoUrl || undefined } },
         { onSuccess: onClose },
       )
     } else {
@@ -72,6 +107,7 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
           description:     description || undefined,
           orgId,
           assignedUserIds: selectedUserIds.length > 0 ? selectedUserIds : undefined,
+          logoUrl:         logoUrl || undefined,
         },
         { onSuccess: onClose },
       )
@@ -92,6 +128,52 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
             {errorMessage}
           </div>
         )}
+
+        {/* Logo Upload Section */}
+        <div className="flex flex-col items-center mb-6 mt-2">
+          <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+            <div className={`w-20 h-20 rounded-2xl flex items-center justify-center overflow-hidden border-2 border-dashed ${uploadError ? 'border-red-400' : 'border-gray-200'} bg-gray-50 transition-colors group-hover:border-orange-400 group-hover:bg-orange-50`}>
+              {logoUrl ? (
+                <S3Image storageKey={logoUrl} fallbackInitials={title.slice(0, 2).toUpperCase() || 'PR'} className="w-full h-full object-cover" />
+              ) : (
+                <div className="flex flex-col items-center justify-center text-gray-400 group-hover:text-orange-500 transition-colors">
+                  <Camera size={24} className="mb-1" />
+                  <span className="text-[10px] font-medium uppercase tracking-wider">Logo</span>
+                </div>
+              )}
+              {isUploading && (
+                <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center z-10">
+                  <Loader2 className="w-5 h-5 text-orange-500 animate-spin" />
+                </div>
+              )}
+            </div>
+            
+            {/* Remove Logo Button */}
+            {logoUrl && !isUploading && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setLogoUrl(null)
+                }}
+                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors border-2 border-white z-20"
+                title="Remove logo"
+              >
+                <X size={12} strokeWidth={3} />
+              </button>
+            )}
+            
+            {/* Hidden Input */}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </div>
+          {uploadError && <p className="text-xs text-red-500 mt-2 font-medium">{uploadError}</p>}
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
@@ -272,6 +354,16 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
           </div>
 
         </form>
+
+        {selectedFileForCrop && (
+          <ImageCropperModal
+            imageSrc={selectedFileForCrop.dataUrl}
+            fileName={selectedFileForCrop.file.name}
+            fileType={selectedFileForCrop.file.type}
+            onSave={handleCropComplete}
+            onCancel={() => setSelectedFileForCrop(null)}
+          />
+        )}
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useLogoutMutation } from '../../queries/auth.queries'
 import { useMe } from '../../queries/users.queries'
 import UpdateProfileForm from '../users/UpdateProfileForm'
+import S3Image from '../ui/S3Image'
 import { formatDate, roleBadgeClasses, userColor } from '../../lib/utils'
 
 const pageConfig: Record<string, { title: string; action?: string; actionTo?: string }> = {
@@ -71,10 +72,14 @@ export default function Topbar() {
               onClick={() => setMenuOpen(!menuOpen)}
               className="flex items-center gap-2 hover:bg-gray-50 px-2 py-1 rounded-lg transition-colors"
             >
-              <div className={`w-8 h-8 ${userColor(profile?.id ?? '')} rounded-full flex items-center justify-center flex-shrink-0`}>
-                <span className="text-white text-sm font-semibold">
-                  {displayName.charAt(0).toUpperCase()}
-                </span>
+              <div className={`w-8 h-8 ${userColor(profile?.id ?? '')} rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden`}>
+                {profile?.avatarUrl ? (
+                  <S3Image storageKey={profile.avatarUrl} className="w-full h-full object-cover text-[10px]" />
+                ) : (
+                  <span className="text-white text-sm font-semibold">
+                    {displayName.charAt(0).toUpperCase()}
+                  </span>
+                )}
               </div>
               <div className="text-left">
                 <p className="text-sm font-medium text-gray-700 leading-none">{displayName}</p>

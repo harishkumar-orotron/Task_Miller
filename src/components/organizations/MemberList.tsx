@@ -1,6 +1,7 @@
 import { Users } from 'lucide-react'
 import type { OrgMember } from '../../types/org.types'
 import { userColor, formatDate } from '../../lib/utils'
+import S3Image from '../ui/S3Image'
 
 interface MemberListProps {
   members: OrgMember[]
@@ -40,8 +41,12 @@ export default function MemberList({ members }: MemberListProps) {
               <td className="px-4 py-3 text-gray-400 text-xs">{String(i + 1).padStart(2, '0')}</td>
               <td className="px-4 py-3">
                 <div className="flex items-center gap-2.5">
-                  <div className={`w-7 h-7 rounded-full ${userColor(m.userId)} flex items-center justify-center flex-shrink-0`}>
-                    <span className="text-white text-xs font-semibold">{m.name.charAt(0)}</span>
+                  <div className={`w-7 h-7 rounded-full ${userColor(m.userId)} flex items-center justify-center flex-shrink-0 relative overflow-hidden`}>
+                    {m.avatarUrl ? (
+                      <S3Image storageKey={m.avatarUrl} fallbackInitials={m.name.charAt(0)} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white text-xs font-semibold">{m.name.charAt(0)}</span>
+                    )}
                   </div>
                   <span className="font-medium text-gray-700 text-sm">{m.name}</span>
                 </div>

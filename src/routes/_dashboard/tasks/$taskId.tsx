@@ -7,6 +7,7 @@ import { useAuth } from '../../../hooks/useAuth'
 import StatusBadge from '../../../components/ui/StatusBadge'
 import PriorityBadge from '../../../components/ui/PriorityBadge'
 import AvatarStack from '../../../components/ui/AvatarStack'
+import S3Image from '../../../components/ui/S3Image'
 import CommentsSection from '../../../components/tasks/CommentsSection'
 import LoadingSpinner from '../../../components/common/LoadingSpinner'
 import ErrorMessage from '../../../components/common/ErrorMessage'
@@ -295,8 +296,12 @@ function TaskViewPage() {
             {/* Created By + Due Date */}
             <div className="flex-shrink-0 space-y-3">
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${userColor(task.creator.id)}`}>
-                  <span className="text-white text-sm font-semibold">{task.creator.name.charAt(0).toUpperCase()}</span>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden ${userColor(task.creator.id)}`}>
+                  {task.creator.avatarUrl ? (
+                    <S3Image storageKey={task.creator.avatarUrl} fallbackInitials={task.creator.name.charAt(0).toUpperCase()} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-white text-sm font-semibold">{task.creator.name.charAt(0).toUpperCase()}</span>
+                  )}
                 </div>
                 <div>
                   <p className="text-xs text-gray-400">Created By</p>
@@ -395,8 +400,12 @@ function TaskViewPage() {
                         <td className="px-4 py-2.5 text-xs text-gray-400">{String(i + 1).padStart(2, '0')}</td>
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2.5">
-                            <div className={`w-7 h-7 rounded-full ${userColor(a.id)} flex items-center justify-center`}>
-                              <span className="text-white text-xs font-semibold">{a.name.charAt(0).toUpperCase()}</span>
+                            <div className={`w-7 h-7 rounded-full ${userColor(a.id)} flex items-center justify-center relative overflow-hidden`}>
+                              {a.avatarUrl ? (
+                                <S3Image storageKey={a.avatarUrl} fallbackInitials={a.name.charAt(0).toUpperCase()} className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-white text-xs font-semibold">{a.name.charAt(0).toUpperCase()}</span>
+                              )}
                             </div>
                             <span className="font-medium text-gray-700">{a.name}</span>
                           </div>
@@ -423,7 +432,8 @@ function TaskViewPage() {
             taskId={taskId}
             userId={user?.id ?? ''}
             userName={user?.name ?? ''}
-            assignees={task.assignees.map(a => ({ id: a.id, name: a.name, email: a.email }))}
+            avatarUrl={user?.avatarUrl ?? null}
+            assignees={task.assignees.map(a => ({ id: a.id, name: a.name, email: a.email, avatarUrl: a.avatarUrl }))}
           />
         </div>
 

@@ -42,7 +42,7 @@ export interface UserProjectTask {
   projectId:   string
   completedAt: string | null
   createdAt:   string
-  assignees?:  { id: string; name: string; email: string }[]
+  assignees?:  { id: string; name: string; email: string; avatarUrl?: string | null }[]
 }
 
 export interface UserProject {
@@ -101,4 +101,5 @@ export interface CreateUserBody {
 export interface UpdateMeBody {
   name?:  string
   phone?: string
+  avatarUrl?: string
 }

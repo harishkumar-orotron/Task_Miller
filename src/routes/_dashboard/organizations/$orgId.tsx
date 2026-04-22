@@ -8,6 +8,7 @@ import { useOrg, useOrgs, useRemoveMemberMutation, useDeleteOrgMutation } from '
 import { useAuth } from '../../../hooks/useAuth'
 import LoadingSpinner from '../../../components/common/LoadingSpinner'
 import ErrorMessage from '../../../components/common/ErrorMessage'
+import S3Image from '../../../components/ui/S3Image'
 import { userColor, formatDate } from '../../../lib/utils'
 import type { OrgMember } from '../../../types/org.types'
 import type { ApiError } from '../../../types/api.types'
@@ -318,13 +319,17 @@ interface MemberRowProps {
 }
 
 function MemberRow({
-  member, index, canRemove, isRemoving, confirming,
+  member, canRemove, isRemoving, confirming,
   onRemoveClick, onConfirmRemove, onCancelRemove,
 }: MemberRowProps) {
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-      <div className={`w-8 h-8 rounded-full ${userColor(member.userId)} flex items-center justify-center flex-shrink-0`}>
-        <span className="text-white text-xs font-semibold">{member.name.charAt(0).toUpperCase()}</span>
+      <div className={`w-8 h-8 rounded-full ${userColor(member.userId)} flex items-center justify-center flex-shrink-0 relative overflow-hidden`}>
+        {member.avatarUrl ? (
+          <S3Image storageKey={member.avatarUrl} fallbackInitials={member.name.charAt(0).toUpperCase()} className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-white text-xs font-semibold">{member.name.charAt(0).toUpperCase()}</span>
+        )}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-700 truncate">{member.name}</p>

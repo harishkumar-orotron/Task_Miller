@@ -71,10 +71,12 @@ export interface CreateProjectBody {
   description?:      string
   orgId:             string
   assignedUserIds?:  string[]
+  logoUrl?:          string
 }
 
 export interface UpdateProjectBody {
   title?:       string
   description?: string
   status?:      ProjectStatus
+  logoUrl?:     string
 }
