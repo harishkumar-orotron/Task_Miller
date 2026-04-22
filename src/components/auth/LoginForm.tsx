@@ -41,19 +41,36 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm w-full max-w-sm p-8">
-
+    <div className="min-h-screen bg-[#FFF7F4] flex overflow-hidden">
+      
+      {/* ── Left Section: Branding & Illustration ── */}
+      <div className="hidden lg:flex flex-1 flex-col p-12 h-screen">
         {/* Logo */}
-        <div className="flex items-center gap-2 mb-8">
-          <div className="w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">T</span>
-          </div>
-          <span className="font-bold text-gray-800 text-lg">Task Miller</span>
+        <div className="flex-shrink-0 z-10">
+          <span className="font-extrabold text-[#FF6B00] text-4xl tracking-tight">Task Miller</span>
         </div>
 
-        <h1 className="text-xl font-bold text-gray-800 mb-1">Welcome back</h1>
-        <p className="text-sm text-gray-500 mb-4">Sign in to your account</p>
+        {/* Big Graphic */}
+        <div className="flex-1 w-full mt-8 flex items-end justify-center pointer-events-none min-h-0">
+          <img 
+            src="/login-left-img.png" 
+            alt="Professional Task Management" 
+            className="w-full h-full max-w-4xl object-contain object-bottom mix-blend-multiply" 
+          />
+        </div>
+      </div>
+
+      {/* ── Right Section: Form Card ── */}
+      <div className="w-full lg:w-[48%] flex items-center justify-center p-6 sm:p-12 relative z-10">
+        <div className="bg-white w-full max-w-[440px] rounded-[2rem] shadow-2xl shadow-orange-900/5 p-8 sm:p-10 border border-white">
+          
+          {/* Card Illustration */}
+          <div className="flex justify-center mb-8">
+            <img src="/login-form-img.png" alt="Email Security" className="h-32 object-contain" />
+          </div>
+
+          <h1 className="text-2xl font-bold text-gray-800 mb-1">Welcome back</h1>
+          <p className="text-sm text-gray-500 mb-6">Sign in to your account</p>
 
         {/* Test credentials */}
         <div className="bg-orange-50 border border-orange-100 rounded-lg px-3 py-2.5 mb-6">
@@ -131,6 +148,7 @@ export default function LoginForm() {
           </Link>
         </div>
 
+        </div>
       </div>
     </div>
   )
