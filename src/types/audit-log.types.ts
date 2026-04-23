@@ -38,4 +38,5 @@ export interface AuditLogParams {
   limit?: number
   entityType?: string
   entityId?: string
+  orgId?: string
 }

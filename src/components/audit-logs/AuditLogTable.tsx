@@ -19,6 +19,7 @@ const actionStyle = (action: string): { label: string; cls: string } => {
 const entityStyle: Record<string, string> = {
   task:    'bg-blue-100 text-blue-700',
   project: 'bg-violet-100 text-violet-700',
+  user:    'bg-teal-100 text-teal-700',
 }
 
 interface Props {

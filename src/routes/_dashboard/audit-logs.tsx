@@ -12,7 +12,7 @@ import type { ApiError } from '../../types/api.types'
 export const Route = createFileRoute('/_dashboard/audit-logs')({
   beforeLoad: ({ context }: any) => {
     const role = context?.auth?.role ?? null
-    if (role === 'developer') throw redirect({ to: '/dashboard' })
+    if (role === 'developer') throw redirect({ to: '/dashboard', search: {} } as any)
   },
   validateSearch: (search: Record<string, unknown>) => ({
     entityType: (search.entityType as string) || '',
@@ -24,8 +24,10 @@ export const Route = createFileRoute('/_dashboard/audit-logs')({
 })
 
 function AuditLogsPage() {
-  const { isAdmin } = useAuth()
+  const { isAdmin, isSuperAdmin } = useAuth()
   const { selectedOrg } = useOrgContext()
+
+  const orgId = isSuperAdmin && selectedOrg ? selectedOrg.id : undefined
 
   const navigate = Route.useNavigate()
   const { entityType, entityId, page, limit } = Route.useSearch()
@@ -34,14 +36,12 @@ function AuditLogsPage() {
     navigate({ search: (prev) => ({ ...prev, ...params }) as any })
 
   const { data, isLoading, isFetching, isError, error } = useAuditLogs({
+    orgId,
     entityType: entityType || undefined,
     entityId:   entityId   || undefined,
     page,
     limit,
   })
-
-  // Re-fetch when superadmin switches org
-  void selectedOrg?.id
 
   const logs       = data?.auditLogs   ?? []
   const pagination = data?.pagination
@@ -77,6 +77,7 @@ function AuditLogsPage() {
               <option value="">All Entities</option>
               <option value="task">Tasks</option>
               <option value="project">Projects</option>
+              <option value="user">Users</option>
             </select>
             <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
           </div>
@@ -88,7 +89,7 @@ function AuditLogsPage() {
               <input
                 value={entityId}
                 onChange={(e) => setParams({ entityId: e.target.value, page: 1 })}
-                placeholder={`${entityType === 'task' ? 'Task' : 'Project'} ID`}
+                placeholder={`${entityType === 'task' ? 'Task' : entityType === 'project' ? 'Project' : 'User'} ID`}
                 className="bg-transparent outline-none w-44 text-gray-700 placeholder-gray-400 text-xs font-mono"
               />
             </div>
