@@ -109,18 +109,18 @@ function TasksPage() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col flex-1 overflow-hidden gap-5">
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+      <div className="flex-shrink-0 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
         {stats.map((s) => <StatsCard key={s.label} {...s} />)}
       </div>
 
       {/* Table card */}
-      <div className="bg-white rounded-xl border border-gray-100">
+      <div className="flex flex-col flex-1 overflow-hidden bg-white rounded-xl border border-gray-100 min-h-0">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
+        <div className="flex-shrink-0 flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
           <h2 className="font-semibold text-gray-800">
             Tasks List
             <span className="text-gray-400 font-normal ml-1.5">({totalRecords})</span>
@@ -177,41 +177,44 @@ function TasksPage() {
         </div>
 
         {/* Table */}
-        {isLoading ? (
-          <div className="py-16 flex justify-center"><LoadingSpinner /></div>
-        ) : isError ? (
-          <div className="py-8 px-5">
-            <ErrorMessage message={(error as ApiError)?.message ?? 'Failed to load tasks'} />
-          </div>
-        ) : (
-          <TaskTable
-            tasks={tasks}
-            projects={projects}
-            startEntry={startEntry}
-            isAdmin={isAdmin}
-            sorting={sorting}
-            onSortingChange={handleSorting}
-            onEdit={(task) => navigate({ to: '/tasks/$taskId/edit', params: { taskId: task.id } })}
-            onDelete={setDeleteTask}
-          />
-        )}
+        <div className="flex-1 overflow-y-auto">
+          {isLoading ? (
+            <div className="py-16 flex justify-center"><LoadingSpinner /></div>
+          ) : isError ? (
+            <div className="py-8 px-5">
+              <ErrorMessage message={(error as ApiError)?.message ?? 'Failed to load tasks'} />
+            </div>
+          ) : (
+            <TaskTable
+              tasks={tasks}
+              projects={projects}
+              startEntry={startEntry}
+              isAdmin={isAdmin}
+              sorting={sorting}
+              onSortingChange={handleSorting}
+              onEdit={(task) => navigate({ to: '/tasks/$taskId/edit', params: { taskId: task.id } })}
+              onDelete={setDeleteTask}
+            />
+          )}
+        </div>
 
-        {/* Pagination */}
-        {!isLoading && !isError && totalPages > 0 && (
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            totalRecords={totalRecords}
-            startEntry={startEntry}
-            endEntry={endEntry}
-            limit={limit}
-            hasPrevPage={pagination?.hasPrevPage}
-            hasNextPage={pagination?.hasNextPage}
-            onPageChange={(p) => setParams({ page: p })}
-            onLimitChange={handleLimit}
-          />
-        )}
       </div>
+
+      {/* Pagination footer */}
+      {!isLoading && !isError && totalPages > 0 && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalRecords={totalRecords}
+          startEntry={startEntry}
+          endEntry={endEntry}
+          limit={limit}
+          hasPrevPage={pagination?.hasPrevPage}
+          hasNextPage={pagination?.hasNextPage}
+          onPageChange={(p) => setParams({ page: p })}
+          onLimitChange={handleLimit}
+        />
+      )}
 
       {deleteTask  && (
         <ConfirmDeleteModal

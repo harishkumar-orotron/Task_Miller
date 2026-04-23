@@ -53,9 +53,13 @@ function OrganizationsPage() {
   const handleLimit  = (val: number) => { setLimit(val); setPage(1) }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col flex-1 overflow-hidden gap-3">
+
+      {/* Card */}
+      <div className="flex flex-col flex-1 overflow-hidden bg-white rounded-xl border border-gray-100">
+
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex-shrink-0 flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
           <h2 className="font-semibold text-gray-800">
             All <span className="text-gray-400 font-normal ml-1">({totalRecords})</span>
           </h2>
@@ -96,35 +100,37 @@ function OrganizationsPage() {
         </div>
 
         {/* Content */}
-        {isLoading ? (
-          <div className="flex justify-center py-16">
-            <LoadingSpinner />
-          </div>
-        ) : error ? (
-          <div className="p-5">
-            <ErrorMessage message={(error as ApiError)?.message ?? 'Failed to load organizations'} />
-          </div>
-        ) : (
-          <OrgTable orgs={orgs} />
-        )}
+        <div className="flex-1 overflow-y-auto">
+          {isLoading ? (
+            <div className="flex justify-center py-16">
+              <LoadingSpinner />
+            </div>
+          ) : error ? (
+            <div className="p-5">
+              <ErrorMessage message={(error as ApiError)?.message ?? 'Failed to load organizations'} />
+            </div>
+          ) : (
+            <OrgTable orgs={orgs} />
+          )}
+        </div>
 
-        {/* Pagination */}
-        {!isLoading && !error && totalPages > 0 && (
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            totalRecords={totalRecords}
-            startEntry={startEntry}
-            endEntry={endEntry}
-            limit={limit}
-            hasPrevPage={pagination?.hasPrevPage}
-            hasNextPage={pagination?.hasNextPage}
-            onPageChange={setPage}
-            onLimitChange={handleLimit}
-          />
-        )}
+      </div>
 
-    
+      {/* Pagination footer */}
+      {!isLoading && !error && totalPages > 0 && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalRecords={totalRecords}
+          startEntry={startEntry}
+          endEntry={endEntry}
+          limit={limit}
+          hasPrevPage={pagination?.hasPrevPage}
+          hasNextPage={pagination?.hasNextPage}
+          onPageChange={setPage}
+          onLimitChange={handleLimit}
+        />
+      )}
 
     </div>
   )

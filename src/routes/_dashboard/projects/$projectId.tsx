@@ -9,6 +9,7 @@ import { useAuth } from '../../../hooks/useAuth'
 import LoadingSpinner from '../../../components/common/LoadingSpinner'
 import ErrorMessage from '../../../components/common/ErrorMessage'
 import S3Image from '../../../components/ui/S3Image'
+import Pagination from '../../../components/ui/Pagination'
 import { userColor, formatDate, projectStatusBadge } from '../../../lib/utils'
 import type { ApiError } from '../../../types/api.types'
 
@@ -39,6 +40,8 @@ function ProjectViewPage() {
 
 
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [membersPage,  setMembersPage]  = useState(1)
+  const [membersLimit, setMembersLimit] = useState(10)
 
   const handleDelete = () => {
     deleteProject(projectId, {
@@ -78,21 +81,27 @@ function ProjectViewPage() {
     { label: 'Completed',    value: ts.completed,  iconBg: 'bg-green-100',  icon: <CheckCircle2 size={18} className="text-green-500"  /> },
   ]
 
+  const totalMembers    = project.members.length
+  const totalMemberPages = Math.ceil(totalMembers / membersLimit) || 1
+  const membersStart    = totalMembers === 0 ? 0 : (membersPage - 1) * membersLimit + 1
+  const membersEnd      = Math.min(membersPage * membersLimit, totalMembers)
+  const pagedMembers    = project.members.slice((membersPage - 1) * membersLimit, membersPage * membersLimit)
+
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col flex-1 gap-4 overflow-hidden">
 
       {/* Back */}
       <button
         onClick={() => navigate({ to: '/projects', search: {} as any })}
-        className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+        className="flex-shrink-0 flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
       >
         <ArrowLeft size={15} /> Back to Projects
       </button>
 
-      <div className="flex gap-5 items-start">
+      <div className="flex flex-1 gap-5 min-h-0">
 
         {/* ── Left panel ────────────────────────────────────────────────── */}
-        <div className="flex-1 space-y-4">
+        <div className="flex flex-col flex-1 min-h-0 gap-4 overflow-hidden">
 
           {/* Header card */}
           <div className="bg-white rounded-xl border border-gray-100 p-5">
@@ -185,68 +194,97 @@ function ProjectViewPage() {
             </div>
           </div>
 
-          {/* Members card */}
-          <div className="bg-white rounded-xl border border-gray-100 p-5">
-            <h3 className="font-semibold text-gray-800 mb-4">
-              Members
-              <span className="ml-2 text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-                {project.members.length}
-              </span>
-            </h3>
+          {/* Members section: card + pagination footer */}
+          <div className="flex flex-col flex-1 min-h-0 gap-3 overflow-hidden">
 
-            {project.members.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-gray-400">
-                <p className="text-sm">No members assigned</p>
+            {/* Members card */}
+            <div className="flex flex-col flex-1 overflow-hidden bg-white rounded-xl border border-gray-100">
+
+              {/* Card header */}
+              <div className="flex-shrink-0 flex items-center px-5 py-3.5 border-b border-gray-100">
+                <h3 className="font-semibold text-gray-800">
+                  Members
+                  <span className="ml-2 text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                    {totalMembers}
+                  </span>
+                </h3>
               </div>
-            ) : (
-              <div className="overflow-hidden rounded-lg border border-gray-100">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-teal-100 text-xs text-gray-500 font-semibold border-b border-gray-200">
-                      <th className="px-5 py-3 text-left">#</th>
-                      <th className="px-5 py-3 text-left">Name</th>
-                      <th className="px-5 py-3 text-left">Date</th>
-                      <th className="px-5 py-3 text-left">Tasks Assigned</th>
-                      <th className="px-5 py-3 text-left">Email</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {project.members.map((m, i) => (
-                      <tr key={m.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-5 py-3 text-gray-400 text-xs">{String(i + 1).padStart(2, '0')}</td>
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-2.5">
-                            <div className={`w-8 h-8 rounded-full ${userColor(m.id)} flex items-center justify-center flex-shrink-0 relative overflow-hidden`}>
-                              {m.avatarUrl ? (
-                                <S3Image storageKey={m.avatarUrl} fallbackInitials={m.name.charAt(0).toUpperCase()} className="w-full h-full object-cover" />
-                              ) : (
-                                <span className="text-white text-xs font-semibold">{m.name.charAt(0).toUpperCase()}</span>
-                              )}
-                            </div>
-                            <span className="font-medium text-gray-700 whitespace-nowrap">{m.name}</span>
-                          </div>
-                        </td>
-                        <td className="px-5 py-3 text-gray-500 text-xs whitespace-nowrap">
-                          {formatDate(project.createdAt)}
-                        </td>
-                        <td className="px-5 py-3">
-                          <span className="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 text-xs font-semibold">
-                            {m.totalTasksAssigned}
-                          </span>
-                        </td>
-                        <td className="px-5 py-3 text-gray-500 text-xs">{m.email}</td>
+
+              {/* Scrollable table */}
+              <div className="flex-1 overflow-y-auto">
+                {totalMembers === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                    <p className="text-sm">No members assigned</p>
+                  </div>
+                ) : (
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 z-20">
+                      <tr className="text-xs text-gray-600 font-semibold">
+                        <th className="px-5 py-3 text-left bg-[#ccfbf1]">#</th>
+                        <th className="px-5 py-3 text-left bg-[#ccfbf1]">Name</th>
+                        <th className="px-5 py-3 text-left bg-[#ccfbf1]">Date</th>
+                        <th className="px-5 py-3 text-left bg-[#ccfbf1]">Tasks Assigned</th>
+                        <th className="px-5 py-3 text-left bg-[#ccfbf1]">Email</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {pagedMembers.map((m, i) => (
+                        <tr key={m.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-5 py-3 text-gray-400 text-xs">
+                            {String((membersPage - 1) * membersLimit + i + 1).padStart(2, '0')}
+                          </td>
+                          <td className="px-5 py-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className={`w-8 h-8 rounded-full ${userColor(m.id)} flex items-center justify-center flex-shrink-0 relative overflow-hidden`}>
+                                {m.avatarUrl ? (
+                                  <S3Image storageKey={m.avatarUrl} fallbackInitials={m.name.charAt(0).toUpperCase()} className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="text-white text-xs font-semibold">{m.name.charAt(0).toUpperCase()}</span>
+                                )}
+                              </div>
+                              <span className="font-medium text-gray-700 whitespace-nowrap">{m.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3 text-gray-500 text-xs whitespace-nowrap">
+                            {formatDate(project.createdAt)}
+                          </td>
+                          <td className="px-5 py-3">
+                            <span className="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 text-xs font-semibold">
+                              {m.totalTasksAssigned}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3 text-gray-500 text-xs">{m.email}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
-            )}
-          </div>
 
-        </div>
+            </div>{/* end members card */}
+
+            {/* Pagination footer */}
+            {totalMembers > 0 && (
+              <Pagination
+                page={membersPage}
+                totalPages={totalMemberPages}
+                totalRecords={totalMembers}
+                startEntry={membersStart}
+                endEntry={membersEnd}
+                limit={membersLimit}
+                hasPrevPage={membersPage > 1}
+                hasNextPage={membersPage < totalMemberPages}
+                onPageChange={setMembersPage}
+                onLimitChange={(l) => { setMembersLimit(l); setMembersPage(1) }}
+              />
+            )}
+
+          </div>{/* end members section */}
+
+        </div>{/* end left panel */}
 
         {/* ── Right panel — unified stats card ──────────────────────────── */}
-        <div className="w-64 flex-shrink-0">
+        <div className="w-64 flex-shrink-0 overflow-y-auto">
           <div className="bg-white rounded-xl border border-gray-100 p-5">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">Statistics</p>
             <div className="space-y-3">

@@ -56,60 +56,67 @@ function AuditLogsPage() {
   if (!isAdmin) return null
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100">
+    <div className="flex flex-col flex-1 overflow-hidden gap-3">
 
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
-        <h2 className="font-semibold text-gray-800">
-          Audit Logs
-          <span className="text-gray-400 font-normal ml-1.5">({totalRecords})</span>
-        </h2>
+      {/* Table card */}
+      <div className="flex flex-col flex-1 overflow-hidden bg-white rounded-xl border border-gray-100">
 
-        <div className="flex items-center gap-2 flex-wrap">
+        {/* Header */}
+        <div className="flex-shrink-0 flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
+          <h2 className="font-semibold text-gray-800">
+            Audit Logs
+            <span className="text-gray-400 font-normal ml-1.5">({totalRecords})</span>
+          </h2>
 
-          {/* Entity type filter */}
-          <div className="relative">
-            <select
-              value={entityType}
-              onChange={(e) => setParams({ entityType: e.target.value, entityId: '', page: 1 })}
-              className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-500 bg-gray-50 outline-none cursor-pointer"
-            >
-              <option value="">All Entities</option>
-              <option value="task">Tasks</option>
-              <option value="project">Projects</option>
-              <option value="user">Users</option>
-            </select>
-            <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
-          </div>
+          <div className="flex items-center gap-2 flex-wrap">
 
-          {/* Entity ID filter — visible only when a type is selected */}
-          {entityType && (
-            <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-1.5 bg-gray-50">
-              <Search size={14} className={isFetching ? 'text-orange-400 animate-pulse' : 'text-gray-400'} />
-              <input
-                value={entityId}
-                onChange={(e) => setParams({ entityId: e.target.value, page: 1 })}
-                placeholder={`${entityType === 'task' ? 'Task' : entityType === 'project' ? 'Project' : 'User'} ID`}
-                className="bg-transparent outline-none w-44 text-gray-700 placeholder-gray-400 text-xs font-mono"
-              />
+            {/* Entity type filter */}
+            <div className="relative">
+              <select
+                value={entityType}
+                onChange={(e) => setParams({ entityType: e.target.value, entityId: '', page: 1 })}
+                className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-500 bg-gray-50 outline-none cursor-pointer"
+              >
+                <option value="">All Entities</option>
+                <option value="task">Tasks</option>
+                <option value="project">Projects</option>
+                <option value="user">Users</option>
+              </select>
+              <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
             </div>
-          )}
 
+            {/* Entity ID filter — visible only when a type is selected */}
+            {entityType && (
+              <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-1.5 bg-gray-50">
+                <Search size={14} className={isFetching ? 'text-orange-400 animate-pulse' : 'text-gray-400'} />
+                <input
+                  value={entityId}
+                  onChange={(e) => setParams({ entityId: e.target.value, page: 1 })}
+                  placeholder={`${entityType === 'task' ? 'Task' : entityType === 'project' ? 'Project' : 'User'} ID`}
+                  className="bg-transparent outline-none w-44 text-gray-700 placeholder-gray-400 text-xs font-mono"
+                />
+              </div>
+            )}
+
+          </div>
         </div>
+
+        {/* Table */}
+        <div className="flex-1 overflow-y-auto">
+          {isLoading ? (
+            <div className="py-16 flex justify-center"><LoadingSpinner /></div>
+          ) : isError ? (
+            <div className="py-8 px-5">
+              <ErrorMessage message={(error as ApiError)?.message ?? 'Failed to load audit logs'} />
+            </div>
+          ) : (
+            <AuditLogTable logs={logs} startEntry={startEntry} />
+          )}
+        </div>
+
       </div>
 
-      {/* Table */}
-      {isLoading ? (
-        <div className="py-16 flex justify-center"><LoadingSpinner /></div>
-      ) : isError ? (
-        <div className="py-8 px-5">
-          <ErrorMessage message={(error as ApiError)?.message ?? 'Failed to load audit logs'} />
-        </div>
-      ) : (
-        <AuditLogTable logs={logs} startEntry={startEntry} />
-      )}
-
-      {/* Pagination */}
+      {/* Pagination footer */}
       {!isLoading && !isError && totalPages > 0 && (
         <Pagination
           page={page}

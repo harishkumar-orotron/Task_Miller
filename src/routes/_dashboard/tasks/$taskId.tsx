@@ -202,161 +202,161 @@ function TaskViewPage() {
   const allowed = allowedStatuses(task.status)
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col flex-1 gap-4 overflow-hidden">
 
       {/* Back */}
       <button
         onClick={() => navigate({ to: '/tasks', search: {} as any })}
-        className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+        className="flex-shrink-0 flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
       >
         <ArrowLeft size={15} /> Back to Tasks
       </button>
 
-      <div className="flex gap-5 items-start">
+      <div className="flex flex-1 gap-5 min-h-0">
 
         {/* ── Left panel ─────────────────────────────────────────────────── */}
-        <div className="flex-1 min-w-0 bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+        <div className="flex flex-col flex-1 min-w-0 overflow-hidden bg-white rounded-2xl border border-gray-100">
 
-          {/* Title row */}
-          <div className="flex items-start justify-between gap-4">
-            <h2 className="text-xl font-bold text-gray-800 leading-snug">{task.title}</h2>
+          {/* Fixed top section */}
+          <div className="flex-shrink-0 p-6 space-y-5">
 
-            <div className="flex items-center gap-2 flex-shrink-0">
-
-              {/* Status dropdown */}
-              {task.status === 'completed' ? (
-                <StatusBadge status={task.status} />
-              ) : (
-                <div className="relative">
-                  <button
-                    onClick={() => setStatusOpen(!statusOpen)}
-                    className={`flex items-center gap-2 border-2 rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors ${statusButtonClass[task.status] ?? statusButtonFallback}`}
-                  >
-                    {statusLabel(task.status)}
-                    <ChevronDown size={14} />
-                  </button>
-
-                  {statusOpen && (
-                    <>
-                      <div className="fixed inset-0 z-[9]" onClick={() => setStatusOpen(false)} />
-                      <div className="absolute right-0 top-9 z-[10] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden min-w-[140px]">
-                        {allowed.map((s) => (
-                          <button
-                            key={s}
-                            onClick={() => handleStatusChange(s)}
-                            className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-gray-50 ${s === task.status ? 'text-orange-500 bg-orange-50' : 'text-gray-700'}`}
-                          >
-                            {statusLabel(s)}
-                          </button>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {/* Edit button */}
-              {isAdmin && task.status !== 'completed' && (
-                <button
-                  onClick={() => navigate({ to: '/tasks/$taskId/edit', params: { taskId } })}
-                  className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-colors"
-                  title="Edit task"
-                >
-                  <Pencil size={14} />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Status error */}
-          {statusError && (
-            <div className="flex items-center justify-between gap-2 bg-red-50 border border-red-200 text-red-600 text-xs px-3 py-2 rounded-lg">
-              <span>{statusError}</span>
-              <button onClick={() => setStatusError(null)} className="text-red-400 hover:text-red-600 transition-colors">
-                <X size={13} />
-              </button>
-            </div>
-          )}
-
-          {/* Project */}
-          <div>
-            <p className="text-xs text-gray-400 mb-0.5">Project</p>
-            <p className="text-sm font-bold text-gray-800">{proj?.title ?? '—'}</p>
-          </div>
-
-          <hr className="border-gray-300" />
-
-          {/* Description + Created By + Due Date */}
-          <div className="flex gap-6 items-start">
-            {/* Description */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <AlignLeft size={15} className="text-gray-400" />
-                <p className="text-sm font-semibold text-gray-700">Description</p>
-              </div>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                {task.description ?? <span className="italic text-gray-300">No description provided</span>}
-              </p>
-            </div>
-
-            {/* Created By + Due Date */}
-            <div className="flex-shrink-0 space-y-3">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden ${userColor(task.creator.id)}`}>
-                  {task.creator.avatarUrl ? (
-                    <S3Image storageKey={task.creator.avatarUrl} fallbackInitials={task.creator.name.charAt(0).toUpperCase()} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-white text-sm font-semibold">{task.creator.name.charAt(0).toUpperCase()}</span>
-                  )}
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400">Created By</p>
-                  <p className="text-sm font-bold text-gray-800">{task.creator.name}</p>
-                  <p className="text-xs text-gray-400">
-                    {new Date(task.createdAt).toLocaleString('en-GB', {
-                      day: '2-digit', month: '2-digit', year: 'numeric',
-                      hour: '2-digit', minute: '2-digit',
-                    })}
-                  </p>
-                </div>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Due Date</p>
-                {task.dueDate ? (
-                  <p className="text-sm font-semibold text-red-500 bg-red-50 border border-red-100 px-3 py-1.5 rounded-lg">
-                    {formatDate(task.dueDate)}
-                  </p>
+            {/* Title row */}
+            <div className="flex items-start justify-between gap-4">
+              <h2 className="text-xl font-bold text-gray-800 leading-snug">{task.title}</h2>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {task.status === 'completed' ? (
+                  <StatusBadge status={task.status} />
                 ) : (
-                  <p className="text-sm text-gray-400">—</p>
+                  <div className="relative">
+                    <button
+                      onClick={() => setStatusOpen(!statusOpen)}
+                      className={`flex items-center gap-2 border-2 rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors ${statusButtonClass[task.status] ?? statusButtonFallback}`}
+                    >
+                      {statusLabel(task.status)}
+                      <ChevronDown size={14} />
+                    </button>
+                    {statusOpen && (
+                      <>
+                        <div className="fixed inset-0 z-[9]" onClick={() => setStatusOpen(false)} />
+                        <div className="absolute right-0 top-9 z-[10] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden min-w-[140px]">
+                          {allowed.map((s) => (
+                            <button
+                              key={s}
+                              onClick={() => handleStatusChange(s)}
+                              className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-gray-50 ${s === task.status ? 'text-orange-500 bg-orange-50' : 'text-gray-700'}`}
+                            >
+                              {statusLabel(s)}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+                {isAdmin && task.status !== 'completed' && (
+                  <button
+                    onClick={() => navigate({ to: '/tasks/$taskId/edit', params: { taskId } })}
+                    className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-colors"
+                    title="Edit task"
+                  >
+                    <Pencil size={14} />
+                  </button>
                 )}
               </div>
             </div>
-          </div>
 
-          {/* Tabs */}
-          <div>
-            <div className="flex border-b border-gray-100 gap-0">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.key
+            {/* Status error */}
+            {statusError && (
+              <div className="flex items-center justify-between gap-2 bg-red-50 border border-red-200 text-red-600 text-xs px-3 py-2 rounded-lg">
+                <span>{statusError}</span>
+                <button onClick={() => setStatusError(null)} className="text-red-400 hover:text-red-600 transition-colors">
+                  <X size={13} />
+                </button>
+              </div>
+            )}
+
+            {/* Project */}
+            <div>
+              <p className="text-xs text-gray-400 mb-0.5">Project</p>
+              <p className="text-sm font-bold text-gray-800">{proj?.title ?? '—'}</p>
+            </div>
+
+            <hr className="border-gray-300" />
+
+            {/* Description + Created By + Due Date */}
+            <div className="flex gap-6 items-start">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlignLeft size={15} className="text-gray-400" />
+                  <p className="text-sm font-semibold text-gray-700">Description</p>
+                </div>
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  {task.description ?? <span className="italic text-gray-300">No description provided</span>}
+                </p>
+              </div>
+              <div className="flex-shrink-0 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden ${userColor(task.creator.id)}`}>
+                    {task.creator.avatarUrl ? (
+                      <S3Image storageKey={task.creator.avatarUrl} fallbackInitials={task.creator.name.charAt(0).toUpperCase()} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white text-sm font-semibold">{task.creator.name.charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Created By</p>
+                    <p className="text-sm font-bold text-gray-800">{task.creator.name}</p>
+                    <p className="text-xs text-gray-400">
+                      {new Date(task.createdAt).toLocaleString('en-GB', {
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">Due Date</p>
+                  {task.dueDate ? (
+                    <p className="text-sm font-semibold text-red-500 bg-red-50 border border-red-100 px-3 py-1.5 rounded-lg">
+                      {formatDate(task.dueDate)}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-400">—</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+          </div>{/* end fixed top */}
+
+          {/* Sticky tabs nav */}
+          <div className="flex-shrink-0 flex gap-0 border-b border-gray-100 px-6">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === tab.key
                     ? 'border-orange-500 text-orange-500'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                >
-                  {tab.label}
-                  <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${activeTab === tab.key ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'
-                    }`}>
-                    {String(tab.count).padStart(2, '0')}
-                  </span>
-                </button>
-              ))}
-            </div>
+                }`}
+              >
+                {tab.label}
+                <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
+                  activeTab === tab.key ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'
+                }`}>
+                  {String(tab.count).padStart(2, '0')}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Scrollable tab content */}
+          <div className="flex-1 overflow-y-auto px-6 pb-6 pt-4">
 
             {/* Subtasks tab */}
             {activeTab === 'subtasks' && (
-              <div className="mt-4 space-y-3">
+              <div className="space-y-3">
                 {isAdmin && task.status !== 'completed' && (
                   <button
                     onClick={() => navigate({ to: '/tasks/$taskId/subtask', params: { taskId } })}
@@ -385,12 +385,12 @@ function TaskViewPage() {
 
             {/* Assign To tab */}
             {activeTab === 'assignTo' && (
-              <table className="w-full text-sm mt-3">
-                <thead>
-                  <tr className="bg-gray-50 text-xs text-gray-500 font-semibold">
-                    <th className="px-4 py-2.5 text-left rounded-l-lg">S No</th>
-                    <th className="px-4 py-2.5 text-left">Name</th>
-                    <th className="px-4 py-2.5 text-left rounded-r-lg">Email</th>
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 z-20">
+                  <tr className="text-xs text-gray-600 font-semibold">
+                    <th className="px-4 py-2.5 text-left bg-[#ccfbf1]">S No</th>
+                    <th className="px-4 py-2.5 text-left bg-[#ccfbf1]">Name</th>
+                    <th className="px-4 py-2.5 text-left bg-[#ccfbf1]">Email</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -426,12 +426,13 @@ function TaskViewPage() {
             {activeTab === 'attachments' && (
               <AttachmentsSection taskId={taskId} />
             )}
-          </div>
 
-        </div>
+          </div>{/* end scrollable content */}
+
+        </div>{/* end left panel */}
 
         {/* ── Right panel — Comments ──────────────────────────────────────── */}
-        <div className="w-96 flex-shrink-0 sticky top-6" style={{ height: 'calc(100vh - 120px)' }}>
+        <div className="w-96 flex-shrink-0">
           <CommentsSection
             taskId={taskId}
             userId={user?.id ?? ''}

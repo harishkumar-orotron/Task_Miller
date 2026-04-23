@@ -24,7 +24,7 @@ export default function Pagination({
   )
 
   return (
-    <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100">
+    <div className="flex items-center justify-between px-5 py-3 bg-white rounded-xl border border-gray-100">
 
       {/* Left — entries info + rows selector */}
       <div className="flex items-center gap-3">

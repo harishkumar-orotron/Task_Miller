@@ -114,18 +114,18 @@ function DashboardPage() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col flex-1 overflow-hidden gap-5">
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 xl:grid-cols-10 gap-3">
+      <div className="flex-shrink-0 grid grid-cols-2 sm:grid-cols-5 xl:grid-cols-10 gap-3">
         {stats.map((s) => <StatsCard key={s.label} {...s} />)}
       </div>
 
       {/* Tasks List */}
-      <div className="bg-white rounded-xl border border-gray-100">
+      <div className="flex flex-col flex-1 overflow-hidden bg-white rounded-xl border border-gray-100 min-h-0">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
+        <div className="flex-shrink-0 flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
           <h2 className="font-semibold text-gray-800">
             Tasks List
             <span className="text-gray-400 font-normal ml-1.5">({totalRecords})</span>
@@ -173,38 +173,40 @@ function DashboardPage() {
         </div>
 
         {/* Table */}
-        {isLoadingTasks ? (
-          <div className="py-12 flex justify-center">
-            <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : (
-          <TaskTable
-            tasks={tasks}
-            projects={projects}
-            startEntry={startEntry}
-            isAdmin={isAdmin}
-            sorting={sorting}
-            onSortingChange={handleSorting}
-          />
-        )}
-
-        {/* Pagination */}
-        {!isLoadingTasks && totalPages > 0 && (
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            totalRecords={totalRecords}
-            startEntry={startEntry}
-            endEntry={endEntry}
-            limit={limit}
-            hasPrevPage={pagination?.hasPrevPage}
-            hasNextPage={pagination?.hasNextPage}
-            onPageChange={(p) => setParams({ page: p })}
-            onLimitChange={handleLimit}
-          />
-        )}
+        <div className="flex-1 overflow-y-auto">
+          {isLoadingTasks ? (
+            <div className="py-12 flex justify-center">
+              <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <TaskTable
+              tasks={tasks}
+              projects={projects}
+              startEntry={startEntry}
+              isAdmin={isAdmin}
+              sorting={sorting}
+              onSortingChange={handleSorting}
+            />
+          )}
+        </div>
 
       </div>
+
+      {/* Pagination footer */}
+      {!isLoadingTasks && totalPages > 0 && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalRecords={totalRecords}
+          startEntry={startEntry}
+          endEntry={endEntry}
+          limit={limit}
+          hasPrevPage={pagination?.hasPrevPage}
+          hasNextPage={pagination?.hasNextPage}
+          onPageChange={(p) => setParams({ page: p })}
+          onLimitChange={handleLimit}
+        />
+      )}
 
     </div>
   )

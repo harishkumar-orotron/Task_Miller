@@ -37,47 +37,45 @@ export default function DataTable<TData>({
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id} className="table-header text-xs text-gray-600 font-semibold">
-              {headerGroup.headers.map((header) => {
-                const canSort = header.column.getCanSort()
-                const sorted  = header.column.getIsSorted()
-                return (
-                  <th
-                    key={header.id}
-                    className="px-5 py-3 text-left whitespace-nowrap select-none"
-                    onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                    style={{ cursor: canSort ? 'pointer' : 'default' }}
-                  >
-                    <div className="flex items-center gap-1">
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {canSort && (
-                        sorted === 'asc'  ? <ChevronUp   size={12} className="text-gray-700" /> :
-                        sorted === 'desc' ? <ChevronDown size={12} className="text-gray-700" /> :
-                                           <ChevronsUpDown size={12} className="text-gray-400" />
-                      )}
-                    </div>
-                  </th>
-                )
-              })}
-            </tr>
-          ))}
-        </thead>
-        <tbody className="divide-y divide-gray-50">
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="px-5 py-3">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <table className="w-full text-sm">
+      <thead className="sticky top-0 z-20">
+        {table.getHeaderGroups().map((headerGroup) => (
+          <tr key={headerGroup.id} className="table-header text-xs text-gray-600 font-semibold">
+            {headerGroup.headers.map((header) => {
+              const canSort = header.column.getCanSort()
+              const sorted  = header.column.getIsSorted()
+              return (
+                <th
+                  key={header.id}
+                  className="px-5 py-3 text-left whitespace-nowrap select-none bg-[#ccfbf1]"
+                  onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                  style={{ cursor: canSort ? 'pointer' : 'default' }}
+                >
+                  <div className="flex items-center gap-1">
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {canSort && (
+                      sorted === 'asc'  ? <ChevronUp   size={12} className="text-gray-700" /> :
+                      sorted === 'desc' ? <ChevronDown size={12} className="text-gray-700" /> :
+                                         <ChevronsUpDown size={12} className="text-gray-400" />
+                    )}
+                  </div>
+                </th>
+              )
+            })}
+          </tr>
+        ))}
+      </thead>
+      <tbody className="divide-y divide-gray-50">
+        {table.getRowModel().rows.map((row) => (
+          <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+            {row.getVisibleCells().map((cell) => (
+              <td key={cell.id} className="px-5 py-3">
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   )
 }
