@@ -5,7 +5,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useOrgContext } from '../../store/orgContext.store'
 import AuditLogTable from '../../components/audit-logs/AuditLogTable'
 import Pagination from '../../components/ui/Pagination'
-import LoadingSpinner from '../../components/common/LoadingSpinner'
+import { TableSkeleton } from '../../components/ui/Skeleton'
 import ErrorMessage from '../../components/common/ErrorMessage'
 import type { ApiError } from '../../types/api.types'
 
@@ -105,7 +105,9 @@ function AuditLogsPage() {
         {/* Table */}
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
-            <div className="py-16 flex justify-center"><LoadingSpinner /></div>
+            <div className="p-5">
+              <TableSkeleton rows={12} cols={6} />
+            </div>
           ) : isError ? (
             <div className="py-8 px-5">
               <ErrorMessage message={(error as ApiError)?.message ?? 'Failed to load audit logs'} />

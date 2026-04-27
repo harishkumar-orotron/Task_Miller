@@ -1,9 +1,11 @@
-import { useRouterState, useNavigate } from '@tanstack/react-router'
-import { ChevronDown, Plus, LogOut, Building2, Mail, ShieldCheck, Phone, Clock, UserCog } from 'lucide-react'
-import { useState } from 'react'
+import { useRouterState, useNavigate, useMatches } from '@tanstack/react-router'
+import { ChevronDown, Plus, LogOut, Building2, Mail, ShieldCheck, Phone, Clock, UserCog, Menu } from 'lucide-react'
+import React, { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { useLogoutMutation } from '../../queries/auth.queries'
 import { useMe } from '../../queries/users.queries'
+import { useTask } from '../../queries/tasks.queries'
+import { useProject } from '../../queries/projects.queries'
 import S3Image from '../ui/S3Image'
 import { formatDate, roleBadgeClasses, userColor } from '../../lib/utils'
 import NotificationPanel from '../notifications/NotificationPanel'
@@ -19,13 +21,20 @@ const pageConfig: Record<string, { title: string; action?: string; actionTo?: st
 }
 
 
-export default function Topbar() {
+export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const navigate = useNavigate()
   const { isAdmin, orgName } = useAuth()
   const { mutate: logout, isPending: isLoggingOut } = useLogoutMutation()
   const { data: profile } = useMe()
   const [menuOpen, setMenuOpen] = useState(false)
+
+  const matches = useMatches()
+  const taskId = (matches.find((m) => (m.params as any).taskId)?.params as any)?.taskId
+  const projectId = (matches.find((m) => (m.params as any).projectId)?.params as any)?.projectId
+
+  const { data: task } = useTask(taskId || '')
+  const { data: project } = useProject(projectId || '')
 
   const matchedKey = Object.keys(pageConfig)
     .filter((k) => pathname === k || pathname.startsWith(k + '/'))
@@ -34,6 +43,25 @@ export default function Topbar() {
   const config     = matchedKey ? pageConfig[matchedKey] : { title: 'Task Miller' }
   const isIndexPage = pathname === matchedKey
   const showAction  = isAdmin && config.action && isIndexPage
+
+  let displayTitle: React.ReactNode = config.title
+  if (taskId && task) {
+    displayTitle = (
+      <div className="flex items-center gap-2">
+        <span className="text-gray-400 font-medium">{config.title}</span>
+        <span className="text-gray-300 text-sm font-light">/</span>
+        <span className="truncate max-w-[300px]">{task.title}</span>
+      </div>
+    )
+  } else if (projectId && project) {
+    displayTitle = (
+      <div className="flex items-center gap-2">
+        <span className="text-gray-400 font-medium">{config.title}</span>
+        <span className="text-gray-300 text-sm font-light">/</span>
+        <span className="truncate max-w-[300px]">{project.title}</span>
+      </div>
+    )
+  }
 
   const handleLogout = () => {
     logout()
@@ -46,7 +74,16 @@ export default function Topbar() {
     <>
       <header className="bg-white border-b border-gray-200 px-6 h-14 flex items-center justify-between flex-shrink-0">
 
-        <h1 className="text-lg font-semibold text-gray-800">{config.title}</h1>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onToggleSidebar}
+            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-500"
+            title="Toggle Sidebar"
+          >
+            <Menu size={20} />
+          </button>
+          <h1 className="text-lg font-semibold text-gray-800">{displayTitle}</h1>
+        </div>
 
         <div className="flex items-center gap-3">
 

@@ -17,7 +17,12 @@ const navItems = [
   { label: 'Audit Logs',    icon: ScrollText,      to: '/audit-logs',    roles: ['superadmin', 'admin'] },
 ] as const
 
-export default function Sidebar() {
+interface SidebarProps {
+  isCollapsed: boolean
+  setIsCollapsed: (v: boolean) => void
+}
+
+export default function Sidebar({ isCollapsed }: SidebarProps) {
   const pathname          = useRouterState({ select: (s) => s.location.pathname })
   const navigate          = useNavigate()
   const { role, orgName } = useAuth()
@@ -58,19 +63,28 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-56 bg-white border-r border-gray-200 flex flex-col h-full flex-shrink-0">
+    <aside 
+      className={`${
+        isCollapsed ? 'w-20' : 'w-64'
+      } bg-[#fffcf5] border-r border-orange-100 flex flex-col h-full flex-shrink-0 transition-all duration-300 ease-in-out z-30`}
+    >
 
       {/* Logo */}
-      <div className="px-4 py-4 flex items-center gap-2 border-b border-gray-100">
-        <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
-          <span className="text-white font-bold text-sm">T</span>
+      <div className={`px-4 py-6 flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} border-b border-orange-50`}>
+        <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-200">
+          <span className="text-white font-bold text-lg">T</span>
         </div>
-        <span className="font-bold text-gray-800 text-sm">Task Miller</span>
+        {!isCollapsed && (
+          <div className="flex flex-col">
+            <span className="font-bold text-gray-800 text-base tracking-tight leading-none">Task Miller</span>
+            <span className="text-[10px] text-orange-400 font-bold uppercase tracking-widest mt-1">Management</span>
+          </div>
+        )}
       </div>
 
       {/* Nav items — fills remaining space */}
-      <div className="flex-1 p-3 overflow-y-auto">
-        <div className="space-y-0.5">
+      <div className="flex-1 p-3 overflow-y-auto custom-scrollbar">
+        <div className="space-y-1.5">
           {visibleNav.map(({ label, icon: Icon, to }) => {
             const active = pathname === to || pathname.startsWith(to + '/')
             return (
@@ -79,14 +93,17 @@ export default function Sidebar() {
                 to={to}
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 search={{} as any}
-                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`group flex items-center ${
+                  isCollapsed ? 'justify-center' : 'gap-3 px-4'
+                } py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
                   active
-                    ? 'bg-orange-500 text-white'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
+                    ? 'bg-orange-500 text-white shadow-md shadow-orange-100'
+                    : 'text-gray-500 hover:bg-orange-50 hover:text-orange-600'
                 }`}
+                title={isCollapsed ? label : ''}
               >
-                <Icon size={17} />
-                {label}
+                <Icon size={isCollapsed ? 22 : 18} className={`${active ? 'text-white' : 'text-gray-400 group-hover:text-orange-500'} transition-colors`} />
+                {!isCollapsed && <span>{label}</span>}
               </Link>
             )
           })}
@@ -94,7 +111,7 @@ export default function Sidebar() {
       </div>
 
       {/* Org button + Logout — pinned to bottom */}
-      <div className="border-t border-gray-100 px-3 py-3 space-y-2">
+      <div className={`border-t border-orange-50 p-4 space-y-3 bg-[#fff9f0]`}>
 
         {/* Org section */}
         <div className="relative">
@@ -107,19 +124,19 @@ export default function Sidebar() {
               {orgOpen && orgs && orgs.length > 0 && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setOrgOpen(false)} />
-                  <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
-                    <p className="text-xs font-semibold text-gray-400 px-4 pt-3 pb-2">
-                      Switch Organization
+                  <div className={`absolute bottom-full ${isCollapsed ? 'left-full ml-2' : 'left-0 right-0 mb-2'} bg-white rounded-2xl shadow-2xl border border-orange-100 z-50 overflow-hidden min-w-[200px]`}>
+                    <p className="text-xs font-bold text-gray-400 px-4 pt-4 pb-2 uppercase tracking-wider">
+                      Organizations
                     </p>
-                    <div className="pb-2">
+                    <div className="pb-2 max-h-60 overflow-y-auto">
                       {orgs.map((org) => {
                         const isActive = activeOrgId === org.id
                         return (
                           <button
                             key={org.id}
                             onClick={() => handleSwitchOrg(org)}
-                            className={`w-full text-left px-4 py-2 text-sm font-semibold transition-colors hover:bg-gray-50 ${
-                              isActive ? 'text-orange-500' : 'text-gray-800'
+                            className={`w-full text-left px-4 py-2.5 text-sm font-bold transition-colors hover:bg-orange-50 ${
+                              isActive ? 'text-orange-500 bg-orange-50/50' : 'text-gray-600'
                             }`}
                           >
                             {org.name}
@@ -135,15 +152,20 @@ export default function Sidebar() {
               <button
                 onClick={() => !isFetching && setOrgOpen((v) => !v)}
                 disabled={isFetching}
-                className="w-full flex items-center gap-2 bg-orange-50 hover:bg-orange-100 transition-colors rounded-xl px-2.5 py-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'} bg-white border border-orange-100 hover:border-orange-200 transition-all rounded-xl p-2 shadow-sm disabled:opacity-60`}
+                title={isCollapsed ? activeOrgName : ''}
               >
-                <div className="w-7 h-7 rounded-full bg-pink-100 flex items-center justify-center flex-shrink-0">
-                  <Building2 size={14} className="text-orange-500" />
+                <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+                  <Building2 size={16} className="text-orange-600" />
                 </div>
-                <span className="flex-1 text-left text-sm font-semibold text-gray-700 truncate">
-                  {activeOrgName}
-                </span>
-                <RefreshCw size={14} className={`flex-shrink-0 ${isFetching ? 'text-orange-400 animate-spin' : 'text-orange-400'}`} />
+                {!isCollapsed && (
+                  <>
+                    <span className="flex-1 text-left text-xs font-bold text-gray-700 truncate">
+                      {activeOrgName}
+                    </span>
+                    <RefreshCw size={12} className={`flex-shrink-0 ${isFetching ? 'text-orange-400 animate-spin' : 'text-orange-400'}`} />
+                  </>
+                )}
               </button>
 
             </div>
@@ -151,11 +173,11 @@ export default function Sidebar() {
 
           {/* Admin / Developer: static only */}
           {role !== 'superadmin' && orgName && (
-            <div className="w-full flex items-center gap-2 bg-orange-50 rounded-xl px-2.5 py-2">
-              <div className="w-7 h-7 rounded-full bg-pink-100 flex items-center justify-center flex-shrink-0">
-                <Building2 size={14} className="text-orange-500" />
+            <div className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'} bg-white border border-orange-100 rounded-xl p-2 shadow-sm`}>
+              <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+                <Building2 size={16} className="text-orange-600" />
               </div>
-              <span className="flex-1 text-sm font-semibold text-gray-700 truncate">{orgName}</span>
+              {!isCollapsed && <span className="flex-1 text-xs font-bold text-gray-700 truncate">{orgName}</span>}
             </div>
           )}
 
@@ -165,10 +187,11 @@ export default function Sidebar() {
         <button
           onClick={() => logout(undefined, { onSuccess: () => navigate({ to: '/login' }) })}
           disabled={isLoggingOut}
-          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-4'} py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 transition-all disabled:opacity-60`}
+          title={isCollapsed ? 'Logout' : ''}
         >
-          <LogOut size={17} />
-          {isLoggingOut ? 'Logging out...' : 'Logout'}
+          <LogOut size={18} />
+          {!isCollapsed && <span>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>}
         </button>
 
       </div>

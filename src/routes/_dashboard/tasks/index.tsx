@@ -14,7 +14,7 @@ import StatsCard from '../../../components/ui/StatsCard'
 import Pagination from '../../../components/ui/Pagination'
 import TaskTable from '../../../components/tasks/TaskTable'
 import ConfirmDeleteModal from '../../../components/common/ConfirmDeleteModal'
-import LoadingSpinner from '../../../components/common/LoadingSpinner'
+import { StatsSkeleton, TableSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
 import type { Task, TaskStatus } from '../../../types/task.types'
 import type { ApiError } from '../../../types/api.types'
@@ -112,8 +112,14 @@ function TasksPage() {
     <div className="flex flex-col flex-1 overflow-hidden">
 
       {/* Stats */}
-      <div className="flex-shrink-0 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 mb-5">
-        {stats.map((s) => <StatsCard key={s.label} {...s} />)}
+      <div className="flex-shrink-0 mb-5">
+        {isLoading ? (
+          <StatsSkeleton />
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+            {stats.map((s) => <StatsCard key={s.label} {...s} />)}
+          </div>
+        )}
       </div>
 
       {/* Table card */}
@@ -123,7 +129,7 @@ function TasksPage() {
         <div className="flex-shrink-0 flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
           <h2 className="font-semibold text-gray-800">
             Tasks List
-            <span className="text-gray-400 font-normal ml-1.5">({totalRecords})</span>
+            {!isLoading && <span className="text-gray-400 font-normal ml-1.5">({totalRecords})</span>}
           </h2>
           <div className="flex items-center gap-2 flex-wrap">
 
@@ -179,7 +185,9 @@ function TasksPage() {
         {/* Table */}
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
-            <div className="py-16 flex justify-center"><LoadingSpinner /></div>
+            <div className="p-5">
+              <TableSkeleton rows={8} cols={7} />
+            </div>
           ) : isError ? (
             <div className="py-8 px-5">
               <ErrorMessage message={(error as ApiError)?.message ?? 'Failed to load tasks'} />

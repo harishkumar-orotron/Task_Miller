@@ -4,6 +4,8 @@ import Sidebar from '../components/layout/Sidebar'
 import Topbar from '../components/layout/Topbar'
 import ErrorBoundary from '../components/common/ErrorBoundary'
 
+import { useState } from 'react'
+
 export const Route = createFileRoute('/_dashboard')({
   // Redirect to login if not authenticated (client-only: localStorage is not available on the server)
   beforeLoad: () => {
@@ -15,11 +17,13 @@ export const Route = createFileRoute('/_dashboard')({
 })
 
 function DashboardLayout() {
+  const [isCollapsed, setIsCollapsed] = useState(false)
+
   return (
     <div className="flex h-screen bg-orange-50 overflow-hidden">
-      <Sidebar />
+      <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <div className="flex-1 flex flex-col min-w-0">
-        <Topbar />
+        <Topbar onToggleSidebar={() => setIsCollapsed(!isCollapsed)} />
         <main className="flex-1 flex flex-col overflow-hidden px-6 pt-6">
           <ErrorBoundary>
             <Outlet />

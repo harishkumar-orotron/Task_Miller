@@ -13,6 +13,7 @@ import { useDebounce } from '../../hooks/useDebounce'
 import StatsCard from '../../components/ui/StatsCard'
 import Pagination from '../../components/ui/Pagination'
 import TaskTable from '../../components/tasks/TaskTable'
+import { StatsSkeleton, TableSkeleton } from '../../components/ui/Skeleton'
 import type { TaskStatus } from '../../types/task.types'
 
 export const Route = createFileRoute('/_dashboard/dashboard')({
@@ -117,8 +118,14 @@ function DashboardPage() {
     <div className="flex flex-col flex-1 overflow-hidden">
 
       {/* Stats */}
-      <div className="flex-shrink-0 grid grid-cols-2 sm:grid-cols-5 xl:grid-cols-10 gap-3 mb-5">
-        {stats.map((s) => <StatsCard key={s.label} {...s} />)}
+      <div className="flex-shrink-0 mb-5">
+        {isLoadingTasks ? (
+          <StatsSkeleton />
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-5 xl:grid-cols-10 gap-3">
+            {stats.map((s) => <StatsCard key={s.label} {...s} />)}
+          </div>
+        )}
       </div>
 
       {/* Tasks List */}
@@ -175,8 +182,8 @@ function DashboardPage() {
         {/* Table */}
         <div className="flex-1 overflow-y-auto">
           {isLoadingTasks ? (
-            <div className="py-12 flex justify-center">
-              <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+            <div className="p-5">
+              <TableSkeleton rows={8} cols={7} />
             </div>
           ) : (
             <TaskTable

@@ -42,6 +42,7 @@ export default function UserTable({
     columnHelper.display({
       id:     'sno',
       header: 'S.no',
+      meta:   { align: 'center' },
       cell:   ({ row }) => (
         <span className="text-gray-400 text-xs">
           {String((activePage - 1) * activeLimit + row.index + 1).padStart(2, '0')}
@@ -83,6 +84,7 @@ export default function UserTable({
     columnHelper.accessor('status', {
       header:        'Status',
       enableSorting: true,
+      meta:          { align: 'center' },
       cell:          (info) => {
         const status = info.getValue()
         return (
@@ -105,6 +107,7 @@ export default function UserTable({
     columnHelper.accessor('projectCount', {
       header:        'Projects',
       enableSorting: false,
+      meta:          { align: 'center' },
       cell:          (info) => (
         <span className="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full bg-pink-50 text-pink-600 text-xs font-semibold">
           {info.getValue() ?? 0}
@@ -115,6 +118,7 @@ export default function UserTable({
     columnHelper.accessor('taskCount', {
       header:        'Tasks',
       enableSorting: false,
+      meta:          { align: 'center' },
       cell:          (info) => (
         <span className="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 text-xs font-semibold">
           {info.getValue() ?? 0}
@@ -125,6 +129,7 @@ export default function UserTable({
     columnHelper.accessor('inProgressCount', {
       header:        'In Progress',
       enableSorting: false,
+      meta:          { align: 'center' },
       cell:          (info) => (
         <span className="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 text-xs font-semibold">
           {info.getValue() ?? 0}
@@ -135,6 +140,7 @@ export default function UserTable({
     columnHelper.accessor('toDoCount', {
       header:        'Pending',
       enableSorting: false,
+      meta:          { align: 'center' },
       cell:          (info) => (
         <span className="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold">
           {info.getValue() ?? 0}
@@ -145,10 +151,11 @@ export default function UserTable({
     columnHelper.display({
       id:     'actions',
       header: 'Actions',
+      meta:   { align: 'center' },
       cell:   ({ row }) => {
         const user = row.original
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2">
             <button
               onClick={() => navigate({ to: '/users/$userId', params: { userId: user.id } })}
               className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-500 transition-colors"

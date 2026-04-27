@@ -40,6 +40,7 @@ export default function TaskTable({
     columnHelper.display({
       id:     'sno',
       header: 'S No',
+      meta:   { align: 'center' },
       cell:   ({ row }) => (
         <span className="text-gray-500">
           {String(startEntry + row.index).padStart(2, '0')}
@@ -83,22 +84,25 @@ export default function TaskTable({
     columnHelper.accessor('status', {
       header:  'Status',
       enableSorting: true,
+      meta:    { align: 'center' },
       cell:    (info) => <StatusBadge status={info.getValue()} />,
     }),
 
     columnHelper.accessor('priority', {
       header:  'Priority',
       enableSorting: true,
+      meta:    { align: 'center' },
       cell:    (info) => <PriorityBadge priority={info.getValue()} />,
     }),
 
     columnHelper.display({
       id:     'actions',
       header: 'Actions',
+      meta:   { align: 'center' },
       cell:   ({ row }) => {
         const task = row.original
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2">
             <button
               onClick={() => navigate({ to: '/tasks/$taskId', params: { taskId: task.id } })}
               className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-500 transition-colors"

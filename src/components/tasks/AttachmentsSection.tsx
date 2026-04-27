@@ -8,6 +8,7 @@ import {
 import { useUploadFile } from '../../queries/uploads.queries'
 import { getAttachmentDownloadUrlApi } from '../../http/services/attachments.service'
 import { useAuth } from '../../hooks/useAuth'
+import Pagination from '../ui/Pagination'
 import type { Attachment } from '../../types/task.types'
 
 interface AttachmentsSectionProps {
@@ -183,6 +184,8 @@ export default function AttachmentsSection({ taskId }: AttachmentsSectionProps) 
   const { user, isAdmin } = useAuth()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(6)
 
   const { data, isLoading } = useAttachments(taskId)
   const attachments = data?.attachments ?? []
@@ -218,10 +221,9 @@ export default function AttachmentsSection({ taskId }: AttachmentsSectionProps) 
   }
 
   return (
-    <div className="mt-6">
-
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+    <div className="mt-6 flex flex-col h-full overflow-hidden">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-20 bg-white flex items-center justify-between mb-4 pb-2 border-b border-gray-50">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-semibold text-gray-700">Attachments</h3>
           <span className="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full font-medium">
@@ -244,35 +246,57 @@ export default function AttachmentsSection({ taskId }: AttachmentsSectionProps) 
         />
       </div>
 
-      {uploadError && (
-        <div className="mb-3 bg-red-50 border border-red-200 text-red-600 text-xs px-3 py-2 rounded-lg font-medium">
-          {uploadError}
-        </div>
-      )}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        {uploadError && (
+          <div className="mb-3 bg-red-50 border border-red-200 text-red-600 text-xs px-3 py-2 rounded-lg font-medium">
+            {uploadError}
+          </div>
+        )}
 
-      {/* Grid */}
-      {isLoading ? (
-        <div className="flex items-center justify-center h-32">
-          <Loader2 className="w-6 h-6 text-orange-500 animate-spin" />
-        </div>
-      ) : attachments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-32 text-gray-400 border border-dashed border-gray-200 rounded-xl">
-          <Upload size={22} className="mb-2 opacity-40" />
-          <p className="text-sm">No attachments yet</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3">
-          {attachments.map((attachment) => (
-            <AttachmentCard
-              key={attachment.id}
-              attachment={attachment}
-              taskId={taskId}
-              canDelete={isAdmin || user?.id === attachment.uploader.id}
-            />
-          ))}
-        </div>
-      )}
+        {/* Grid */}
+        {isLoading ? (
+          <div className="flex items-center justify-center h-32">
+            <Loader2 className="w-6 h-6 text-orange-500 animate-spin" />
+          </div>
+        ) : attachments.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-32 text-gray-400 border border-dashed border-gray-200 rounded-xl">
+            <Upload size={22} className="mb-2 opacity-40" />
+            <p className="text-sm">No attachments yet</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {(() => {
+              const start = (page - 1) * limit
+              const paged = attachments.slice(start, start + limit)
+              return paged.map((attachment) => (
+                <AttachmentCard
+                  key={attachment.id}
+                  attachment={attachment}
+                  taskId={taskId}
+                  canDelete={isAdmin || user?.id === attachment.uploader.id}
+                />
+              ))
+            })()}
+          </div>
+        )}
+      </div>
 
+      {/* Pagination Footer */}
+      {!isLoading && attachments.length > 0 && (
+        <Pagination
+          page={page}
+          totalPages={Math.ceil(attachments.length / limit)}
+          totalRecords={attachments.length}
+          startEntry={(page - 1) * limit + 1}
+          endEntry={Math.min(page * limit, attachments.length)}
+          limit={limit}
+          hasPrevPage={page > 1}
+          hasNextPage={page < Math.ceil(attachments.length / limit)}
+          onPageChange={setPage}
+          onLimitChange={(l) => { setLimit(l); setPage(1) }}
+          className="flex-shrink-0 flex items-center justify-between py-3 bg-white border-t border-gray-100"
+        />
+      )}
     </div>
   )
 }

@@ -47,11 +47,11 @@ export default function DataTable<TData>({
               return (
                 <th
                   key={header.id}
-                  className="px-5 py-3 text-left whitespace-nowrap select-none bg-[#ccfbf1]"
+                  className={`px-5 py-3 text-left whitespace-nowrap select-none bg-[#ccfbf1] ${header.column.columnDef.meta?.headerClassName || ''}`}
                   onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
                   style={{ cursor: canSort ? 'pointer' : 'default' }}
                 >
-                  <div className="flex items-center gap-1">
+                  <div className={`flex items-center gap-1 ${header.column.columnDef.meta?.align === 'center' ? 'justify-center' : ''}`}>
                     {flexRender(header.column.columnDef.header, header.getContext())}
                     {canSort && (
                       sorted === 'asc'  ? <ChevronUp   size={12} className="text-gray-700" /> :
@@ -69,7 +69,7 @@ export default function DataTable<TData>({
         {table.getRowModel().rows.map((row) => (
           <tr key={row.id} className="hover:bg-gray-50 transition-colors">
             {row.getVisibleCells().map((cell) => (
-              <td key={cell.id} className="px-5 py-3">
+              <td key={cell.id} className={`px-5 py-3 ${cell.column.columnDef.meta?.className || ''} ${cell.column.columnDef.meta?.align === 'center' ? 'text-center' : ''}`}>
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </td>
             ))}

@@ -11,8 +11,9 @@ import AvatarStack from '../../../components/ui/AvatarStack'
 import S3Image from '../../../components/ui/S3Image'
 import CommentsSection from '../../../components/tasks/CommentsSection'
 import AttachmentsSection from '../../../components/tasks/AttachmentsSection'
-import LoadingSpinner from '../../../components/common/LoadingSpinner'
+import { TaskDetailSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
+import Pagination from '../../../components/ui/Pagination'
 import { userColor, toAvatarShape, formatDate } from '../../../lib/utils'
 import type { TaskStatus, Subtask } from '../../../types/task.types'
 import type { ApiError } from '../../../types/api.types'
@@ -150,6 +151,8 @@ function TaskViewPage() {
   const [activeTab, setActiveTab] = useState<Tab>('subtasks')
   const [statusOpen, setStatusOpen] = useState(false)
   const [statusError, setStatusError] = useState<string | null>(null)
+  const [assigneesPage, setAssigneesPage] = useState(1)
+  const [assigneesLimit, setAssigneesLimit] = useState(10)
 
   const { data: task, isLoading, isError, error } = useTask(taskId)
   const { data: projectsData } = useProjects({ limit: 100 })
@@ -186,9 +189,7 @@ function TaskViewPage() {
     updateTask({ id: subtaskId, body: { status: newStatus } })
   }
 
-  if (isLoading) return (
-    <div className="py-20 flex justify-center"><LoadingSpinner /></div>
-  )
+  if (isLoading) return <TaskDetailSkeleton />
 
   if (isError || !task) return (
     <div className="py-8">
@@ -385,41 +386,65 @@ function TaskViewPage() {
 
             {/* Assign To tab */}
             {activeTab === 'assignTo' && (
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 z-20">
-                  <tr className="text-xs text-gray-600 font-semibold">
-                    <th className="px-4 py-2.5 text-left bg-[#ccfbf1]">S No</th>
-                    <th className="px-4 py-2.5 text-left bg-[#ccfbf1]">Name</th>
-                    <th className="px-4 py-2.5 text-left bg-[#ccfbf1]">Email</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {task.assignees.length === 0 ? (
-                    <tr>
-                      <td colSpan={3} className="px-4 py-6 text-center text-sm text-gray-400">No assignees</td>
-                    </tr>
-                  ) : (
-                    task.assignees.map((a, i) => (
-                      <tr key={a.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-2.5 text-xs text-gray-400">{String(i + 1).padStart(2, '0')}</td>
-                        <td className="px-4 py-2.5">
-                          <div className="flex items-center gap-2.5">
-                            <div className={`w-7 h-7 rounded-full ${userColor(a.id)} flex items-center justify-center relative overflow-hidden`}>
-                              {a.avatarUrl ? (
-                                <S3Image storageKey={a.avatarUrl} fallbackInitials={a.name.charAt(0).toUpperCase()} className="w-full h-full object-cover" />
-                              ) : (
-                                <span className="text-white text-xs font-semibold">{a.name.charAt(0).toUpperCase()}</span>
-                              )}
-                            </div>
-                            <span className="font-medium text-gray-700">{a.name}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-2.5 text-xs text-gray-400">{a.email}</td>
+              <div className="flex flex-col h-full overflow-hidden -mx-6 px-6">
+                <div className="flex-1 overflow-y-auto min-h-0">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 z-20">
+                      <tr className="text-xs text-gray-600 font-semibold">
+                        <th className="px-4 py-2.5 text-left bg-[#ccfbf1]">S No</th>
+                        <th className="px-4 py-2.5 text-left bg-[#ccfbf1]">Name</th>
+                        <th className="px-4 py-2.5 text-left bg-[#ccfbf1]">Email</th>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {task.assignees.length === 0 ? (
+                        <tr>
+                          <td colSpan={3} className="px-4 py-6 text-center text-sm text-gray-400">No assignees</td>
+                        </tr>
+                      ) : (
+                        (() => {
+                          const start = (assigneesPage - 1) * assigneesLimit
+                          const paged = task.assignees.slice(start, start + assigneesLimit)
+                          return paged.map((a, i) => (
+                            <tr key={a.id} className="hover:bg-gray-50 transition-colors">
+                              <td className="px-4 py-2.5 text-xs text-gray-400">{String(start + i + 1).padStart(2, '0')}</td>
+                              <td className="px-4 py-2.5">
+                                <div className="flex items-center gap-2.5">
+                                  <div className={`w-7 h-7 rounded-full ${userColor(a.id)} flex items-center justify-center relative overflow-hidden`}>
+                                    {a.avatarUrl ? (
+                                      <S3Image storageKey={a.avatarUrl} fallbackInitials={a.name.charAt(0).toUpperCase()} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <span className="text-white text-xs font-semibold">{a.name.charAt(0).toUpperCase()}</span>
+                                    )}
+                                  </div>
+                                  <span className="font-medium text-gray-700">{a.name}</span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-2.5 text-xs text-gray-400">{a.email}</td>
+                            </tr>
+                          ))
+                        })()
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {task.assignees.length > 0 && (
+                  <Pagination
+                    page={assigneesPage}
+                    totalPages={Math.ceil(task.assignees.length / assigneesLimit)}
+                    totalRecords={task.assignees.length}
+                    startEntry={(assigneesPage - 1) * assigneesLimit + 1}
+                    endEntry={Math.min(assigneesPage * assigneesLimit, task.assignees.length)}
+                    limit={assigneesLimit}
+                    hasPrevPage={assigneesPage > 1}
+                    hasNextPage={assigneesPage < Math.ceil(task.assignees.length / assigneesLimit)}
+                    onPageChange={setAssigneesPage}
+                    onLimitChange={(l) => { setAssigneesLimit(l); setAssigneesPage(1) }}
+                    className="flex-shrink-0 flex items-center justify-between px-6 py-3 bg-white border-t border-gray-100"
+                  />
+                )}
+              </div>
             )}
 
             {/* Attachments tab */}
