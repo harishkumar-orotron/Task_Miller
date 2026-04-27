@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react'
-import { ChevronDown, Check, Camera, Loader2, X } from 'lucide-react'
+import { ChevronDown, Check, Camera, Loader2, X, Search } from 'lucide-react'
 import { useCreateProjectMutation, useUpdateProjectMutation } from '../../queries/projects.queries'
 import { useOrgs, useOrg } from '../../queries/orgs.queries'
 import { useUploadFile } from '../../queries/uploads.queries'
@@ -33,8 +33,10 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>(
     project?.members.map((m) => m.id) ?? [],
   )
-  const [orgOpen,    setOrgOpen]    = useState(false)
-  const [memberOpen, setMemberOpen] = useState(false)
+  const [orgOpen,      setOrgOpen]      = useState(false)
+  const [memberOpen,   setMemberOpen]   = useState(false)
+  const [orgSearch,    setOrgSearch]    = useState('')
+  const [memberSearch, setMemberSearch] = useState('')
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [selectedFileForCrop, setSelectedFileForCrop] = useState<{ file: File; dataUrl: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -59,6 +61,14 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
   const members = orgDetail?.members ?? []
 
   const selectedOrg = orgs.find((o) => o.id === orgId)
+
+  const filteredOrgs = orgs.filter((o) =>
+    o.name.toLowerCase().includes(orgSearch.toLowerCase()),
+  )
+  const filteredMembers = members.filter((m) =>
+    m.name.toLowerCase().includes(memberSearch.toLowerCase()) ||
+    m.email.toLowerCase().includes(memberSearch.toLowerCase()),
+  )
 
   const toggleMember = (userId: string) => {
     setSelectedUserIds((prev) =>
@@ -224,27 +234,37 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
 
                 {orgOpen && (
                   <>
-                  <div className="fixed inset-0 z-[9]" onClick={() => setOrgOpen(false)} />
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[10] max-h-48 overflow-y-auto">
-                    {orgs.length === 0 ? (
-                      <p className="text-sm text-gray-400 px-3 py-3">No organizations found</p>
-                    ) : (
-                      orgs.map((org) => (
-                        <button
-                          key={org.id}
-                          type="button"
-                          onClick={() => {
-                            setOrgId(org.id)
-                            setSelectedUserIds([])
-                            setOrgOpen(false)
-                          }}
-                          className="w-full text-left px-3 py-2.5 text-sm hover:bg-orange-50 flex items-center justify-between transition-colors"
-                        >
-                          <span className="text-gray-700">{org.name}</span>
-                          {orgId === org.id && <Check size={13} className="text-orange-500" />}
-                        </button>
-                      ))
-                    )}
+                  <div className="fixed inset-0 z-[9]" onClick={() => { setOrgOpen(false); setOrgSearch('') }} />
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[10]">
+                    <div className="p-2 border-b border-gray-100">
+                      <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5">
+                        <Search size={12} className="text-gray-400 flex-shrink-0" />
+                        <input
+                          autoFocus
+                          value={orgSearch}
+                          onChange={(e) => setOrgSearch(e.target.value)}
+                          placeholder="Search organizations..."
+                          className="bg-transparent outline-none flex-1 text-xs text-gray-700 placeholder-gray-400"
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-44 overflow-y-auto">
+                      {filteredOrgs.length === 0 ? (
+                        <p className="text-sm text-gray-400 px-3 py-3">No organizations found</p>
+                      ) : (
+                        filteredOrgs.map((org) => (
+                          <button
+                            key={org.id}
+                            type="button"
+                            onClick={() => { setOrgId(org.id); setSelectedUserIds([]); setOrgOpen(false); setOrgSearch('') }}
+                            className="w-full text-left px-3 py-2.5 text-sm hover:bg-orange-50 flex items-center justify-between transition-colors"
+                          >
+                            <span className="text-gray-700">{org.name}</span>
+                            {orgId === org.id && <Check size={13} className="text-orange-500" />}
+                          </button>
+                        ))
+                      )}
+                    </div>
                   </div>
                   </>
                 )}
@@ -281,31 +301,45 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
 
                 {memberOpen && (
                   <>
-                  <div className="fixed inset-0 z-[9]" onClick={() => setMemberOpen(false)} />
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[10] max-h-52 overflow-y-auto">
-                    {members.length === 0 ? (
-                      <p className="text-sm text-gray-400 px-3 py-3">No members in this org</p>
-                    ) : (
-                      members.map((m, i) => (
-                        <button
-                          key={m.userId}
-                          type="button"
-                          onClick={() => toggleMember(m.userId)}
-                          className="w-full text-left px-3 py-2.5 hover:bg-orange-50 flex items-center gap-2.5 transition-colors"
-                        >
-                          <div className={`w-7 h-7 rounded-full ${avatarColors[i % avatarColors.length]} flex items-center justify-center flex-shrink-0`}>
-                            <span className="text-white text-xs font-semibold">{m.name.charAt(0).toUpperCase()}</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-700 truncate">{m.name}</p>
-                            <p className="text-xs text-gray-400 truncate">{m.email}</p>
-                          </div>
-                          <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${selectedUserIds.includes(m.userId) ? 'bg-orange-500 border-orange-500' : 'border-gray-300'}`}>
-                            {selectedUserIds.includes(m.userId) && <Check size={10} className="text-white" />}
-                          </div>
-                        </button>
-                      ))
-                    )}
+                  <div className="fixed inset-0 z-[9]" onClick={() => { setMemberOpen(false); setMemberSearch('') }} />
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[10]">
+                    <div className="p-2 border-b border-gray-100">
+                      <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5">
+                        <Search size={12} className="text-gray-400 flex-shrink-0" />
+                        <input
+                          autoFocus
+                          value={memberSearch}
+                          onChange={(e) => setMemberSearch(e.target.value)}
+                          placeholder="Search by name or email..."
+                          className="bg-transparent outline-none flex-1 text-xs text-gray-700 placeholder-gray-400"
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-48 overflow-y-auto">
+                      {filteredMembers.length === 0 ? (
+                        <p className="text-sm text-gray-400 px-3 py-3">No members found</p>
+                      ) : (
+                        filteredMembers.map((m, i) => (
+                          <button
+                            key={m.userId}
+                            type="button"
+                            onClick={() => toggleMember(m.userId)}
+                            className="w-full text-left px-3 py-2.5 hover:bg-orange-50 flex items-center gap-2.5 transition-colors"
+                          >
+                            <div className={`w-7 h-7 rounded-full ${avatarColors[i % avatarColors.length]} flex items-center justify-center flex-shrink-0`}>
+                              <span className="text-white text-xs font-semibold">{m.name.charAt(0).toUpperCase()}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-700 truncate">{m.name}</p>
+                              <p className="text-xs text-gray-400 truncate">{m.email}</p>
+                            </div>
+                            <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${selectedUserIds.includes(m.userId) ? 'bg-orange-500 border-orange-500' : 'border-gray-300'}`}>
+                              {selectedUserIds.includes(m.userId) && <Check size={10} className="text-white" />}
+                            </div>
+                          </button>
+                        ))
+                      )}
+                    </div>
                   </div>
                   </>
                 )}

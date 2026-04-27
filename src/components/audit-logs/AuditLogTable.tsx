@@ -35,17 +35,16 @@ export default function AuditLogTable({ logs, startEntry }: Props) {
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-gray-100 bg-gray-50 text-xs text-gray-500 font-medium uppercase tracking-wide">
-            <th className="px-5 py-3 text-left w-10">#</th>
-            <th className="px-5 py-3 text-left">Actor</th>
-            <th className="px-5 py-3 text-left">Action</th>
-            <th className="px-5 py-3 text-left">Entity</th>
-            <th className="px-5 py-3 text-left">IP Address</th>
-            <th className="px-5 py-3 text-left">Time</th>
-            <th className="px-5 py-3 w-10" />
+    <table className="w-full text-sm">
+        <thead className="sticky top-0 z-10">
+          <tr className="border-b border-gray-200 text-xs text-gray-600 font-semibold uppercase tracking-wide">
+            <th className="px-5 py-3 text-left w-10 bg-[#ccfbf1]">S.no</th>
+            <th className="px-5 py-3 text-left bg-[#ccfbf1]">Actor</th>
+            <th className="px-5 py-3 text-left bg-[#ccfbf1]">Action</th>
+            <th className="px-5 py-3 text-left bg-[#ccfbf1]">Entity</th>
+            <th className="px-5 py-3 text-left bg-[#ccfbf1]">IP Address</th>
+            <th className="px-5 py-3 text-left bg-[#ccfbf1]">Time</th>
+            <th className="px-5 py-3 w-10 bg-[#ccfbf1]" />
           </tr>
         </thead>
         <tbody>
@@ -114,7 +113,6 @@ export default function AuditLogTable({ logs, startEntry }: Props) {
             )
           })}
         </tbody>
-      </table>
-    </div>
+    </table>
   )
 }

@@ -19,7 +19,7 @@ function EditProjectPage() {
   if (isLoading) return <div className="py-20 flex justify-center"><LoadingSpinner /></div>
 
   if (isError || !project) return (
-    <div className="max-w-lg mx-auto space-y-4">
+    <div className="max-w-2xl mx-auto w-full space-y-4">
       <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors">
         <ArrowLeft size={15} /> Back to Project
       </button>
@@ -28,7 +28,7 @@ function EditProjectPage() {
   )
 
   return (
-    <div className="max-w-lg mx-auto space-y-4">
+    <div className="max-w-2xl mx-auto w-full space-y-4">
       <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors">
         <ArrowLeft size={15} /> Back to Project
       </button>

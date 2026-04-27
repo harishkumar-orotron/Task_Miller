@@ -57,6 +57,8 @@ export interface UserProject {
 
 export interface UserDetail extends User {
   updatedAt: string
+  orgId?:    string | null
+  orgName?:  string | null
   stats?:    UserStats
   projects?: UserProject[]
 }

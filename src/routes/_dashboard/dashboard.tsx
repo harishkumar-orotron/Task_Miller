@@ -17,13 +17,13 @@ import type { TaskStatus } from '../../types/task.types'
 
 export const Route = createFileRoute('/_dashboard/dashboard')({
   validateSearch: (search: Record<string, unknown>) => ({
-    search:        (search.search as string) || '',
-    statusFilter:  ((search.statusFilter as string) || '') as TaskStatus | '',
-    projectFilter: (search.projectFilter as string) || '',
-    sortBy:        (search.sortBy as string) || '',
-    sortDir:       (search.sortDir as 'asc' | 'desc') || 'asc',
-    page:          Number(search.page)  || 1,
-    limit:         Number(search.limit) || 10,
+    search:        (search.search as string)        || undefined,
+    statusFilter:  ((search.statusFilter as string) || undefined) as TaskStatus | undefined,
+    projectFilter: (search.projectFilter as string) || undefined,
+    sortBy:        (search.sortBy as string)        || undefined,
+    sortDir:       (search.sortDir as string) === 'desc' ? 'desc' as const : undefined,
+    page:          Number(search.page)  > 1  ? Number(search.page)  : undefined,
+    limit:         Number(search.limit) > 0 && Number(search.limit) !== 10 ? Number(search.limit) : undefined,
   }),
   component: DashboardPage,
 })
@@ -36,14 +36,14 @@ function DashboardPage() {
   const assignedUserId = isDeveloper ? (user?.id ?? undefined) : undefined
 
   const navigate = Route.useNavigate()
-  const { search, statusFilter, projectFilter, sortBy, sortDir, page, limit } = Route.useSearch()
-  const setParams = (params: Partial<{ search: string; statusFilter: TaskStatus | ''; projectFilter: string; sortBy: string; sortDir: 'asc' | 'desc'; page: number; limit: number }>) =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { search = '', statusFilter = '', projectFilter = '', sortBy = '', sortDir = 'asc', page = 1, limit = 10 } = Route.useSearch()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const setParams = (params: Record<string, any>) =>
     navigate({ search: (prev) => ({ ...prev, ...params }) as any })
 
   const sorting: SortingState = sortBy ? [{ id: sortBy, desc: sortDir === 'desc' }] : []
 
-  useEffect(() => { setParams({ page: 1 }) }, [selectedOrg?.id])
+  useEffect(() => { setParams({ page: undefined }) }, [selectedOrg?.id])
 
   const debouncedSearch = useDebounce(search, 400)
 
@@ -104,13 +104,13 @@ function DashboardPage() {
     },
   ]
 
-  const handleSearch        = (val: string)          => setParams({ search: val,        page: 1 })
-  const handleStatusChange  = (val: TaskStatus | '') => setParams({ statusFilter: val,  page: 1 })
-  const handleProjectChange = (val: string)          => setParams({ projectFilter: val, page: 1 })
-  const handleLimit         = (val: number)          => setParams({ limit: val,         page: 1 })
+  const handleSearch        = (val: string)          => setParams({ search: val || undefined,        page: undefined })
+  const handleStatusChange  = (val: TaskStatus | '') => setParams({ statusFilter: val || undefined,  page: undefined })
+  const handleProjectChange = (val: string)          => setParams({ projectFilter: val || undefined, page: undefined })
+  const handleLimit         = (val: number)          => setParams({ limit: val !== 10 ? val : undefined, page: undefined })
   const handleSorting       = (updater: any)         => {
     const next: SortingState = typeof updater === 'function' ? updater(sorting) : updater
-    setParams({ sortBy: next[0]?.id || '', sortDir: next[0]?.desc ? 'desc' : 'asc', page: 1 })
+    setParams({ sortBy: next[0]?.id || undefined, sortDir: next[0]?.desc ? 'desc' : undefined, page: undefined })
   }
 
   return (
@@ -203,7 +203,7 @@ function DashboardPage() {
           limit={limit}
           hasPrevPage={pagination?.hasPrevPage}
           hasNextPage={pagination?.hasNextPage}
-          onPageChange={(p) => setParams({ page: p })}
+          onPageChange={(p) => setParams({ page: p > 1 ? p : undefined })}
           onLimitChange={handleLimit}
         />
       )}

@@ -14,10 +14,10 @@ import type { ProjectStatus } from '../../../types/project.types'
 
 export const Route = createFileRoute('/_dashboard/projects/')({
   validateSearch: (search: Record<string, unknown>) => ({
-    search: (search.search as string) || '',
-    status: (search.status as ProjectStatus) || '',
-    page:   Number(search.page)  || 1,
-    limit:  Number(search.limit) || 10,
+    search: (search.search as string) || undefined,
+    status: ((search.status as string) || undefined) as ProjectStatus | undefined,
+    page:   Number(search.page)  > 1  ? Number(search.page)  : undefined,
+    limit:  Number(search.limit) > 0 && Number(search.limit) !== 10 ? Number(search.limit) : undefined,
   }),
   component: ProjectsPage,
 })
@@ -27,12 +27,12 @@ function ProjectsPage() {
   const { isAdmin, isSuperAdmin } = useAuth()
   const { selectedOrg } = useOrgContext()
   const navigate = Route.useNavigate()
-  const { search, status, page, limit } = Route.useSearch()
-  const setParams = (params: Partial<{ search: string; status: ProjectStatus | ''; page: number; limit: number }>) =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { search = '', status = '', page = 1, limit = 10 } = Route.useSearch()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const setParams = (params: Record<string, any>) =>
     navigate({ search: (prev) => ({ ...prev, ...params }) as any })
 
-  useEffect(() => { setParams({ page: 1 }) }, [selectedOrg?.id])
+  useEffect(() => { setParams({ page: undefined }) }, [selectedOrg?.id])
 
   const debouncedSearch = useDebounce(search, 400)
 
@@ -54,9 +54,9 @@ function ProjectsPage() {
   const startEntry   = totalRecords === 0 ? 0 : (activePage - 1) * activeLimit + 1
   const endEntry     = Math.min(activePage * activeLimit, totalRecords)
 
-  const handleSearch = (val: string)          => setParams({ search: val, page: 1 })
-  const handleStatus = (val: ProjectStatus | '') => setParams({ status: val, page: 1 })
-  const handleLimit  = (val: number)          => setParams({ limit: val, page: 1 })
+  const handleSearch = (val: string)             => setParams({ search: val || undefined, page: undefined })
+  const handleStatus = (val: ProjectStatus | '') => setParams({ status: val || undefined, page: undefined })
+  const handleLimit  = (val: number)             => setParams({ limit: val !== 10 ? val : undefined, page: undefined })
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden gap-3">
@@ -139,7 +139,7 @@ function ProjectsPage() {
           limit={limit}
           hasPrevPage={pagination?.hasPrevPage}
           hasNextPage={pagination?.hasNextPage}
-          onPageChange={(p) => setParams({ page: p })}
+          onPageChange={(p) => setParams({ page: p > 1 ? p : undefined })}
           onLimitChange={handleLimit}
         />
       )}

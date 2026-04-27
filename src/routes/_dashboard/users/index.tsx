@@ -20,12 +20,12 @@ export const Route = createFileRoute('/_dashboard/users/')({
     if (role === 'developer') throw redirect({ to: '/dashboard', search: {} as any })
   },
   validateSearch: (search: Record<string, unknown>) => ({
-    search:  (search.search as string) || '',
-    filter:  (search.filter as UserFilter) || '' as UserFilter,
-    sortBy:  (search.sortBy as string) || '',
-    sortDir: (search.sortDir as 'asc' | 'desc') || 'asc',
-    page:    Number(search.page)  || 1,
-    limit:   Number(search.limit) || 10,
+    search:  (search.search as string) || undefined,
+    filter:  ((search.filter as string) || undefined) as UserFilter | undefined,
+    sortBy:  (search.sortBy as string) || undefined,
+    sortDir: (search.sortDir as string) === 'desc' ? 'desc' as const : undefined,
+    page:    Number(search.page)  > 1  ? Number(search.page)  : undefined,
+    limit:   Number(search.limit) > 0 && Number(search.limit) !== 10 ? Number(search.limit) : undefined,
   }),
   component: UsersPage,
 })
@@ -36,15 +36,15 @@ function UsersPage() {
   const { isAdmin, isSuperAdmin, user: me } = useAuth()
   const { selectedOrg } = useOrgContext()
   const navigate = Route.useNavigate()
-  const { search, filter, sortBy, sortDir, page, limit } = Route.useSearch()
+  const { search = '', filter = '' as UserFilter, sortBy = '', sortDir = 'asc', page = 1, limit = 10 } = Route.useSearch()
 
-  const setParams = (params: Partial<{ search: string; filter: UserFilter; sortBy: string; sortDir: 'asc' | 'desc'; page: number; limit: number }>) =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const setParams = (params: Record<string, any>) =>
     navigate({ search: (prev) => ({ ...prev, ...params }) as any })
 
   const sorting: SortingState = sortBy ? [{ id: sortBy, desc: sortDir === 'desc' }] : []
 
-  useEffect(() => { setParams({ page: 1 }) }, [selectedOrg?.id])
+  useEffect(() => { setParams({ page: undefined }) }, [selectedOrg?.id])
 
 
   const debouncedSearch = useDebounce(search, 400)
@@ -72,12 +72,12 @@ function UsersPage() {
   const startEntry   = totalRecords === 0 ? 0 : (activePage - 1) * activeLimit + 1
   const endEntry     = Math.min(activePage * activeLimit, totalRecords)
 
-  const handleSearch  = (val: string)     => setParams({ search: val, page: 1 })
-  const handleFilter  = (val: UserFilter) => setParams({ filter: val, page: 1 })
-  const handleLimit   = (val: number)     => setParams({ limit: val, page: 1 })
+  const handleSearch  = (val: string)     => setParams({ search: val || undefined, page: undefined })
+  const handleFilter  = (val: UserFilter) => setParams({ filter: val || undefined, page: undefined })
+  const handleLimit   = (val: number)     => setParams({ limit: val !== 10 ? val : undefined, page: undefined })
   const handleSorting = (updater: any)    => {
     const next: SortingState = typeof updater === 'function' ? updater(sorting) : updater
-    setParams({ sortBy: next[0]?.id || '', sortDir: next[0]?.desc ? 'desc' : 'asc', page: 1 })
+    setParams({ sortBy: next[0]?.id || undefined, sortDir: next[0]?.desc ? 'desc' : undefined, page: undefined })
   }
 
   return (
@@ -172,7 +172,7 @@ function UsersPage() {
           limit={limit}
           hasPrevPage={pagination?.hasPrevPage}
           hasNextPage={pagination?.hasNextPage}
-          onPageChange={(p) => setParams({ page: p })}
+          onPageChange={(p) => setParams({ page: p > 1 ? p : undefined })}
           onLimitChange={handleLimit}
         />
       )}

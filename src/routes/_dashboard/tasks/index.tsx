@@ -21,13 +21,13 @@ import type { ApiError } from '../../../types/api.types'
 
 export const Route = createFileRoute('/_dashboard/tasks/')({
   validateSearch: (search: Record<string, unknown>) => ({
-    search:    (search.search as string) || '',
-    status:    ((search.status as string) || '') as TaskStatus | '',
-    projectId: (search.projectId as string) || '',
-    sortBy:    (search.sortBy as string) || '',
-    sortDir:   (search.sortDir as 'asc' | 'desc') || 'asc',
-    page:      Number(search.page)  || 1,
-    limit:     Number(search.limit) || 10,
+    search:    (search.search as string)    || undefined,
+    status:    ((search.status as string)   || undefined) as TaskStatus | undefined,
+    projectId: (search.projectId as string) || undefined,
+    sortBy:    (search.sortBy as string)    || undefined,
+    sortDir:   (search.sortDir as string) === 'desc' ? 'desc' as const : undefined,
+    page:      Number(search.page)  > 1  ? Number(search.page)  : undefined,
+    limit:     Number(search.limit) > 0 && Number(search.limit) !== 10 ? Number(search.limit) : undefined,
   }),
   component: TasksPage,
 })
@@ -40,16 +40,16 @@ function TasksPage() {
   const assignedUserId = isDeveloper ? (user?.id ?? undefined) : undefined
 
   const navigate = Route.useNavigate()
-  const { search, status, projectId, sortBy, sortDir, page, limit } = Route.useSearch()
+  const { search = '', status = '', projectId = '', sortBy = '', sortDir = 'asc', page = 1, limit = 10 } = Route.useSearch()
   const [deleteTask, setDeleteTask] = useState<Task | null>(null)
 
-  const setParams = (params: Partial<{ search: string; status: TaskStatus | ''; projectId: string; sortBy: string; sortDir: 'asc' | 'desc'; page: number; limit: number }>) =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const setParams = (params: Record<string, any>) =>
     navigate({ search: (prev) => ({ ...prev, ...params }) as any })
 
   const sorting: SortingState = sortBy ? [{ id: sortBy, desc: sortDir === 'desc' }] : []
 
-  useEffect(() => { setParams({ page: 1 }) }, [selectedOrg?.id])
+  useEffect(() => { setParams({ page: undefined }) }, [selectedOrg?.id])
 
 
   const debouncedSearch = useDebounce(search, 400)
@@ -99,13 +99,13 @@ function TasksPage() {
     if (!deleteTask) return
     deleteTaskMutation(deleteTask.id, { onSuccess: () => setDeleteTask(null) })
   }
-  const handleSearch        = (val: string) => setParams({ search: val, page: 1 })
-  const handleStatusChange  = (val: string) => setParams({ status: val as TaskStatus | '', page: 1 })
-  const handleProjectChange = (val: string) => setParams({ projectId: val, page: 1 })
-  const handleLimit         = (val: number) => setParams({ limit: val, page: 1 })
+  const handleSearch        = (val: string) => setParams({ search: val || undefined, page: undefined })
+  const handleStatusChange  = (val: string) => setParams({ status: val || undefined, page: undefined })
+  const handleProjectChange = (val: string) => setParams({ projectId: val || undefined, page: undefined })
+  const handleLimit         = (val: number) => setParams({ limit: val !== 10 ? val : undefined, page: undefined })
   const handleSorting       = (updater: any) => {
     const next: SortingState = typeof updater === 'function' ? updater(sorting) : updater
-    setParams({ sortBy: next[0]?.id || '', sortDir: next[0]?.desc ? 'desc' : 'asc', page: 1 })
+    setParams({ sortBy: next[0]?.id || undefined, sortDir: next[0]?.desc ? 'desc' : undefined, page: undefined })
   }
 
   return (
@@ -211,7 +211,7 @@ function TasksPage() {
           limit={limit}
           hasPrevPage={pagination?.hasPrevPage}
           hasNextPage={pagination?.hasNextPage}
-          onPageChange={(p) => setParams({ page: p })}
+          onPageChange={(p) => setParams({ page: p > 1 ? p : undefined })}
           onLimitChange={handleLimit}
         />
       )}

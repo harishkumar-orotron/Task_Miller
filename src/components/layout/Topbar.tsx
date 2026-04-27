@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { useLogoutMutation } from '../../queries/auth.queries'
 import { useMe } from '../../queries/users.queries'
-import UpdateProfileForm from '../users/UpdateProfileForm'
 import S3Image from '../ui/S3Image'
 import { formatDate, roleBadgeClasses, userColor } from '../../lib/utils'
 import NotificationPanel from '../notifications/NotificationPanel'
@@ -16,6 +15,7 @@ const pageConfig: Record<string, { title: string; action?: string; actionTo?: st
   '/users':        { title: 'Users',         action: 'Add User',    actionTo: '/users/new'         },
   '/organizations':{ title: 'Organizations'                                                        },
   '/audit-logs':   { title: 'Audit Logs'                                                           },
+  '/profile':      { title: 'My Profile'                                                           },
 }
 
 
@@ -25,8 +25,7 @@ export default function Topbar() {
   const { isAdmin, orgName } = useAuth()
   const { mutate: logout, isPending: isLoggingOut } = useLogoutMutation()
   const { data: profile } = useMe()
-  const [menuOpen,       setMenuOpen]       = useState(false)
-  const [showEditProfile, setShowEditProfile] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const matchedKey = Object.keys(pageConfig)
     .filter((k) => pathname === k || pathname.startsWith(k + '/'))
@@ -138,11 +137,11 @@ export default function Topbar() {
 
                 {/* Update profile */}
                 <button
-                  onClick={() => { setMenuOpen(false); setShowEditProfile(true) }}
+                  onClick={() => { setMenuOpen(false); navigate({ to: '/profile' }) }}
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors border-b border-gray-100"
                 >
                   <UserCog size={14} />
-                  Update Profile
+                  My Profile
                 </button>
 
                 {/* Logout */}
@@ -162,9 +161,6 @@ export default function Topbar() {
         </div>
       </header>
 
-      {showEditProfile && profile && (
-        <UpdateProfileForm profile={profile} onClose={() => setShowEditProfile(false)} />
-      )}
     </>
   )
 }

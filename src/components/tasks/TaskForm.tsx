@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ChevronDown, Check } from 'lucide-react'
+import { ChevronDown, Check, Search } from 'lucide-react'
 import { useCreateTaskMutation, useUpdateTaskMutation } from '../../queries/tasks.queries'
 import { useProjects } from '../../queries/projects.queries'
 import { useUsers } from '../../queries/users.queries'
@@ -48,8 +48,10 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>(
     task?.assignees.map((a) => a.id) ?? [],
   )
-  const [projectOpen, setProjectOpen] = useState(false)
-  const [memberOpen,  setMemberOpen]  = useState(false)
+  const [projectOpen,   setProjectOpen]   = useState(false)
+  const [memberOpen,    setMemberOpen]    = useState(false)
+  const [projectSearch, setProjectSearch] = useState('')
+  const [memberSearch,  setMemberSearch]  = useState('')
 
   const { data: projectsData } = useProjects({ limit: 100, orgId })
   const { data: usersData }    = useUsers({ limit: 100, orgId, role: 'developer' })
@@ -66,9 +68,17 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
     {},
   ) ?? {}
 
-  const projects      = projectsData?.projects ?? []
-  const users         = (usersData?.users ?? []).filter((u) => u.role === 'developer')
-  const selectedProj  = projects.find((p) => p.id === selectedProject)
+  const projects     = projectsData?.projects ?? []
+  const users        = (usersData?.users ?? []).filter((u) => u.role === 'developer')
+  const selectedProj = projects.find((p) => p.id === selectedProject)
+
+  const filteredProjects = projects.filter((p) =>
+    p.title.toLowerCase().includes(projectSearch.toLowerCase()),
+  )
+  const filteredUsers = users.filter((u) =>
+    u.name.toLowerCase().includes(memberSearch.toLowerCase()) ||
+    u.email.toLowerCase().includes(memberSearch.toLowerCase()),
+  )
 
   const toggleUser = (userId: string) => {
     setSelectedUserIds((prev) =>
@@ -170,23 +180,37 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
 
                 {projectOpen && (
                   <>
-                  <div className="fixed inset-0 z-[9]" onClick={() => setProjectOpen(false)} />
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[10] max-h-48 overflow-y-auto">
-                    {projects.length === 0 ? (
-                      <p className="text-sm text-gray-400 px-3 py-3">No projects found</p>
-                    ) : (
-                      projects.map((p) => (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => { setSelectedProject(p.id); setProjectOpen(false) }}
-                          className="w-full text-left px-3 py-2.5 text-sm hover:bg-orange-50 flex items-center justify-between transition-colors"
-                        >
-                          <span className="text-gray-700">{p.title}</span>
-                          {selectedProject === p.id && <Check size={13} className="text-orange-500" />}
-                        </button>
-                      ))
-                    )}
+                  <div className="fixed inset-0 z-[9]" onClick={() => { setProjectOpen(false); setProjectSearch('') }} />
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[10]">
+                    <div className="p-2 border-b border-gray-100">
+                      <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5">
+                        <Search size={12} className="text-gray-400 flex-shrink-0" />
+                        <input
+                          autoFocus
+                          value={projectSearch}
+                          onChange={(e) => setProjectSearch(e.target.value)}
+                          placeholder="Search projects..."
+                          className="bg-transparent outline-none flex-1 text-xs text-gray-700 placeholder-gray-400"
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-44 overflow-y-auto">
+                      {filteredProjects.length === 0 ? (
+                        <p className="text-sm text-gray-400 px-3 py-3">No projects found</p>
+                      ) : (
+                        filteredProjects.map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => { setSelectedProject(p.id); setProjectOpen(false); setProjectSearch('') }}
+                            className="w-full text-left px-3 py-2.5 text-sm hover:bg-orange-50 flex items-center justify-between transition-colors"
+                          >
+                            <span className="text-gray-700">{p.title}</span>
+                            {selectedProject === p.id && <Check size={13} className="text-orange-500" />}
+                          </button>
+                        ))
+                      )}
+                    </div>
                   </div>
                   </>
                 )}
@@ -283,31 +307,45 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
 
               {memberOpen && (
                 <>
-                <div className="fixed inset-0 z-[9]" onClick={() => setMemberOpen(false)} />
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[10] max-h-52 overflow-y-auto">
-                  {users.length === 0 ? (
-                    <p className="text-sm text-gray-400 px-3 py-3">No users found</p>
-                  ) : (
-                    users.map((u, i) => (
-                      <button
-                        key={u.id}
-                        type="button"
-                        onClick={() => toggleUser(u.id)}
-                        className="w-full text-left px-3 py-2.5 hover:bg-orange-50 flex items-center gap-2.5 transition-colors"
-                      >
-                        <div className={`w-7 h-7 rounded-full ${avatarColors[i % avatarColors.length]} flex items-center justify-center flex-shrink-0`}>
-                          <span className="text-white text-xs font-semibold">{u.name.charAt(0).toUpperCase()}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-700 truncate">{u.name}</p>
-                          <p className="text-xs text-gray-400 truncate">{u.email}</p>
-                        </div>
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${selectedUserIds.includes(u.id) ? 'bg-orange-500 border-orange-500' : 'border-gray-300'}`}>
-                          {selectedUserIds.includes(u.id) && <Check size={10} className="text-white" />}
-                        </div>
-                      </button>
-                    ))
-                  )}
+                <div className="fixed inset-0 z-[9]" onClick={() => { setMemberOpen(false); setMemberSearch('') }} />
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[10]">
+                  <div className="p-2 border-b border-gray-100">
+                    <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5">
+                      <Search size={12} className="text-gray-400 flex-shrink-0" />
+                      <input
+                        autoFocus
+                        value={memberSearch}
+                        onChange={(e) => setMemberSearch(e.target.value)}
+                        placeholder="Search by name or email..."
+                        className="bg-transparent outline-none flex-1 text-xs text-gray-700 placeholder-gray-400"
+                      />
+                    </div>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto">
+                    {filteredUsers.length === 0 ? (
+                      <p className="text-sm text-gray-400 px-3 py-3">No users found</p>
+                    ) : (
+                      filteredUsers.map((u, i) => (
+                        <button
+                          key={u.id}
+                          type="button"
+                          onClick={() => toggleUser(u.id)}
+                          className="w-full text-left px-3 py-2.5 hover:bg-orange-50 flex items-center gap-2.5 transition-colors"
+                        >
+                          <div className={`w-7 h-7 rounded-full ${avatarColors[i % avatarColors.length]} flex items-center justify-center flex-shrink-0`}>
+                            <span className="text-white text-xs font-semibold">{u.name.charAt(0).toUpperCase()}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-700 truncate">{u.name}</p>
+                            <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                          </div>
+                          <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${selectedUserIds.includes(u.id) ? 'bg-orange-500 border-orange-500' : 'border-gray-300'}`}>
+                            {selectedUserIds.includes(u.id) && <Check size={10} className="text-white" />}
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
                 </div>
                 </>
               )}

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardRouteImport } from './routes/_dashboard'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardProfileRouteImport } from './routes/_dashboard/profile'
 import { Route as DashboardDashboardRouteImport } from './routes/_dashboard/dashboard'
 import { Route as DashboardAuditLogsRouteImport } from './routes/_dashboard/audit-logs'
 import { Route as AuthOtpRouteImport } from './routes/_auth/otp'
@@ -45,6 +46,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardProfileRoute = DashboardProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardDashboardRoute = DashboardDashboardRouteImport.update({
   id: '/dashboard',
@@ -161,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/otp': typeof AuthOtpRoute
   '/audit-logs': typeof DashboardAuditLogsRoute
   '/dashboard': typeof DashboardDashboardRoute
+  '/profile': typeof DashboardProfileRoute
   '/organizations/$orgId': typeof DashboardOrganizationsOrgIdRoute
   '/organizations/new': typeof DashboardOrganizationsNewRoute
   '/projects/$projectId': typeof DashboardProjectsProjectIdRoute
@@ -184,6 +191,7 @@ export interface FileRoutesByTo {
   '/otp': typeof AuthOtpRoute
   '/audit-logs': typeof DashboardAuditLogsRoute
   '/dashboard': typeof DashboardDashboardRoute
+  '/profile': typeof DashboardProfileRoute
   '/organizations/$orgId': typeof DashboardOrganizationsOrgIdRoute
   '/organizations/new': typeof DashboardOrganizationsNewRoute
   '/projects/$projectId': typeof DashboardProjectsProjectIdRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/_auth/otp': typeof AuthOtpRoute
   '/_dashboard/audit-logs': typeof DashboardAuditLogsRoute
   '/_dashboard/dashboard': typeof DashboardDashboardRoute
+  '/_dashboard/profile': typeof DashboardProfileRoute
   '/_dashboard/organizations/$orgId': typeof DashboardOrganizationsOrgIdRoute
   '/_dashboard/organizations/new': typeof DashboardOrganizationsNewRoute
   '/_dashboard/projects/$projectId': typeof DashboardProjectsProjectIdRoute
@@ -235,6 +244,7 @@ export interface FileRouteTypes {
     | '/otp'
     | '/audit-logs'
     | '/dashboard'
+    | '/profile'
     | '/organizations/$orgId'
     | '/organizations/new'
     | '/projects/$projectId'
@@ -258,6 +268,7 @@ export interface FileRouteTypes {
     | '/otp'
     | '/audit-logs'
     | '/dashboard'
+    | '/profile'
     | '/organizations/$orgId'
     | '/organizations/new'
     | '/projects/$projectId'
@@ -283,6 +294,7 @@ export interface FileRouteTypes {
     | '/_auth/otp'
     | '/_dashboard/audit-logs'
     | '/_dashboard/dashboard'
+    | '/_dashboard/profile'
     | '/_dashboard/organizations/$orgId'
     | '/_dashboard/organizations/new'
     | '/_dashboard/projects/$projectId'
@@ -329,6 +341,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_dashboard/profile': {
+      id: '/_dashboard/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof DashboardProfileRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/_dashboard/dashboard': {
       id: '/_dashboard/dashboard'
@@ -488,6 +507,7 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 interface DashboardRouteChildren {
   DashboardAuditLogsRoute: typeof DashboardAuditLogsRoute
   DashboardDashboardRoute: typeof DashboardDashboardRoute
+  DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardOrganizationsOrgIdRoute: typeof DashboardOrganizationsOrgIdRoute
   DashboardOrganizationsNewRoute: typeof DashboardOrganizationsNewRoute
   DashboardProjectsProjectIdRoute: typeof DashboardProjectsProjectIdRoute
@@ -509,6 +529,7 @@ interface DashboardRouteChildren {
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAuditLogsRoute: DashboardAuditLogsRoute,
   DashboardDashboardRoute: DashboardDashboardRoute,
+  DashboardProfileRoute: DashboardProfileRoute,
   DashboardOrganizationsOrgIdRoute: DashboardOrganizationsOrgIdRoute,
   DashboardOrganizationsNewRoute: DashboardOrganizationsNewRoute,
   DashboardProjectsProjectIdRoute: DashboardProjectsProjectIdRoute,

@@ -15,10 +15,10 @@ export const Route = createFileRoute('/_dashboard/audit-logs')({
     if (role === 'developer') throw redirect({ to: '/dashboard', search: {} } as any)
   },
   validateSearch: (search: Record<string, unknown>) => ({
-    entityType: (search.entityType as string) || '',
-    entityId:   (search.entityId   as string) || '',
-    page:       Number(search.page)  || 1,
-    limit:      Number(search.limit) || 20,
+    entityType: (search.entityType as string) || undefined,
+    entityId:   (search.entityId   as string) || undefined,
+    page:       Number(search.page)  > 1  ? Number(search.page)  : undefined,
+    limit:      Number(search.limit) > 0 && Number(search.limit) !== 20 ? Number(search.limit) : undefined,
   }),
   component: AuditLogsPage,
 })
@@ -30,9 +30,10 @@ function AuditLogsPage() {
   const orgId = isSuperAdmin && selectedOrg ? selectedOrg.id : undefined
 
   const navigate = Route.useNavigate()
-  const { entityType, entityId, page, limit } = Route.useSearch()
+  const { entityType = '', entityId = '', page = 1, limit = 20 } = Route.useSearch()
 
-  const setParams = (params: Partial<{ entityType: string; entityId: string; page: number; limit: number }>) =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const setParams = (params: Record<string, any>) =>
     navigate({ search: (prev) => ({ ...prev, ...params }) as any })
 
   const { data, isLoading, isFetching, isError, error } = useAuditLogs({
@@ -74,7 +75,7 @@ function AuditLogsPage() {
             <div className="relative">
               <select
                 value={entityType}
-                onChange={(e) => setParams({ entityType: e.target.value, entityId: '', page: 1 })}
+                onChange={(e) => setParams({ entityType: e.target.value || undefined, entityId: undefined, page: undefined })}
                 className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-500 bg-gray-50 outline-none cursor-pointer"
               >
                 <option value="">All Entities</option>
@@ -91,7 +92,7 @@ function AuditLogsPage() {
                 <Search size={14} className={isFetching ? 'text-orange-400 animate-pulse' : 'text-gray-400'} />
                 <input
                   value={entityId}
-                  onChange={(e) => setParams({ entityId: e.target.value, page: 1 })}
+                  onChange={(e) => setParams({ entityId: e.target.value || undefined, page: undefined })}
                   placeholder={`${entityType === 'task' ? 'Task' : entityType === 'project' ? 'Project' : 'User'} ID`}
                   className="bg-transparent outline-none w-44 text-gray-700 placeholder-gray-400 text-xs font-mono"
                 />
@@ -127,8 +128,8 @@ function AuditLogsPage() {
           limit={limit}
           hasPrevPage={pagination?.hasPrevPage}
           hasNextPage={pagination?.hasNextPage}
-          onPageChange={(p) => setParams({ page: p })}
-          onLimitChange={(l) => setParams({ limit: l, page: 1 })}
+          onPageChange={(p) => setParams({ page: p > 1 ? p : undefined })}
+          onLimitChange={(l) => setParams({ limit: l !== 20 ? l : undefined, page: undefined })}
         />
       )}
     </div>
