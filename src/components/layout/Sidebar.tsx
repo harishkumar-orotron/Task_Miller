@@ -30,7 +30,6 @@ export default function Sidebar() {
   const { data: orgsData } = useOrgs({}, { enabled: role === 'superadmin' })
   const orgs = orgsData?.organizations
 
-  // Set default org to Orotron when superadmin logs in and no org is selected yet
   useEffect(() => {
     if (role === 'superadmin' && orgs && orgs.length > 0 && !selectedOrg) {
       const orotron = orgs.find((o) => o.name.toLowerCase() === 'orotron') ?? orgs[0]
@@ -52,11 +51,10 @@ export default function Sidebar() {
     queryClient.removeQueries({ queryKey: ['projects'] })
     queryClient.removeQueries({ queryKey: ['users'] })
 
-    // If on a detail page, go back to the section index so the
-    // old record's ID doesn't linger in the URL for the new org
     const sectionRoots = ['/tasks', '/projects', '/users', '/organizations']
     const match = sectionRoots.find((r) => pathname.startsWith(r + '/'))
-    if (match) navigate({ to: match as '/tasks' | '/projects' | '/users' | '/organizations' })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (match) navigate({ to: match as '/tasks' | '/projects' | '/users' | '/organizations', search: {} as any })
   }
 
   return (
@@ -70,10 +68,8 @@ export default function Sidebar() {
         <span className="font-bold text-gray-800 text-sm">Task Miller</span>
       </div>
 
-      {/* Nav + org button in the same flex-1 column */}
-      <div className="flex-1 flex flex-col p-3 min-h-0">
-
-        {/* Nav items */}
+      {/* Nav items — fills remaining space */}
+      <div className="flex-1 p-3 overflow-y-auto">
         <div className="space-y-0.5">
           {visibleNav.map(({ label, icon: Icon, to }) => {
             const active = pathname === to || pathname.startsWith(to + '/')
@@ -81,6 +77,8 @@ export default function Sidebar() {
               <Link
                 key={to}
                 to={to}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                search={{} as any}
                 className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   active
                     ? 'bg-orange-500 text-white'
@@ -93,9 +91,13 @@ export default function Sidebar() {
             )
           })}
         </div>
+      </div>
 
-        {/* Org button — centered in remaining empty space */}
-        <div className="flex-1 flex items-center pt-45 px-0 relative">
+      {/* Org button + Logout — pinned to bottom */}
+      <div className="border-t border-gray-100 px-3 py-3 space-y-2">
+
+        {/* Org section */}
+        <div className="relative">
 
           {/* Superadmin: switchable */}
           {role === 'superadmin' && (
@@ -158,10 +160,8 @@ export default function Sidebar() {
           )}
 
         </div>
-      </div>
 
-      {/* Logout — fixed at bottom */}
-      <div className="border-t border-gray-100 px-3 py-3">
+        {/* Logout */}
         <button
           onClick={() => logout(undefined, { onSuccess: () => navigate({ to: '/login' }) })}
           disabled={isLoggingOut}
@@ -170,6 +170,7 @@ export default function Sidebar() {
           <LogOut size={17} />
           {isLoggingOut ? 'Logging out...' : 'Logout'}
         </button>
+
       </div>
 
     </aside>

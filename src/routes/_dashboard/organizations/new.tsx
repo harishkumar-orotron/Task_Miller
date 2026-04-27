@@ -8,7 +8,7 @@ export const Route = createFileRoute('/_dashboard/organizations/new')({
 
 function NewOrgPage() {
   const navigate = useNavigate()
-  const onBack = () => navigate({ to: '/organizations' })
+  const onBack = () => navigate({ to: '/organizations', search: {} as any })
 
   return (
     <div className="max-w-2xl mx-auto w-full space-y-4">

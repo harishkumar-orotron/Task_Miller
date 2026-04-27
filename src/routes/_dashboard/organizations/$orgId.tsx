@@ -8,6 +8,7 @@ import { useOrg, useOrgs, useRemoveMemberMutation, useDeleteOrgMutation } from '
 import { useAuth } from '../../../hooks/useAuth'
 import LoadingSpinner from '../../../components/common/LoadingSpinner'
 import ErrorMessage from '../../../components/common/ErrorMessage'
+import Pagination from '../../../components/ui/Pagination'
 import S3Image from '../../../components/ui/S3Image'
 import { userColor, formatDate } from '../../../lib/utils'
 import type { OrgMember } from '../../../types/org.types'
@@ -33,6 +34,8 @@ function OrgDetailPage() {
 
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [devPage,  setDevPage]  = useState(1)
+  const [devLimit, setDevLimit] = useState(5)
 
   const isLoading = isLoadingOrgs || isLoadingOrg
 
@@ -47,7 +50,7 @@ function OrgDetailPage() {
   if (error || !org) {
     return (
       <div className="space-y-4">
-        <button onClick={() => navigate({ to: '/organizations' })} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700">
+        <button onClick={() => navigate({ to: '/organizations', search: {} as any })} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700">
           <ArrowLeft size={15} /> Back to Organizations
         </button>
         <ErrorMessage message={(error as ApiError)?.message ?? 'Organization not found'} />
@@ -55,23 +58,28 @@ function OrgDetailPage() {
     )
   }
 
-  const adminMember = org.members.find((m) => m.role === 'admin')
-  const developers  = org.members.filter((m) => m.role === 'developer')
+  const adminMember   = org.members.find((m) => m.role === 'admin')
+  const developers    = org.members.filter((m) => m.role === 'developer')
+  const devTotal      = developers.length
+  const devTotalPages = Math.max(1, Math.ceil(devTotal / devLimit))
+  const devStart      = (devPage - 1) * devLimit
+  const devEnd        = devPage * devLimit
+  const pagedDevs     = developers.slice(devStart, devEnd)
 
   const handleRemove = (userId: string) => {
     removeMember({ orgId: resolvedId, userId }, { onSuccess: () => setConfirmRemove(null) })
   }
 
   const handleDeleteOrg = () => {
-    deleteOrg(resolvedId, { onSuccess: () => navigate({ to: '/organizations' }) })
+    deleteOrg(resolvedId, { onSuccess: () => navigate({ to: '/organizations', search: {} as any }) })
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex-1 overflow-y-auto space-y-4">
 
       {/* Back */}
       <button
-        onClick={() => navigate({ to: '/organizations' })}
+        onClick={() => navigate({ to: '/organizations', search: {} as any })}
         className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
       >
         <ArrowLeft size={15} /> Back to Organizations
@@ -172,8 +180,10 @@ function OrgDetailPage() {
           </div>
 
           {/* ── Developers section ────────────────────────────────────────── */}
-          <div className="bg-white rounded-xl border border-gray-100 p-5">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-white rounded-xl border border-gray-100 flex flex-col overflow-hidden" style={{ maxHeight: '440px' }}>
+
+            {/* Header */}
+            <div className="flex-shrink-0 flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100">
               <h3 className="font-semibold text-gray-800 flex items-center gap-2">
                 <Code2 size={15} className="text-green-500" />
                 Developers
@@ -191,29 +201,51 @@ function OrgDetailPage() {
               )}
             </div>
 
-            {developers.length === 0 ? (
-              <EmptySlot
-                icon={Code2}
-                label="No developers assigned"
-                sublabel={isAdmin ? 'Use the Add Developer button to assign one.' : undefined}
-              />
-            ) : (
-              <div className="space-y-1">
-                {developers.map((m, i) => (
-                  <MemberRow
-                    key={m.memberId}
-                    member={m}
-                    index={i}
-                    canRemove={isAdmin}
-                    isRemoving={isRemoving && confirmRemove === m.userId}
-                    confirming={confirmRemove === m.userId}
-                    onRemoveClick={() => setConfirmRemove(m.userId)}
-                    onConfirmRemove={() => handleRemove(m.userId)}
-                    onCancelRemove={() => setConfirmRemove(null)}
-                  />
-                ))}
+            {/* Scrollable list */}
+            <div className="flex-1 overflow-y-auto px-5 py-2">
+              {developers.length === 0 ? (
+                <EmptySlot
+                  icon={Code2}
+                  label="No developers assigned"
+                  sublabel={isAdmin ? 'Use the Add Developer button to assign one.' : undefined}
+                />
+              ) : (
+                <div className="space-y-1">
+                  {pagedDevs.map((m, i) => (
+                    <MemberRow
+                      key={m.memberId}
+                      member={m}
+                      index={devStart + i}
+                      canRemove={isAdmin}
+                      isRemoving={isRemoving && confirmRemove === m.userId}
+                      confirming={confirmRemove === m.userId}
+                      onRemoveClick={() => setConfirmRemove(m.userId)}
+                      onConfirmRemove={() => handleRemove(m.userId)}
+                      onCancelRemove={() => setConfirmRemove(null)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Sticky pagination */}
+            {developers.length > 0 && (
+              <div className="flex-shrink-0 border-t border-gray-100">
+                <Pagination
+                  page={devPage}
+                  totalPages={devTotalPages}
+                  totalRecords={devTotal}
+                  startEntry={devTotal === 0 ? 0 : devStart + 1}
+                  endEntry={Math.min(devEnd, devTotal)}
+                  limit={devLimit}
+                  hasPrevPage={devPage > 1}
+                  hasNextPage={devPage < devTotalPages}
+                  onPageChange={(p) => setDevPage(p)}
+                  onLimitChange={(l) => { setDevLimit(l); setDevPage(1) }}
+                />
               </div>
             )}
+
           </div>
 
           {/* ── Danger zone ───────────────────────────────────────────────── */}

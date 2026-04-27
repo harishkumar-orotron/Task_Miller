@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { Plus, Search, ChevronDown } from 'lucide-react'
 import { useOrgs } from '../../../queries/orgs.queries'
 import { useDebounce } from '../../../hooks/useDebounce'
@@ -10,6 +9,13 @@ import ErrorMessage from '../../../components/common/ErrorMessage'
 import type { ApiError } from '../../../types/api.types'
 
 export const Route = createFileRoute('/_dashboard/organizations/')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    search: (search.search as string) || undefined,
+    sortBy: ((search.sortBy as string) || undefined) as 'name' | 'createdAt' | undefined,
+    order:  ((search.order  as string) || undefined) as 'asc' | 'desc' | undefined,
+    page:   Number(search.page)  > 1  ? Number(search.page)  : undefined,
+    limit:  Number(search.limit) > 0 && Number(search.limit) !== 10 ? Number(search.limit) : undefined,
+  }),
   component: OrganizationsPage,
 })
 
@@ -21,14 +27,16 @@ const sortOptions = [
 ] as const
 
 function OrganizationsPage() {
-  const [search,    setSearch]    = useState('')
-  const [sortIdx,   setSortIdx]   = useState(2)
-  const [page,      setPage]      = useState(1)
-  const [limit,     setLimit]     = useState(10)
-  const navigate = useNavigate()
+  const navigate = Route.useNavigate()
+  const { search = '', sortBy = 'createdAt', order = 'desc', page = 1, limit = 10 } = Route.useSearch()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const setParams = (params: Record<string, any>) =>
+    navigate({ search: (prev) => ({ ...prev, ...params }) as any })
 
   const debouncedSearch = useDebounce(search, 400)
-  const { sortBy, order } = sortOptions[sortIdx]
+
+  const activeSortIdx = sortOptions.findIndex(o => o.sortBy === sortBy && o.order === order)
+  const currentSortIdx = activeSortIdx === -1 ? 2 : activeSortIdx
 
   const { data, isLoading, isFetching, error } = useOrgs({
     search: debouncedSearch || undefined,
@@ -38,7 +46,7 @@ function OrganizationsPage() {
     limit,
   })
 
-  const orgs       = data?.organizations        ?? []
+  const orgs       = data?.organizations ?? []
   const pagination = data?.pagination
 
   const totalRecords = pagination?.totalRecords ?? 0
@@ -48,9 +56,16 @@ function OrganizationsPage() {
   const startEntry   = totalRecords === 0 ? 0 : (activePage - 1) * activeLimit + 1
   const endEntry     = Math.min(activePage * activeLimit, totalRecords)
 
-  const handleSearch = (val: string) => { setSearch(val); setPage(1) }
-  const handleSort   = (idx: number) => { setSortIdx(idx); setPage(1) }
-  const handleLimit  = (val: number) => { setLimit(val); setPage(1) }
+  const handleSearch = (val: string) => setParams({ search: val || undefined, page: undefined })
+  const handleSort   = (idx: number) => {
+    const opt = sortOptions[idx]
+    setParams({
+      sortBy: opt.sortBy !== 'createdAt' ? opt.sortBy : undefined,
+      order:  opt.order  !== 'desc'      ? opt.order  : undefined,
+      page:   undefined,
+    })
+  }
+  const handleLimit  = (val: number) => setParams({ limit: val !== 10 ? val : undefined, page: undefined })
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden gap-3">
@@ -68,7 +83,7 @@ function OrganizationsPage() {
 
             <div className="relative">
               <select
-                value={sortIdx}
+                value={currentSortIdx}
                 onChange={(e) => handleSort(Number(e.target.value))}
                 className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-600 bg-white outline-none cursor-pointer"
               >
@@ -127,7 +142,7 @@ function OrganizationsPage() {
           limit={limit}
           hasPrevPage={pagination?.hasPrevPage}
           hasNextPage={pagination?.hasNextPage}
-          onPageChange={setPage}
+          onPageChange={(p) => setParams({ page: p > 1 ? p : undefined })}
           onLimitChange={handleLimit}
         />
       )}
