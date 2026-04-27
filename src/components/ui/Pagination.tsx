@@ -11,6 +11,7 @@ interface PaginationProps {
   hasNextPage:  boolean | undefined
   onPageChange: (page: number) => void
   onLimitChange:(limit: number) => void
+  className?:   string
 }
 
 export default function Pagination({
@@ -18,13 +19,14 @@ export default function Pagination({
   startEntry, endEntry, limit,
   hasPrevPage, hasNextPage,
   onPageChange, onLimitChange,
+  className,
 }: PaginationProps) {
   const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1).filter(
     (p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1,
   )
 
   return (
-    <div className="flex items-center justify-between px-5 py-3 bg-white rounded-xl border border-gray-100">
+    <div className={className ?? 'flex-shrink-0 flex items-center justify-between -mx-6 px-11 py-3 bg-white border-t border-gray-100'}>
 
       {/* Left — entries info + rows selector */}
       <div className="flex items-center gap-3">

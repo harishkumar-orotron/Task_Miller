@@ -114,10 +114,10 @@ function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden gap-5">
+    <div className="flex flex-col flex-1 overflow-hidden">
 
       {/* Stats */}
-      <div className="flex-shrink-0 grid grid-cols-2 sm:grid-cols-5 xl:grid-cols-10 gap-3">
+      <div className="flex-shrink-0 grid grid-cols-2 sm:grid-cols-5 xl:grid-cols-10 gap-3 mb-5">
         {stats.map((s) => <StatsCard key={s.label} {...s} />)}
       </div>
 

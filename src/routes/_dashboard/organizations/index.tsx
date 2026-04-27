@@ -68,7 +68,7 @@ function OrganizationsPage() {
   const handleLimit  = (val: number) => setParams({ limit: val !== 10 ? val : undefined, page: undefined })
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden gap-3">
+    <div className="flex flex-col flex-1 overflow-hidden">
 
       {/* Card */}
       <div className="flex flex-col flex-1 overflow-hidden bg-white rounded-xl border border-gray-100">

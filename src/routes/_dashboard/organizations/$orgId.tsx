@@ -75,7 +75,7 @@ function OrgDetailPage() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto space-y-4">
+    <div className="flex-1 overflow-y-auto space-y-4 pb-6">
 
       {/* Back */}
       <button
@@ -228,22 +228,20 @@ function OrgDetailPage() {
               )}
             </div>
 
-            {/* Sticky pagination */}
             {developers.length > 0 && (
-              <div className="flex-shrink-0 border-t border-gray-100">
-                <Pagination
-                  page={devPage}
-                  totalPages={devTotalPages}
-                  totalRecords={devTotal}
-                  startEntry={devTotal === 0 ? 0 : devStart + 1}
-                  endEntry={Math.min(devEnd, devTotal)}
-                  limit={devLimit}
-                  hasPrevPage={devPage > 1}
-                  hasNextPage={devPage < devTotalPages}
-                  onPageChange={(p) => setDevPage(p)}
-                  onLimitChange={(l) => { setDevLimit(l); setDevPage(1) }}
-                />
-              </div>
+              <Pagination
+                page={devPage}
+                totalPages={devTotalPages}
+                totalRecords={devTotal}
+                startEntry={devTotal === 0 ? 0 : devStart + 1}
+                endEntry={Math.min(devEnd, devTotal)}
+                limit={devLimit}
+                hasPrevPage={devPage > 1}
+                hasNextPage={devPage < devTotalPages}
+                onPageChange={(p) => setDevPage(p)}
+                onLimitChange={(l) => { setDevLimit(l); setDevPage(1) }}
+                className="flex-shrink-0 flex items-center justify-between px-5 py-2.5 border-t border-gray-100"
+              />
             )}
 
           </div>

@@ -78,7 +78,7 @@ function ProfilePage() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex-1 overflow-y-auto pb-6">
     <div className="max-w-2xl mx-auto w-full space-y-5">
 
       {/* ── Profile details card ──────────────────────────────────────────── */}

@@ -172,7 +172,7 @@ function UserDetailPage() {
   ]
 
   return (
-    <div className="flex-1 overflow-y-auto space-y-4">
+    <div className="flex-1 overflow-y-auto space-y-4 pb-6">
 
       {/* Back */}
       <button

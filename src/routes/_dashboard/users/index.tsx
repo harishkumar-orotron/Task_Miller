@@ -81,7 +81,7 @@ function UsersPage() {
   }
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden gap-3">
+    <div className="flex flex-col flex-1 overflow-hidden">
 
       {/* Table card */}
       <div className="flex flex-col flex-1 overflow-hidden bg-white rounded-xl border border-gray-100">

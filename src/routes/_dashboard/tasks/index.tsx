@@ -109,10 +109,10 @@ function TasksPage() {
   }
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden gap-5">
+    <div className="flex flex-col flex-1 overflow-hidden">
 
       {/* Stats */}
-      <div className="flex-shrink-0 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+      <div className="flex-shrink-0 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 mb-5">
         {stats.map((s) => <StatsCard key={s.label} {...s} />)}
       </div>
 
@@ -200,7 +200,7 @@ function TasksPage() {
 
       </div>
 
-      {/* Pagination footer */}
+      {/* Pagination */}
       {!isLoading && !isError && totalPages > 0 && (
         <Pagination
           page={page}
