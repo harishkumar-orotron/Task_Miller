@@ -4,7 +4,7 @@ import { useOrgs } from '../../../queries/orgs.queries'
 import { useDebounce } from '../../../hooks/useDebounce'
 import OrgTable from '../../../components/organizations/OrgTable'
 import Pagination from '../../../components/ui/Pagination'
-import LoadingSpinner from '../../../components/common/LoadingSpinner'
+import { TableSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
 import type { ApiError } from '../../../types/api.types'
 
@@ -117,8 +117,8 @@ function OrganizationsPage() {
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
-            <div className="flex justify-center py-16">
-              <LoadingSpinner />
+            <div className="p-5">
+              <TableSkeleton rows={8} cols={5} />
             </div>
           ) : error ? (
             <div className="p-5">

@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import { useOrg, useOrgs, useRemoveMemberMutation, useDeleteOrgMutation } from '../../../queries/orgs.queries'
 import { useAuth } from '../../../hooks/useAuth'
-import LoadingSpinner from '../../../components/common/LoadingSpinner'
+import { OrgDetailSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
 import Pagination from '../../../components/ui/Pagination'
 import S3Image from '../../../components/ui/S3Image'
@@ -39,13 +39,7 @@ function OrgDetailPage() {
 
   const isLoading = isLoadingOrgs || isLoadingOrg
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center py-16">
-        <LoadingSpinner />
-      </div>
-    )
-  }
+  if (isLoading) return <OrgDetailSkeleton />
 
   if (error || !org) {
     return (

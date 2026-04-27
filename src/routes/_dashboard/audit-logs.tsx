@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { ChevronDown, Search } from 'lucide-react'
+import { authStore } from '../../store/auth.store'
 import { useAuditLogs } from '../../queries/audit-logs.queries'
 import { useAuth } from '../../hooks/useAuth'
 import { useOrgContext } from '../../store/orgContext.store'
@@ -10,9 +11,9 @@ import ErrorMessage from '../../components/common/ErrorMessage'
 import type { ApiError } from '../../types/api.types'
 
 export const Route = createFileRoute('/_dashboard/audit-logs')({
-  beforeLoad: ({ context }: any) => {
-    const role = context?.auth?.role ?? null
-    if (role === 'developer') throw redirect({ to: '/dashboard', search: {} } as any)
+  beforeLoad: () => {
+    const role = authStore.state.user?.role
+    if (role === 'developer') throw redirect({ to: '/dashboard', search: {} as any })
   },
   validateSearch: (search: Record<string, unknown>) => ({
     entityType: (search.entityType as string) || undefined,

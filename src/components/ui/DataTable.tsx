@@ -7,6 +7,15 @@ import {
   type OnChangeFn,
 } from '@tanstack/react-table'
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
+import type { RowData } from '@tanstack/react-table'
+
+declare module '@tanstack/react-table' {
+  interface ColumnMeta<TData extends RowData, TValue> {
+    align?: 'left' | 'center' | 'right'
+    className?: string
+    headerClassName?: string
+  }
+}
 
 interface DataTableProps<TData> {
   columns:          ColumnDef<TData, any>[]

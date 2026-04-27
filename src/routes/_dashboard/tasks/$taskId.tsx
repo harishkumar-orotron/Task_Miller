@@ -318,7 +318,11 @@ function TaskViewPage() {
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Due Date</p>
                   {task.dueDate ? (
-                    <p className="text-sm font-semibold text-red-500 bg-red-50 border border-red-100 px-3 py-1.5 rounded-lg">
+                    <p className={`text-sm font-semibold px-3 py-1.5 rounded-lg border ${
+                      new Date(task.dueDate) < new Date()
+                        ? 'text-red-500 bg-red-50 border-red-100'
+                        : 'text-gray-700 bg-gray-50 border-gray-200'
+                    }`}>
                       {formatDate(task.dueDate)}
                     </p>
                   ) : (

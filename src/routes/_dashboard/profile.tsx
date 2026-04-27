@@ -7,7 +7,7 @@ import { useMe, useUpdateMeMutation } from '../../queries/users.queries'
 import { useUploadFile } from '../../queries/uploads.queries'
 import S3Image from '../../components/ui/S3Image'
 import ImageCropperModal from '../../components/ui/ImageCropperModal'
-import LoadingSpinner from '../../components/common/LoadingSpinner'
+import { ProfileSkeleton } from '../../components/ui/Skeleton'
 import { formatDate, roleBadgeClasses, userColor } from '../../lib/utils'
 import type { ApiError } from '../../types/api.types'
 
@@ -74,7 +74,7 @@ function ProfilePage() {
   }
 
   if (isLoading || !profile) {
-    return <div className="flex justify-center py-16"><LoadingSpinner /></div>
+    return <ProfileSkeleton />
   }
 
   return (

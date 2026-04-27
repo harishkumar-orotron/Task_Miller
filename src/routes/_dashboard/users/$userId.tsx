@@ -8,7 +8,7 @@ import {
 import { authStore }                          from '../../../store/auth.store'
 import { useUser, useToggleUserStatusMutation } from '../../../queries/users.queries'
 import { useAuth }                            from '../../../hooks/useAuth'
-import LoadingSpinner                         from '../../../components/common/LoadingSpinner'
+import { UserDetailSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage                           from '../../../components/common/ErrorMessage'
 import StatusBadge                            from '../../../components/ui/StatusBadge'
 import PriorityBadge                          from '../../../components/ui/PriorityBadge'
@@ -142,7 +142,7 @@ function UserDetailPage() {
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId) ?? projects[0]
 
-  if (isLoading) return <div className="flex justify-center py-16"><LoadingSpinner /></div>
+  if (isLoading) return <UserDetailSkeleton />
 
   if (error || !user) return (
     <div className="space-y-4">

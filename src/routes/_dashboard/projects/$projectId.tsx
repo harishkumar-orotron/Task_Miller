@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import { useProject, useDeleteProjectMutation } from '../../../queries/projects.queries'
 import { useAuth } from '../../../hooks/useAuth'
-import LoadingSpinner from '../../../components/common/LoadingSpinner'
+import { ProjectDetailSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
 import S3Image from '../../../components/ui/S3Image'
 import Pagination from '../../../components/ui/Pagination'
@@ -49,13 +49,7 @@ function ProjectViewPage() {
     })
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center py-16">
-        <LoadingSpinner />
-      </div>
-    )
-  }
+  if (isLoading) return <ProjectDetailSkeleton />
 
   if (error || !project) {
     return (
