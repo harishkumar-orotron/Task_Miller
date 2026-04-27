@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
 import { useOrgs } from '../../../../queries/orgs.queries'
 import AddMemberModal from '../../../../components/organizations/AddMemberModal'
-import LoadingSpinner from '../../../../components/common/LoadingSpinner'
+import { FormSkeleton } from '../../../../components/ui/Skeleton'
 
 export const Route = createFileRoute('/_dashboard/organizations/$orgId_/add-member')({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -19,7 +19,7 @@ function AddMemberPage() {
   const resolvedId = (orgsData?.organizations ?? []).find((o) => o.slug === slug)?.id ?? ''
   const onBack = () => navigate({ to: '/organizations/$orgId', params: { orgId: slug } })
 
-  if (isLoading) return <div className="py-20 flex justify-center"><LoadingSpinner /></div>
+  if (isLoading) return <FormSkeleton />
 
   return (
     <div className="max-w-2xl mx-auto w-full space-y-4">

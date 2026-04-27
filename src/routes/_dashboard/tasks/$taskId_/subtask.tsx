@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
 import { useTask } from '../../../../queries/tasks.queries'
 import TaskForm from '../../../../components/tasks/TaskForm'
-import LoadingSpinner from '../../../../components/common/LoadingSpinner'
+import { FormSkeleton } from '../../../../components/ui/Skeleton'
 
 export const Route = createFileRoute('/_dashboard/tasks/$taskId_/subtask')({
   component: AddSubtaskPage,
@@ -14,7 +14,7 @@ function AddSubtaskPage() {
   const { data: task, isLoading } = useTask(taskId)
   const onBack = () => navigate({ to: '/tasks/$taskId', params: { taskId } })
 
-  if (isLoading) return <div className="py-20 flex justify-center"><LoadingSpinner /></div>
+  if (isLoading) return <FormSkeleton />
 
   return (
     <div className="max-w-2xl mx-auto w-full space-y-4">

@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
 import { useProject } from '../../../../queries/projects.queries'
 import ProjectForm from '../../../../components/projects/ProjectForm'
-import LoadingSpinner from '../../../../components/common/LoadingSpinner'
+import { FormSkeleton } from '../../../../components/ui/Skeleton'
 import ErrorMessage from '../../../../components/common/ErrorMessage'
 import type { ApiError } from '../../../../types/api.types'
 
@@ -16,7 +16,7 @@ function EditProjectPage() {
   const { data: project, isLoading, isError, error } = useProject(projectId)
   const onBack = () => navigate({ to: '/projects/$projectId', params: { projectId } })
 
-  if (isLoading) return <div className="py-20 flex justify-center"><LoadingSpinner /></div>
+  if (isLoading) return <FormSkeleton />
 
   if (isError || !project) return (
     <div className="max-w-2xl mx-auto w-full space-y-4">

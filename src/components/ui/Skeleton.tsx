@@ -278,3 +278,28 @@ export function OrgDetailSkeleton() {
     </div>
   )
 }
+
+export function FormSkeleton() {
+  return (
+    <div className="max-w-2xl mx-auto w-full space-y-4 animate-pulse">
+      <Skeleton className="h-4 w-32" />
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-6">
+        <div className="pb-4 border-b border-gray-100">
+          <Skeleton className="h-6 w-40" />
+        </div>
+        <div className="space-y-4">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full rounded-lg" />
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-3 pt-2">
+          <Skeleton className="h-10 flex-1 rounded-lg" />
+          <Skeleton className="h-10 flex-1 rounded-lg" />
+        </div>
+      </div>
+    </div>
+  )
+}
