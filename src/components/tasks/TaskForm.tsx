@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { ChevronDown, Check, Search } from 'lucide-react'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
+import { ChevronDown, Check, Search, CalendarDays } from 'lucide-react'
 import { useCreateTaskMutation, useUpdateTaskMutation } from '../../queries/tasks.queries'
 import { useProjects } from '../../queries/projects.queries'
 import { useUsers } from '../../queries/users.queries'
@@ -43,7 +45,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
   const [description,     setDescription]     = useState(task?.description ?? '')
   const [priority,        setPriority]        = useState<TaskPriority>(task?.priority ?? 'medium')
   const [status,          setStatus]          = useState<TaskStatus>(task?.status     ?? 'to_do')
-  const [dueDate,         setDueDate]         = useState(task?.dueDate ? task.dueDate.slice(0, 10) : '')
+  const [dueDate,         setDueDate]         = useState<Date | null>(task?.dueDate ? new Date(task.dueDate) : null)
   const [selectedProject, setSelectedProject] = useState(task?.projectId ?? preProjectId ?? '')
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>(
     task?.assignees.map((a) => a.id) ?? [],
@@ -118,7 +120,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
             description:     description || undefined,
             status,
             priority,
-            dueDate:         dueDate || undefined,
+            dueDate:         dueDate ? dueDate.toISOString().slice(0, 10) : undefined,
             assignedUserIds: selectedUserIds.length > 0 ? selectedUserIds : undefined,
           },
         },
@@ -130,7 +132,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
         description:     description || undefined,
         priority,
         projectId:       selectedProject,
-        dueDate:         dueDate || undefined,
+        dueDate:         dueDate ? dueDate.toISOString().slice(0, 10) : undefined,
         assignedUserIds: selectedUserIds.length > 0 ? selectedUserIds : undefined,
       }
       if (parentTaskId) body.parentTaskId = parentTaskId
@@ -302,16 +304,28 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
 
           {/* Due Date */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Due Date 
-            </label>
-            <input
-              type="date"
-              value={dueDate}
-              min={new Date().toISOString().slice(0, 10)}
-              onChange={(e) => setDueDate(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-orange-400 transition-colors"
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+            <div className="relative">
+              <DatePicker
+                selected={dueDate}
+                onChange={(date: Date | null) => setDueDate(date)}
+                minDate={new Date()}
+                dateFormat="dd MMM yyyy"
+                placeholderText="Select a due date"
+                isClearable
+                clearButtonClassName="dp-clear-btn"
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+                maxDate={new Date(new Date().setFullYear(new Date().getFullYear() + 5))}
+                className="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-2.5 text-sm outline-none focus:border-orange-400 transition-colors"
+                wrapperClassName="w-full"
+                calendarClassName="dp-calendar"
+                popperPlacement="bottom-start"
+                showPopperArrow={false}
+              />
+              <CalendarDays size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            </div>
           </div>
 
           {/* Assignees */}

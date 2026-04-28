@@ -204,7 +204,7 @@ function TaskViewPage() {
   )
 
   return (
-    <div className="flex flex-col flex-1 gap-4 overflow-hidden">
+    <div className="flex flex-col flex-1 gap-4 overflow-hidden pb-4">
 
       {/* Back */}
       <button

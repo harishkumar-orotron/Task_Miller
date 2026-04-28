@@ -184,15 +184,17 @@ export default function Sidebar({ isCollapsed }: SidebarProps) {
         </div>
 
         {/* Logout */}
-        <button
-          onClick={() => logout(undefined, { onSuccess: () => navigate({ to: '/login' }) })}
-          disabled={isLoggingOut}
-          className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-4'} py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 transition-all disabled:opacity-60`}
-          title={isCollapsed ? 'Logout' : ''}
-        >
-          <LogOut size={18} />
-          {!isCollapsed && <span>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>}
-        </button>
+        <div className="bg-white border border-orange-100 rounded-xl shadow-sm">
+          <button
+            onClick={() => logout(undefined, { onSuccess: () => navigate({ to: '/login' }) })}
+            disabled={isLoggingOut}
+            className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-4'} py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 transition-all disabled:opacity-60`}
+            title={isCollapsed ? 'Logout' : ''}
+          >
+            <LogOut size={18} />
+            {!isCollapsed && <span>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>}
+          </button>
+        </div>
 
       </div>
 

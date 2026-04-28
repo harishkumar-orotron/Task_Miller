@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
-  ArrowLeft, Pencil, Trash2,
+  ArrowLeft, Pencil, Trash2, ChevronDown,
   ListTodo, Timer, AlertCircle, CheckCircle2, LayoutList, PauseCircle,
 } from 'lucide-react'
-import { useProject, useDeleteProjectMutation } from '../../../queries/projects.queries'
+import { useProject, useDeleteProjectMutation, useUpdateProjectMutation } from '../../../queries/projects.queries'
 import { useAuth } from '../../../hooks/useAuth'
 import { ProjectDetailSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
 import S3Image from '../../../components/ui/S3Image'
 import Pagination from '../../../components/ui/Pagination'
-import { userColor, formatDate, projectStatusBadge } from '../../../lib/utils'
+import { userColor, formatDate } from '../../../lib/utils'
+import type { ProjectStatus } from '../../../types/project.types'
 import type { ApiError } from '../../../types/api.types'
 
 export const Route = createFileRoute('/_dashboard/projects/$projectId')({
@@ -24,11 +25,19 @@ const cardColors = [
 ]
 
 
-const statusLabel: Record<string, string> = {
+const statusSelectStyle: Record<string, string> = {
+  active:    'bg-green-50  text-green-600  border-green-200',
+  on_hold:   'bg-amber-50  text-amber-600  border-amber-200',
+  completed: 'bg-blue-50   text-blue-600   border-blue-200',
+}
+
+const statusLabels: Record<string, string> = {
   active:    'Active',
   on_hold:   'On Hold',
   completed: 'Completed',
 }
+
+const allStatuses: ProjectStatus[] = ['active', 'on_hold', 'completed']
 
 function ProjectViewPage() {
   const { projectId } = Route.useParams()
@@ -37,6 +46,7 @@ function ProjectViewPage() {
 
   const { data: project, isLoading, error } = useProject(projectId)
   const { mutate: deleteProject, isPending: isDeleting } = useDeleteProjectMutation()
+  const { mutate: updateProject, isPending: isUpdatingStatus } = useUpdateProjectMutation()
 
 
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -114,11 +124,6 @@ function ProjectViewPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <h2 className="text-lg font-bold text-gray-800 leading-tight">{project.title}</h2>
-                  {project.status && (
-                    <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium capitalize ${projectStatusBadge[project.status] ?? 'bg-gray-50 text-gray-500'}`}>
-                      {statusLabel[project.status] ?? project.status}
-                    </span>
-                  )}
                 </div>
                 <p className="text-sm text-gray-500 mt-2 leading-relaxed">
                   {project.description ?? <span className="text-gray-300 italic">No description provided</span>}
@@ -126,40 +131,64 @@ function ProjectViewPage() {
               </div>
 
               {/* Actions */}
-              {isAdmin && (
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => navigate({ to: '/projects/$projectId/edit', params: { projectId } })}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <Pencil size={13} /> Edit
-                  </button>
-                  {confirmDelete ? (
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => setConfirmDelete(false)}
-                        className="px-2.5 py-1.5 text-xs border border-gray-200 text-gray-500 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleDelete}
-                        disabled={isDeleting}
-                        className="px-2.5 py-1.5 text-xs font-medium bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-60"
-                      >
-                        {isDeleting ? 'Deleting...' : 'Confirm'}
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setConfirmDelete(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+              <div className="flex items-center gap-2 flex-shrink-0">
+
+                {/* Status dropdown */}
+                {isAdmin ? (
+                  <div className="relative inline-flex items-center">
+                    <select
+                      value={project.status}
+                      disabled={isUpdatingStatus}
+                      onChange={(e) => updateProject({ id: projectId, body: { status: e.target.value as ProjectStatus } })}
+                      className={`appearance-none pl-3 pr-7 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer outline-none transition-colors disabled:opacity-60 ${statusSelectStyle[project.status] ?? 'bg-gray-50 text-gray-600 border-gray-200'}`}
                     >
-                      <Trash2 size={13} /> Delete
+                      {allStatuses.map((s) => (
+                        <option key={s} value={s}>{statusLabels[s]}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={11} className={`absolute right-2 pointer-events-none ${statusSelectStyle[project.status]?.split(' ')[1] ?? 'text-gray-500'}`} />
+                  </div>
+                ) : (
+                  <span className={`text-xs px-2.5 py-1 rounded-lg font-semibold border ${statusSelectStyle[project.status] ?? 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                    {statusLabels[project.status] ?? project.status}
+                  </span>
+                )}
+
+                {isAdmin && (
+                  <>
+                    <button
+                      onClick={() => navigate({ to: '/projects/$projectId/edit', params: { projectId } })}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <Pencil size={13} /> Edit
                     </button>
-                  )}
-                </div>
-              )}
+                    {confirmDelete ? (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setConfirmDelete(false)}
+                          className="px-2.5 py-1.5 text-xs border border-gray-200 text-gray-500 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleDelete}
+                          disabled={isDeleting}
+                          className="px-2.5 py-1.5 text-xs font-medium bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-60"
+                        >
+                          {isDeleting ? 'Deleting...' : 'Confirm'}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDelete(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+                      >
+                        <Trash2 size={13} /> Delete
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Created By / Created At / Updated At */}
@@ -277,7 +306,7 @@ function ProjectViewPage() {
 
         </div>{/* end left panel */}
 
-        {/* ── Right panel — unified stats card ──────────────────────────── */}
+        {/* ── Right panel — stats card ───────────────────────────────────── */}
         <div className="w-64 flex-shrink-0 overflow-y-auto">
           <div className="bg-white rounded-xl border border-gray-100 p-5">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">Statistics</p>
