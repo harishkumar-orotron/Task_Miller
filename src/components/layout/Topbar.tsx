@@ -1,5 +1,5 @@
 import { useRouterState, useNavigate, useMatches } from '@tanstack/react-router'
-import { ChevronDown, Plus, LogOut, Building2, Mail, ShieldCheck, Phone, Clock, UserCog, Menu } from 'lucide-react'
+import { ChevronDown, Plus, LogOut, UserCog, Menu } from 'lucide-react'
 import React, { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { useLogoutMutation } from '../../queries/auth.queries'
@@ -7,7 +7,7 @@ import { useMe } from '../../queries/users.queries'
 import { useTask } from '../../queries/tasks.queries'
 import { useProject } from '../../queries/projects.queries'
 import S3Image from '../ui/S3Image'
-import { formatDate, roleBadgeClasses, userColor } from '../../lib/utils'
+import { roleBadgeClasses, userColor } from '../../lib/utils'
 import NotificationPanel from '../notifications/NotificationPanel'
 
 const pageConfig: Record<string, { title: string; action?: string; actionTo?: string }> = {
@@ -24,7 +24,7 @@ const pageConfig: Record<string, { title: string; action?: string; actionTo?: st
 export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const navigate = useNavigate()
-  const { isAdmin, orgName } = useAuth()
+  const { isAdmin } = useAuth()
   const { mutate: logout, isPending: isLoggingOut } = useLogoutMutation()
   const { data: profile } = useMe()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -128,70 +128,29 @@ export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => voi
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 top-10 w-60 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+                <div className="absolute right-0 top-10 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
 
-                {/* Profile details */}
-                <div className="px-4 py-3 border-b border-gray-100 space-y-2">
-                  <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">My Profile</p>
+                  <button
+                    onClick={() => { setMenuOpen(false); navigate({ to: '/profile' }) }}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors border-b border-gray-100"
+                  >
+                    <UserCog size={14} />
+                    My Profile
+                  </button>
 
-                  {profile?.email && (
-                    <div className="flex items-center gap-2">
-                      <Mail size={13} className="text-gray-400 flex-shrink-0" />
-                      <span className="text-xs text-gray-600 truncate">{profile.email}</span>
-                    </div>
-                  )}
+                  <button
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-60"
+                  >
+                    <LogOut size={14} />
+                    {isLoggingOut ? 'Logging out...' : 'Logout'}
+                  </button>
 
-                  {profile?.role && (
-                    <div className="flex items-center gap-2">
-                      <ShieldCheck size={13} className="text-gray-400 flex-shrink-0" />
-                      <span className={`text-xs px-1.5 py-0.5 rounded font-medium capitalize ${roleBadgeClasses[profile.role]}`}>
-                        {profile.role}
-                      </span>
-                    </div>
-                  )}
-
-                  {profile?.phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone size={13} className="text-gray-400 flex-shrink-0" />
-                      <span className="text-xs text-gray-600">{profile.phone}</span>
-                    </div>
-                  )}
-
-                  {orgName && (
-                    <div className="flex items-center gap-2">
-                      <Building2 size={13} className="text-gray-400 flex-shrink-0" />
-                      <span className="text-xs text-gray-600 truncate">{orgName}</span>
-                    </div>
-                  )}
-
-                  {profile?.lastLoginAt && (
-                    <div className="flex items-center gap-2">
-                      <Clock size={13} className="text-gray-400 flex-shrink-0" />
-                      <span className="text-xs text-gray-400">Last login {formatDate(profile.lastLoginAt)}</span>
-                    </div>
-                  )}
                 </div>
-
-                {/* Update profile */}
-                <button
-                  onClick={() => { setMenuOpen(false); navigate({ to: '/profile' }) }}
-                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors border-b border-gray-100"
-                >
-                  <UserCog size={14} />
-                  My Profile
-                </button>
-
-                {/* Logout */}
-                <button
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-60"
-                >
-                  <LogOut size={14} />
-                  {isLoggingOut ? 'Logging out...' : 'Logout'}
-                </button>
-
-              </div>
+              </>
             )}
           </div>
 

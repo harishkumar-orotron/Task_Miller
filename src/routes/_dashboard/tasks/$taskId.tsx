@@ -24,8 +24,6 @@ export const Route = createFileRoute('/_dashboard/tasks/$taskId')({
 
 type Tab = 'subtasks' | 'assignTo' | 'attachments'
 
-const allStatusOptions: TaskStatus[] = ['to_do', 'in_progress', 'on_hold', 'completed']
-
 function statusLabel(s: TaskStatus) {
   return s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
@@ -41,14 +39,14 @@ const statusButtonClass: Record<string, string> = {
 const statusButtonFallback = 'border-gray-300 text-gray-600 bg-white hover:bg-gray-50'
 
 function allowedStatuses(current: string): TaskStatus[] {
-  return allStatusOptions.filter((s) => {
-    if (s === current) return false
-    if (current === 'in_progress' && s === 'to_do') return false
-    if (current === 'on_hold' && s !== 'in_progress') return false
-    if (current === 'completed' && s === 'to_do') return false
-    if (current === 'overdue' && s !== 'completed') return false
-    return true
-  })
+  const transitions: Record<string, TaskStatus[]> = {
+    to_do:       ['in_progress'],
+    in_progress: ['on_hold', 'completed'],
+    on_hold:     ['in_progress'],
+    completed:   [],
+    overdue:     ['completed'],
+  }
+  return transitions[current] ?? []
 }
 
 function SubtaskCard({
@@ -200,7 +198,10 @@ function TaskViewPage() {
     </div>
   )
 
-  const allowed = allowedStatuses(task.status)
+  const hasIncompleteSubtasks = task.subtasks.some(s => s.status !== 'completed')
+  const allowed = allowedStatuses(task.status).filter(s =>
+    !(s === 'completed' && hasIncompleteSubtasks)
+  )
 
   return (
     <div className="flex flex-col flex-1 gap-4 overflow-hidden">
@@ -239,16 +240,22 @@ function TaskViewPage() {
                     {statusOpen && (
                       <>
                         <div className="fixed inset-0 z-[9]" onClick={() => setStatusOpen(false)} />
-                        <div className="absolute right-0 top-9 z-[10] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden min-w-[140px]">
-                          {allowed.map((s) => (
-                            <button
-                              key={s}
-                              onClick={() => handleStatusChange(s)}
-                              className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-gray-50 ${s === task.status ? 'text-orange-500 bg-orange-50' : 'text-gray-700'}`}
-                            >
-                              {statusLabel(s)}
-                            </button>
-                          ))}
+                        <div className="absolute right-0 top-9 z-[10] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden min-w-[180px]">
+                          {allowed.length === 0 ? (
+                            <p className="px-4 py-3 text-xs text-amber-600 font-medium">
+                              Complete all subtasks first
+                            </p>
+                          ) : (
+                            allowed.map((s) => (
+                              <button
+                                key={s}
+                                onClick={() => handleStatusChange(s)}
+                                className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-gray-50 ${s === task.status ? 'text-orange-500 bg-orange-50' : 'text-gray-700'}`}
+                              >
+                                {statusLabel(s)}
+                              </button>
+                            ))
+                          )}
                         </div>
                       </>
                     )}

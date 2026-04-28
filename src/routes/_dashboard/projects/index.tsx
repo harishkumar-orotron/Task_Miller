@@ -16,8 +16,8 @@ export const Route = createFileRoute('/_dashboard/projects/')({
   validateSearch: (search: Record<string, unknown>) => ({
     search: (search.search as string) || undefined,
     status: ((search.status as string) || undefined) as ProjectStatus | undefined,
-    page:   Number(search.page)  > 1  ? Number(search.page)  : undefined,
-    limit:  Number(search.limit) > 0 && Number(search.limit) !== 10 ? Number(search.limit) : undefined,
+    page: Number(search.page) > 1 ? Number(search.page) : undefined,
+    limit: Number(search.limit) > 0 && Number(search.limit) !== 10 ? Number(search.limit) : undefined,
   }),
   component: ProjectsPage,
 })
@@ -39,24 +39,24 @@ function ProjectsPage() {
   const { data, isLoading, isFetching, error } = useProjects({
     search: debouncedSearch || undefined,
     status: status || undefined,
-    orgId:  isSuperAdmin && selectedOrg ? selectedOrg.id : undefined,
+    orgId: isSuperAdmin && selectedOrg ? selectedOrg.id : undefined,
     page,
     limit,
   })
 
-  const projects   = data?.projects    ?? []
+  const projects = data?.projects ?? []
   const pagination = data?.pagination
 
   const totalRecords = pagination?.totalRecords ?? 0
-  const totalPages   = pagination?.totalPages   ?? 1
-  const activePage   = pagination?.currentPage  ?? page
-  const activeLimit  = pagination?.limit        ?? limit
-  const startEntry   = totalRecords === 0 ? 0 : (activePage - 1) * activeLimit + 1
-  const endEntry     = Math.min(activePage * activeLimit, totalRecords)
+  const totalPages = pagination?.totalPages ?? 1
+  const activePage = pagination?.currentPage ?? page
+  const activeLimit = pagination?.limit ?? limit
+  const startEntry = totalRecords === 0 ? 0 : (activePage - 1) * activeLimit + 1
+  const endEntry = Math.min(activePage * activeLimit, totalRecords)
 
-  const handleSearch = (val: string)             => setParams({ search: val || undefined, page: undefined })
+  const handleSearch = (val: string) => setParams({ search: val || undefined, page: undefined })
   const handleStatus = (val: ProjectStatus | '') => setParams({ status: val || undefined, page: undefined })
-  const handleLimit  = (val: number)             => setParams({ limit: val !== 10 ? val : undefined, page: undefined })
+  const handleLimit = (val: number) => setParams({ limit: val !== 10 ? val : undefined, page: undefined })
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">

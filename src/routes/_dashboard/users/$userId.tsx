@@ -1,4 +1,4 @@
-import { useState }                          from 'react'
+import { useState, useEffect }                          from 'react'
 import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router'
 import {
   ArrowLeft, Eye,
@@ -9,6 +9,7 @@ import { authStore }                          from '../../../store/auth.store'
 import { useUser, useToggleUserStatusMutation } from '../../../queries/users.queries'
 import { useAuth }                            from '../../../hooks/useAuth'
 import { UserDetailSkeleton } from '../../../components/ui/Skeleton'
+import Pagination from '../../../components/ui/Pagination'
 import ErrorMessage                           from '../../../components/common/ErrorMessage'
 import StatusBadge                            from '../../../components/ui/StatusBadge'
 import PriorityBadge                          from '../../../components/ui/PriorityBadge'
@@ -20,6 +21,10 @@ import type { UserProjectTask }               from '../../../types/user.types'
 import type { ApiError }                      from '../../../types/api.types'
 
 export const Route = createFileRoute('/_dashboard/users/$userId')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    page:  Number(search.page)  > 1 ? Number(search.page)  : undefined,
+    limit: Number(search.limit) > 0 ? Number(search.limit) : undefined,
+  }),
   beforeLoad: () => {
     const role = authStore.state.user?.role
     if (role === 'developer') throw redirect({ to: '/dashboard', search: {} as any })
@@ -52,8 +57,34 @@ function StatCard({
 
 // ─── Tasks table ──────────────────────────────────────────────────────────────
 
-function TasksTable({ tasks, projectTitle }: { tasks: UserProjectTask[]; projectTitle: string }) {
+function TasksTable({
+  tasks,
+  projectTitle,
+  page,
+  limit,
+  onPageChange,
+  onLimitChange,
+}: {
+  tasks: UserProjectTask[]
+  projectTitle: string
+  page: number
+  limit: number
+  onPageChange: (p: number) => void
+  onLimitChange: (l: number) => void
+}) {
   const navigate = useNavigate()
+
+  const totalRecords = tasks.length
+  const totalPages   = Math.max(1, Math.ceil(totalRecords / limit))
+  const start        = (page - 1) * limit
+  const end          = page * limit
+  const pagedTasks   = tasks.slice(start, end)
+
+  useEffect(() => {
+    if (page > totalPages && totalPages > 0) {
+      onPageChange(1)
+    }
+  }, [tasks, page, totalPages, onPageChange])
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 flex flex-col flex-1 min-h-0">
@@ -61,7 +92,7 @@ function TasksTable({ tasks, projectTitle }: { tasks: UserProjectTask[]; project
       <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100">
         <h3 className="font-semibold text-gray-800 text-sm">Tasks List</h3>
         <span className="text-xs bg-gray-900 text-white px-2 py-0.5 rounded-full font-semibold">
-          {tasks.length}
+          {totalRecords}
         </span>
       </div>
 
@@ -71,44 +102,44 @@ function TasksTable({ tasks, projectTitle }: { tasks: UserProjectTask[]; project
           <p className="text-sm text-gray-400 text-center py-12">No tasks in {projectTitle}</p>
         ) : (
           <table className="w-full text-sm">
-            <thead>
+            <thead className="sticky top-0 z-10 bg-[#ccfbf1]">
               <tr className="table-header text-xs text-gray-600 font-semibold">
-                <th className="px-5 py-3 text-left">S No</th>
-                <th className="px-5 py-3 text-left">Task Name</th>
-                <th className="px-5 py-3 text-left">Due Date</th>
-                <th className="px-5 py-3 text-left">Status</th>
-                <th className="px-5 py-3 text-left">Priority</th>
-                <th className="px-5 py-3 text-left">Assignees</th>
-                <th className="px-5 py-3 text-left">Actions</th>
+                <th className="px-3 py-3 text-left">S No</th>
+                <th className="px-3 py-3 text-left">Task Name</th>
+                <th className="px-3 py-3 text-left">Due Date</th>
+                <th className="px-3 py-3 text-left">Status</th>
+                <th className="px-3 py-3 text-left">Priority</th>
+                <th className="px-3 py-3 text-left">Assignees</th>
+                <th className="px-3 py-3 text-left">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {tasks.map((task, i) => (
+              {pagedTasks.map((task, i) => (
                 <tr key={task.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-5 py-3 text-gray-400 text-xs">
-                    {String(i + 1).padStart(2, '0')}
+                  <td className="px-3 py-3 text-gray-400 text-xs">
+                    {String(start + i + 1).padStart(2, '0')}
                   </td>
-                  <td className="px-5 py-3">
-                    <span className="font-medium text-gray-700 max-w-[220px] truncate block">
+                  <td className="px-3 py-3">
+                    <span className="font-medium text-gray-700 max-w-[180px] truncate block">
                       {task.title}
                     </span>
                   </td>
-                  <td className="px-5 py-3 text-gray-500 text-xs whitespace-nowrap">
+                  <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">
                     {formatDate(task.dueDate)}
                   </td>
-                  <td className="px-5 py-3">
+                  <td className="px-3 py-3">
                     <StatusBadge status={task.status as TaskStatus} />
                   </td>
-                  <td className="px-5 py-3">
+                  <td className="px-3 py-3">
                     <PriorityBadge priority={task.priority as TaskPriority} />
                   </td>
-                  <td className="px-5 py-3">
+                  <td className="px-3 py-3">
                     {task.assignees && task.assignees.length > 0
                       ? <AvatarStack avatars={toAvatarShape(task.assignees)} max={3} size="sm" />
                       : <span className="text-xs text-gray-300">—</span>
                     }
                   </td>
-                  <td className="px-5 py-3">
+                  <td className="px-3 py-3">
                     <button
                       onClick={() => navigate({ to: '/tasks/$taskId', params: { taskId: task.id } })}
                       className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-500 transition-colors"
@@ -123,6 +154,22 @@ function TasksTable({ tasks, projectTitle }: { tasks: UserProjectTask[]; project
           </table>
         )}
       </div>
+      {/* Pagination */}
+      {totalRecords > 0 && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalRecords={totalRecords}
+          startEntry={totalRecords === 0 ? 0 : start + 1}
+          endEntry={Math.min(end, totalRecords)}
+          limit={limit}
+          hasPrevPage={page > 1}
+          hasNextPage={page < totalPages}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+          className="flex-shrink-0 flex items-center justify-between px-5 py-2.5 border-t border-gray-100"
+        />
+      )}
     </div>
   )
 }
@@ -131,8 +178,18 @@ function TasksTable({ tasks, projectTitle }: { tasks: UserProjectTask[]; project
 
 function UserDetailPage() {
   const { userId }  = Route.useParams()
+  const { page = 1, limit = 5 } = Route.useSearch()
   const navigate    = useNavigate()
   const { isAdmin, user: me } = useAuth()
+
+  const setParams = (newParams: any) => {
+    navigate({
+      to:      Route.fullPath,
+      params:  { userId },
+      search:  (prev: any) => ({ ...prev, ...newParams }),
+      replace: true,
+    })
+  }
 
   const { data: user, isLoading, error } = useUser(userId)
   const { mutate: toggleStatus, isPending: isToggling } = useToggleUserStatusMutation()
@@ -172,7 +229,7 @@ function UserDetailPage() {
   ]
 
   return (
-    <div className="flex-1 overflow-y-auto space-y-4 pb-6">
+    <div className="flex-1 overflow-y-auto overflow-x-hidden space-y-4 pb-6">
 
       {/* Back */}
       <button
@@ -224,7 +281,7 @@ function UserDetailPage() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-10 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-10 gap-2">
         {stats.map((s) => <StatCard key={s.label} {...s} />)}
       </div>
 
@@ -234,10 +291,10 @@ function UserDetailPage() {
           No projects assigned yet.
         </div>
       ) : (
-        <div className="flex gap-4" style={{ minHeight: '420px' }}>
+        <div className="flex gap-4 h-[460px]">
 
           {/* Left: project list */}
-          <div className="w-60 flex-shrink-0 bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="w-60 flex-shrink-0 bg-white rounded-xl border border-gray-100 overflow-hidden flex flex-col">
             <div className="px-4 py-3 border-b border-gray-100">
               <h3 className="text-sm font-semibold text-gray-800">
                 Projects
@@ -246,13 +303,16 @@ function UserDetailPage() {
                 </span>
               </h3>
             </div>
-            <div className="overflow-y-auto">
+            <div className="overflow-y-auto flex-1">
               {projects.map((p) => {
                 const isSelected = (selectedProjectId ?? projects[0]?.id) === p.id
                 return (
                   <button
                     key={p.id}
-                    onClick={() => setSelectedProjectId(p.id)}
+                    onClick={() => {
+                      setSelectedProjectId(p.id)
+                      setParams({ page: undefined })
+                    }}
                     className={`w-full text-left px-4 py-3 flex items-center justify-between gap-2 transition-colors border-b border-gray-50 last:border-0 ${
                       isSelected ? 'bg-gray-900 text-white' : 'hover:bg-gray-50 text-gray-700'
                     }`}
@@ -274,6 +334,10 @@ function UserDetailPage() {
             <TasksTable
               tasks={selectedProject.tasks}
               projectTitle={selectedProject.title}
+              page={page}
+              limit={limit}
+              onPageChange={(p) => setParams({ page: p > 1 ? p : undefined })}
+              onLimitChange={(l) => setParams({ limit: l !== 5 ? l : undefined, page: undefined })}
             />
           )}
 

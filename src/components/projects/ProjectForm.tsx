@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Check, Camera, Loader2, X, Search } from 'lucide-react'
 import { useCreateProjectMutation, useUpdateProjectMutation } from '../../queries/projects.queries'
 import { useOrgs, useOrg } from '../../queries/orgs.queries'
@@ -37,6 +37,11 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
   const [memberOpen,   setMemberOpen]   = useState(false)
   const [orgSearch,    setOrgSearch]    = useState('')
   const [memberSearch, setMemberSearch] = useState('')
+  const [orgDirection, setOrgDirection] = useState<'down' | 'up'>('down')
+  const [memberDirection, setMemberDirection] = useState<'down' | 'up'>('down')
+
+  const orgTriggerRef = useRef<HTMLButtonElement>(null)
+  const memberTriggerRef = useRef<HTMLButtonElement>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [selectedFileForCrop, setSelectedFileForCrop] = useState<{ file: File; dataUrl: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -75,6 +80,22 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
       prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId],
     )
   }
+
+  useEffect(() => {
+    if (orgOpen && orgTriggerRef.current) {
+      const rect = orgTriggerRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+      setOrgDirection(spaceBelow < 250 ? 'up' : 'down')
+    }
+  }, [orgOpen])
+
+  useEffect(() => {
+    if (memberOpen && memberTriggerRef.current) {
+      const rect = memberTriggerRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+      setMemberDirection(spaceBelow < 250 ? 'up' : 'down')
+    }
+  }, [memberOpen])
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -222,6 +243,7 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
               <label className="block text-sm font-medium text-gray-700 mb-1">Organization</label>
               <div className="relative">
                 <button
+                  ref={orgTriggerRef}
                   type="button"
                   onClick={() => setOrgOpen((v) => !v)}
                   className={`w-full border rounded-lg px-3 py-2.5 text-sm text-left flex items-center justify-between outline-none focus:border-orange-400 transition-colors ${fieldErrors.orgId ? 'border-red-400' : 'border-gray-200'}`}
@@ -235,7 +257,7 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
                 {orgOpen && (
                   <>
                   <div className="fixed inset-0 z-[9]" onClick={() => { setOrgOpen(false); setOrgSearch('') }} />
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[10]">
+                  <div className={`absolute ${orgDirection === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'} left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[10]`}>
                     <div className="p-2 border-b border-gray-100">
                       <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5">
                         <Search size={12} className="text-gray-400 flex-shrink-0" />
@@ -287,6 +309,7 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
               </label>
               <div className="relative">
                 <button
+                  ref={memberTriggerRef}
                   type="button"
                   onClick={() => setMemberOpen((v) => !v)}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-left flex items-center justify-between outline-none focus:border-orange-400 transition-colors"
@@ -302,7 +325,7 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
                 {memberOpen && (
                   <>
                   <div className="fixed inset-0 z-[9]" onClick={() => { setMemberOpen(false); setMemberSearch('') }} />
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[10]">
+                  <div className={`absolute ${memberDirection === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'} left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[10]`}>
                     <div className="p-2 border-b border-gray-100">
                       <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5">
                         <Search size={12} className="text-gray-400 flex-shrink-0" />

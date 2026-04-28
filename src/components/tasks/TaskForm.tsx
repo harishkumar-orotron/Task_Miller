@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Check, Search } from 'lucide-react'
 import { useCreateTaskMutation, useUpdateTaskMutation } from '../../queries/tasks.queries'
 import { useProjects } from '../../queries/projects.queries'
@@ -52,6 +52,11 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
   const [memberOpen,    setMemberOpen]    = useState(false)
   const [projectSearch, setProjectSearch] = useState('')
   const [memberSearch,  setMemberSearch]  = useState('')
+  const [memberDirection, setMemberDirection] = useState<'down' | 'up'>('down')
+  const [projectDirection, setProjectDirection] = useState<'down' | 'up'>('down')
+
+  const projectTriggerRef = useRef<HTMLButtonElement>(null)
+  const memberTriggerRef  = useRef<HTMLButtonElement>(null)
 
   const { data: projectsData } = useProjects({ limit: 100, orgId })
   const { data: usersData }    = useUsers({ limit: 100, orgId, role: 'developer' })
@@ -85,6 +90,22 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
       prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId],
     )
   }
+
+  useEffect(() => {
+    if (memberOpen && memberTriggerRef.current) {
+      const rect = memberTriggerRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+      setMemberDirection(spaceBelow < 250 ? 'up' : 'down')
+    }
+  }, [memberOpen])
+
+  useEffect(() => {
+    if (projectOpen && projectTriggerRef.current) {
+      const rect = projectTriggerRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+      setProjectDirection(spaceBelow < 250 ? 'up' : 'down')
+    }
+  }, [projectOpen])
 
   const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -168,6 +189,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
               <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
               <div className="relative">
                 <button
+                  ref={projectTriggerRef}
                   type="button"
                   onClick={() => setProjectOpen((v) => !v)}
                   className={`w-full border rounded-lg px-3 py-2.5 text-sm text-left flex items-center justify-between outline-none focus:border-orange-400 transition-colors ${fieldErrors.projectId ? 'border-red-400' : 'border-gray-200'}`}
@@ -181,7 +203,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
                 {projectOpen && (
                   <>
                   <div className="fixed inset-0 z-[9]" onClick={() => { setProjectOpen(false); setProjectSearch('') }} />
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[10]">
+                  <div className={`absolute ${projectDirection === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'} left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[10]`}>
                     <div className="p-2 border-b border-gray-100">
                       <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5">
                         <Search size={12} className="text-gray-400 flex-shrink-0" />
@@ -250,13 +272,24 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
                   onChange={(e) => setStatus(e.target.value as TaskStatus)}
                   className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-orange-400 transition-colors cursor-pointer"
                 >
+                  {/* If current status is overdue (not in allStatusOptions), show it as a disabled label */}
+                  {!allStatusOptions.find((o) => o.value === task?.status) && (
+                    <option value={task?.status} disabled>
+                      {task?.status?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                    </option>
+                  )}
                   {allStatusOptions
                     .filter((opt) => {
                       const current = task?.status
-                      if (current === 'in_progress' && opt.value === 'to_do') return false
-                      if (current === 'on_hold' && opt.value !== 'in_progress' && opt.value !== 'on_hold') return false
-                      if (current === 'completed' && opt.value === 'to_do') return false
-                      return true
+                      const transitions: Record<string, TaskStatus[]> = {
+                        to_do:       ['in_progress'],
+                        in_progress: ['on_hold', 'completed'],
+                        on_hold:     ['in_progress'],
+                        completed:   [],
+                        overdue:     ['completed'],
+                      }
+                      if (opt.value === current) return true
+                      return (transitions[current ?? ''] ?? []).includes(opt.value)
                     })
                     .map((opt) => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -293,6 +326,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
             </label>
             <div className="relative">
               <button
+                ref={memberTriggerRef}
                 type="button"
                 onClick={() => setMemberOpen((v) => !v)}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-left flex items-center justify-between outline-none focus:border-orange-400 transition-colors"
@@ -308,7 +342,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
               {memberOpen && (
                 <>
                 <div className="fixed inset-0 z-[9]" onClick={() => { setMemberOpen(false); setMemberSearch('') }} />
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[10]">
+                <div className={`absolute ${memberDirection === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'} left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[10]`}>
                   <div className="p-2 border-b border-gray-100">
                     <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5">
                       <Search size={12} className="text-gray-400 flex-shrink-0" />

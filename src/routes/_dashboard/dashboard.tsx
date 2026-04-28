@@ -155,7 +155,7 @@ function DashboardPage() {
                 onChange={(e) => handleStatusChange(e.target.value as TaskStatus | '')}
                 className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-500 bg-gray-50 outline-none cursor-pointer"
               >
-                <option value="">Select Status</option>
+                <option value="">All Status</option>
                 <option value="to_do">To Do</option>
                 <option value="in_progress">In Progress</option>
                 <option value="on_hold">On Hold</option>
@@ -170,7 +170,7 @@ function DashboardPage() {
                 onChange={(e) => handleProjectChange(e.target.value)}
                 className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-500 bg-gray-50 outline-none cursor-pointer"
               >
-                <option value="">Select Project</option>
+                <option value="">All Projects</option>
                 {projects.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
               </select>
               <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />

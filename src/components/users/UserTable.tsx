@@ -1,9 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Eye } from 'lucide-react'
+import { Eye, MoreVertical, Power } from 'lucide-react'
 import { createColumnHelper, type SortingState, type OnChangeFn } from '@tanstack/react-table'
 import DataTable from '../ui/DataTable'
-import UserStatusToggle from './UserStatusToggle'
 import { useToggleUserStatusMutation } from '../../queries/users.queries'
 import { userColor, formatDate } from '../../lib/utils'
 import S3Image from '../ui/S3Image'
@@ -33,16 +32,16 @@ export default function UserTable({
   const navigate = useNavigate()
   const { mutate: toggleStatus, isPending: isToggling } = useToggleUserStatusMutation()
 
-  const handleToggle = (id: string, current: UserStatus) => {
+  const handleToggle = useCallback((id: string, current: UserStatus) => {
     toggleStatus({ id, status: current === 'active' ? 'inactive' : 'active' })
-  }
+  }, [toggleStatus])
 
   const columns = useMemo(() => [
 
     columnHelper.display({
       id:     'sno',
       header: 'S.no',
-      meta:   { align: 'center' },
+      meta:   { align: 'center', headerClassName: 'w-10' },
       cell:   ({ row }) => (
         <span className="text-gray-400 text-xs">
           {String((activePage - 1) * activeLimit + row.index + 1).padStart(2, '0')}
@@ -53,6 +52,7 @@ export default function UserTable({
     columnHelper.accessor('name', {
       header:        'Name',
       enableSorting: true,
+      meta:          { headerClassName: 'min-w-[100px]' },
       cell:          ({ row, getValue }) => (
         <div className="flex items-center gap-2.5">
           <div className={`w-8 h-8 rounded-full ${userColor(row.original.id)} flex items-center justify-center flex-shrink-0 relative overflow-hidden`}>
@@ -70,15 +70,17 @@ export default function UserTable({
     columnHelper.accessor('email', {
       header:        'Email',
       enableSorting: true,
+      meta:          { headerClassName: 'min-w-[120px]' },
       cell:          (info) => (
-        <span className="text-gray-500 max-w-[180px] truncate block">{info.getValue()}</span>
+        <span className="text-gray-500 max-w-[120px] truncate block">{info.getValue()}</span>
       ),
     }),
 
     columnHelper.accessor('phone', {
       header:        'Phone',
       enableSorting: false,
-      cell:          (info) => <span className="text-gray-500">{info.getValue() ?? '—'}</span>,
+      meta:          { headerClassName: 'w-24' },
+      cell:          (info) => <span className="text-gray-500 max-w-[80px] truncate block">{info.getValue() ?? '—'}</span>,
     }),
 
     columnHelper.accessor('status', {
@@ -99,6 +101,7 @@ export default function UserTable({
     columnHelper.accessor('createdAt', {
       header:        'Created On',
       enableSorting: true,
+      meta:          { headerClassName: 'w-24' },
       cell:          (info) => (
         <span className="text-gray-500 text-xs whitespace-nowrap">{formatDate(info.getValue())}</span>
       ),
@@ -107,7 +110,7 @@ export default function UserTable({
     columnHelper.accessor('projectCount', {
       header:        'Projects',
       enableSorting: false,
-      meta:          { align: 'center' },
+      meta:          { align: 'center', headerClassName: 'w-20' },
       cell:          (info) => (
         <span className="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full bg-pink-50 text-pink-600 text-xs font-semibold">
           {info.getValue() ?? 0}
@@ -118,7 +121,7 @@ export default function UserTable({
     columnHelper.accessor('taskCount', {
       header:        'Tasks',
       enableSorting: false,
-      meta:          { align: 'center' },
+      meta:          { align: 'center', headerClassName: 'w-20' },
       cell:          (info) => (
         <span className="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 text-xs font-semibold">
           {info.getValue() ?? 0}
@@ -129,7 +132,7 @@ export default function UserTable({
     columnHelper.accessor('inProgressCount', {
       header:        'In Progress',
       enableSorting: false,
-      meta:          { align: 'center' },
+      meta:          { align: 'center', headerClassName: 'w-24' },
       cell:          (info) => (
         <span className="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 text-xs font-semibold">
           {info.getValue() ?? 0}
@@ -140,7 +143,7 @@ export default function UserTable({
     columnHelper.accessor('toDoCount', {
       header:        'Pending',
       enableSorting: false,
-      meta:          { align: 'center' },
+      meta:          { align: 'center', headerClassName: 'w-20' },
       cell:          (info) => (
         <span className="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold">
           {info.getValue() ?? 0}
@@ -154,23 +157,56 @@ export default function UserTable({
       meta:   { align: 'center' },
       cell:   ({ row }) => {
         const user = row.original
+        const [isOpen, setIsOpen] = useState(false)
+        const menuRef = useRef<HTMLDivElement>(null)
+
+        useEffect(() => {
+          if (!isOpen) return
+          const handleClick = (e: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+              setIsOpen(false)
+            }
+          }
+          document.addEventListener('mousedown', handleClick)
+          return () => document.removeEventListener('mousedown', handleClick)
+        }, [isOpen])
+
         return (
           <div className="flex items-center justify-center gap-2">
             <button
-              onClick={() => navigate({ to: '/users/$userId', params: { userId: user.id } })}
+              onClick={() => navigate({ to: '/users/$userId', params: { userId: user.id }, search: {} as any })}
               className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-500 transition-colors"
               title="View details"
             >
-              <Eye size={13} />
+              <Eye size={14} />
             </button>
-            {isAdmin && user.id !== myId && (
-              <UserStatusToggle
-                userId={user.id}
-                status={user.status}
-                disabled={isToggling}
-                onToggle={handleToggle}
-              />
-            )}
+
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setIsOpen(!isOpen)}
+                className={`p-1.5 rounded-lg border transition-colors ${isOpen ? 'bg-orange-50 border-orange-200 text-orange-500' : 'border-gray-200 text-gray-500 hover:bg-gray-100'}`}
+              >
+                <MoreVertical size={14} />
+              </button>
+
+              {isOpen && (
+                <div className="absolute right-0 mt-1 w-36 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1 overflow-hidden">
+                  {isAdmin && user.id !== myId && (
+                    <>
+                      <button
+                        onClick={() => { handleToggle(user.id, user.status); setIsOpen(false) }}
+                        disabled={isToggling}
+                        className="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-600 hover:bg-gray-50 flex items-center gap-2 transition-colors disabled:opacity-50"
+                      >
+                        <Power size={13} className={user.status === 'active' ? 'text-red-500' : 'text-green-500'} />
+                        {user.status === 'active' ? 'Deactivate' : 'Activate'}
+                      </button>
+                    </>
+                  )}
+                  {!isAdmin && <div className="px-3 py-2 text-xs text-gray-400 italic">No actions</div>}
+                </div>
+              )}
+            </div>
           </div>
         )
       },
