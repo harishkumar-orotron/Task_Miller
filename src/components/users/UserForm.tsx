@@ -37,17 +37,12 @@ export default function UserForm({ onClose }: UserFormProps) {
           <h2 className="text-base font-semibold text-gray-800">Create User</h2>
         </div>
 
-        {errorMessage && Object.keys(fieldErrors).length === 0 && (
-          <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2.5 rounded-lg mb-4">
-            {errorMessage}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name <span className="text-red-500">*</span></label>
             <input
               type="text"
               value={name}
@@ -61,7 +56,7 @@ export default function UserForm({ onClose }: UserFormProps) {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
             <input
               type="email"
               value={email}
@@ -75,7 +70,7 @@ export default function UserForm({ onClose }: UserFormProps) {
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password <span className="text-red-500">*</span></label>
             <div className="relative">
               <input
                 type={showPass ? 'text' : 'password'}
@@ -117,6 +112,10 @@ export default function UserForm({ onClose }: UserFormProps) {
                 ))}
               </div>
             </div>
+          )}
+
+          {errorMessage && Object.keys(fieldErrors).length === 0 && (
+            <p className="text-xs text-red-500">{errorMessage}</p>
           )}
 
           <div className="flex gap-3 pt-1">

@@ -91,7 +91,7 @@ export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => voi
           {showAction && config.actionTo && (
             <button
               onClick={() => navigate({ to: config.actionTo as any })}
-              className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+              className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors cursor-pointer"
             >
               <Plus size={15} />
               {config.action}

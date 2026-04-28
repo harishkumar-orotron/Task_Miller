@@ -4,7 +4,7 @@ import { useOrgs } from '../../../queries/orgs.queries'
 import { useDebounce } from '../../../hooks/useDebounce'
 import OrgTable from '../../../components/organizations/OrgTable'
 import Pagination from '../../../components/ui/Pagination'
-import { TableSkeleton } from '../../../components/ui/Skeleton'
+import { CardSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
 import type { ApiError } from '../../../types/api.types'
 
@@ -117,8 +117,8 @@ function OrganizationsPage() {
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
-            <div className="p-5">
-              <TableSkeleton rows={8} cols={5} />
+            <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => <CardSkeleton key={i} />)}
             </div>
           ) : error ? (
             <div className="p-5">

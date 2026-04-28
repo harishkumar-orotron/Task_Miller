@@ -1,6 +1,7 @@
 import { useMemo, useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Eye, MoreVertical, Power } from 'lucide-react'
+import Tooltip from '../ui/Tooltip'
 import { createColumnHelper, type SortingState, type OnChangeFn } from '@tanstack/react-table'
 import DataTable from '../ui/DataTable'
 import { useToggleUserStatusMutation } from '../../queries/users.queries'
@@ -19,6 +20,76 @@ interface UserTableProps {
 }
 
 const columnHelper = createColumnHelper<User>()
+
+function ActionsCell({
+  user,
+  isAdmin,
+  myId,
+  isToggling,
+  onToggle,
+  onView,
+}: {
+  user: User
+  isAdmin: boolean
+  myId: string | undefined
+  isToggling: boolean
+  onToggle: (id: string, status: UserStatus) => void
+  onView: () => void
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!isOpen) return
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [isOpen])
+
+  return (
+    <div className="flex items-center justify-center gap-2">
+      <Tooltip label="View profile">
+        <button
+          onClick={onView}
+          className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-500 transition-colors cursor-pointer"
+        >
+          <Eye size={14} />
+        </button>
+      </Tooltip>
+
+      <div className="relative" ref={menuRef}>
+        <Tooltip label="Actions">
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${isOpen ? 'bg-orange-50 border-orange-200 text-orange-500' : 'border-gray-200 text-gray-500 hover:bg-gray-100'}`}
+          >
+            <MoreVertical size={14} />
+          </button>
+        </Tooltip>
+
+        {isOpen && (
+          <div className="absolute right-0 mt-1 w-36 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1 overflow-hidden">
+            {isAdmin && user.id !== myId && (
+              <button
+                onClick={() => { onToggle(user.id, user.status); setIsOpen(false) }}
+                disabled={isToggling}
+                className="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-600 hover:bg-gray-50 flex items-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                <Power size={13} className={user.status === 'active' ? 'text-red-500' : 'text-green-500'} />
+                {user.status === 'active' ? 'Deactivate' : 'Activate'}
+              </button>
+            )}
+            {!isAdmin && <div className="px-3 py-2 text-xs text-gray-400 italic">No actions</div>}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function UserTable({
   users,
@@ -155,61 +226,16 @@ export default function UserTable({
       id:     'actions',
       header: 'Actions',
       meta:   { align: 'center' },
-      cell:   ({ row }) => {
-        const user = row.original
-        const [isOpen, setIsOpen] = useState(false)
-        const menuRef = useRef<HTMLDivElement>(null)
-
-        useEffect(() => {
-          if (!isOpen) return
-          const handleClick = (e: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-              setIsOpen(false)
-            }
-          }
-          document.addEventListener('mousedown', handleClick)
-          return () => document.removeEventListener('mousedown', handleClick)
-        }, [isOpen])
-
-        return (
-          <div className="flex items-center justify-center gap-2">
-            <button
-              onClick={() => navigate({ to: '/users/$userId', params: { userId: user.id }, search: {} as any })}
-              className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-500 transition-colors"
-              title="View details"
-            >
-              <Eye size={14} />
-            </button>
-
-            <div className="relative" ref={menuRef}>
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                className={`p-1.5 rounded-lg border transition-colors ${isOpen ? 'bg-orange-50 border-orange-200 text-orange-500' : 'border-gray-200 text-gray-500 hover:bg-gray-100'}`}
-              >
-                <MoreVertical size={14} />
-              </button>
-
-              {isOpen && (
-                <div className="absolute right-0 mt-1 w-36 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1 overflow-hidden">
-                  {isAdmin && user.id !== myId && (
-                    <>
-                      <button
-                        onClick={() => { handleToggle(user.id, user.status); setIsOpen(false) }}
-                        disabled={isToggling}
-                        className="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-600 hover:bg-gray-50 flex items-center gap-2 transition-colors disabled:opacity-50"
-                      >
-                        <Power size={13} className={user.status === 'active' ? 'text-red-500' : 'text-green-500'} />
-                        {user.status === 'active' ? 'Deactivate' : 'Activate'}
-                      </button>
-                    </>
-                  )}
-                  {!isAdmin && <div className="px-3 py-2 text-xs text-gray-400 italic">No actions</div>}
-                </div>
-              )}
-            </div>
-          </div>
-        )
-      },
+      cell:   ({ row }) => (
+        <ActionsCell
+          user={row.original}
+          isAdmin={isAdmin}
+          myId={myId}
+          isToggling={isToggling}
+          onToggle={handleToggle}
+          onView={() => navigate({ to: '/users/$userId', params: { userId: row.original.id }, search: {} as any })}
+        />
+      ),
     }),
 
   ], [activePage, activeLimit, isAdmin, myId, isToggling, navigate, handleToggle])

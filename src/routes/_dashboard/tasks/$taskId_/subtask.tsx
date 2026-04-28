@@ -12,7 +12,7 @@ function AddSubtaskPage() {
   const { taskId } = Route.useParams()
   const navigate   = useNavigate()
   const { data: task, isLoading } = useTask(taskId)
-  const onBack = () => navigate({ to: '/tasks/$taskId', params: { taskId } })
+  const onBack = () => navigate({ to: '/tasks/$taskId', params: { taskId }, search: { tab: undefined } })
 
   if (isLoading) return <FormSkeleton />
 

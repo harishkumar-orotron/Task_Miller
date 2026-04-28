@@ -1,6 +1,7 @@
 import { useMemo, useCallback, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Eye, Pencil, Trash2, ChevronDown } from 'lucide-react'
+import Tooltip from '../ui/Tooltip'
 import { createColumnHelper, type SortingState, type OnChangeFn } from '@tanstack/react-table'
 import { useUpdateTaskMutation } from '../../queries/tasks.queries'
 import DataTable from '../ui/DataTable'
@@ -201,30 +202,33 @@ export default function TaskTable({
         const task = row.original
         return (
           <div className="flex items-center justify-center gap-2">
-            <button
-              onClick={() => navigate({ to: '/tasks/$taskId', params: { taskId: task.id } })}
-              className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-500 transition-colors"
-              title="View"
-            >
-              <Eye size={13} />
-            </button>
-            {isAdmin && onEdit && task.status !== 'completed' && (
+            <Tooltip label="View task">
               <button
-                onClick={() => onEdit(task)}
-                className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-500 transition-colors"
-                title="Edit"
+                onClick={() => navigate({ to: '/tasks/$taskId', params: { taskId: task.id }, search: { tab: undefined } })}
+                className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-500 transition-colors cursor-pointer"
               >
-                <Pencil size={13} />
+                <Eye size={13} />
               </button>
+            </Tooltip>
+            {isAdmin && onEdit && task.status !== 'completed' && (
+              <Tooltip label="Edit">
+                <button
+                  onClick={() => onEdit(task)}
+                  className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-500 transition-colors cursor-pointer"
+                >
+                  <Pencil size={13} />
+                </button>
+              </Tooltip>
             )}
             {isAdmin && onDelete && task.status === 'completed' && (
-              <button
-                onClick={() => onDelete(task)}
-                className="p-1.5 rounded-lg border border-red-100 hover:bg-red-50 text-red-400 transition-colors"
-                title="Delete"
-              >
-                <Trash2 size={13} />
-              </button>
+              <Tooltip label="Delete">
+                <button
+                  onClick={() => onDelete(task)}
+                  className="p-1.5 rounded-lg border border-red-100 hover:bg-red-50 text-red-400 transition-colors cursor-pointer"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </Tooltip>
             )}
           </div>
         )

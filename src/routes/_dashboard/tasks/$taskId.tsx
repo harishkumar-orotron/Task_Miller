@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, ChevronDown, Pencil, Plus, X, AlignLeft, Eye } from 'lucide-react'
+import { ArrowLeft, ChevronDown, Pencil, Plus, X, AlignLeft } from 'lucide-react'
 import { useTask, useUpdateTaskMutation } from '../../../queries/tasks.queries'
 import { useAttachments } from '../../../queries/attachments.queries'
 import { useProjects } from '../../../queries/projects.queries'
@@ -18,7 +18,12 @@ import { userColor, toAvatarShape, formatDate } from '../../../lib/utils'
 import type { TaskStatus, Subtask } from '../../../types/task.types'
 import type { ApiError } from '../../../types/api.types'
 
+const TABS: Tab[] = ['subtasks', 'assignTo', 'attachments']
+
 export const Route = createFileRoute('/_dashboard/tasks/$taskId')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: TABS.includes(search.tab as Tab) ? (search.tab as Tab) : undefined,
+  }),
   component: TaskViewPage,
 })
 
@@ -50,14 +55,11 @@ function allowedStatuses(current: string): TaskStatus[] {
 }
 
 function SubtaskCard({
-  subtask, parentOnHold, onEdit, onView, onStatusChange, isAdmin,
+  subtask, parentOnHold, onStatusChange,
 }: {
   subtask: Subtask
   parentOnHold: boolean
-  onEdit: (s: Subtask) => void
-  onView: (s: Subtask) => void
   onStatusChange: (id: string, status: TaskStatus) => void
-  isAdmin: boolean
 }) {
   const statusSelectClass: Record<string, string> = {
     to_do: 'border-purple-300 text-purple-600 bg-purple-50',
@@ -109,32 +111,12 @@ function SubtaskCard({
         <AvatarStack avatars={toAvatarShape(subtask.assignees)} max={4} size="sm" />
       </div>
 
-      {/* Due Date + Actions */}
-      <div className="flex items-end justify-between pt-0.5">
-        <div>
-          <p className="text-xs text-gray-400">Due Date</p>
-          <p className="text-xs font-medium text-gray-700 mt-0.5">
-            {subtask.dueDate ? formatDate(subtask.dueDate) : '—'}
-          </p>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => onView(subtask)}
-            className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-colors"
-            title="View subtask"
-          >
-            <Eye size={12} />
-          </button>
-          {isAdmin && subtask.status !== 'completed' && (
-            <button
-              onClick={() => onEdit(subtask)}
-              className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-colors"
-              title="Edit subtask"
-            >
-              <Pencil size={12} />
-            </button>
-          )}
-        </div>
+      {/* Due Date */}
+      <div className="pt-0.5">
+        <p className="text-xs text-gray-400">Due Date</p>
+        <p className="text-xs font-medium text-gray-700 mt-0.5">
+          {subtask.dueDate ? formatDate(subtask.dueDate) : '—'}
+        </p>
       </div>
 
     </div>
@@ -146,7 +128,7 @@ function TaskViewPage() {
   const navigate = useNavigate()
   const { isAdmin, isDeveloper, user } = useAuth()
 
-  const [activeTab, setActiveTab] = useState<Tab>('subtasks')
+  const { tab } = Route.useSearch()
   const [statusOpen, setStatusOpen] = useState(false)
   const [statusError, setStatusError] = useState<string | null>(null)
   const [assigneesPage, setAssigneesPage] = useState(1)
@@ -157,6 +139,9 @@ function TaskViewPage() {
   const { data: attachmentsData } = useAttachments(taskId)
   const { mutate: updateTask } = useUpdateTaskMutation()
 
+  const activeTab: Tab = tab ?? (task?.parentTaskId ? 'assignTo' : 'subtasks')
+  const setActiveTab = (t: Tab) => navigate({ to: Route.fullPath, params: { taskId }, search: { tab: t === (task?.parentTaskId ? 'assignTo' : 'subtasks') ? undefined : t }, replace: true })
+
   const projects = projectsData?.projects ?? []
   const proj = projects.find((p) => p.id === task?.projectId)
   const visibleSubtasks = task
@@ -165,14 +150,6 @@ function TaskViewPage() {
       : task.subtasks
     : []
   const attachmentCount = attachmentsData?.attachments.length ?? 0
-
-  const tabs: { key: Tab; label: string; count: number }[] = task
-    ? [
-      { key: 'subtasks', label: 'Subtasks', count: visibleSubtasks.length },
-      { key: 'assignTo', label: 'Assign To', count: task.assignees.length },
-      { key: 'attachments', label: 'Attachments', count: attachmentCount },
-    ]
-    : []
 
   const handleStatusChange = (newStatus: TaskStatus) => {
     setStatusError(null)
@@ -198,6 +175,17 @@ function TaskViewPage() {
     </div>
   )
 
+  const isSubtask = !!task.parentTaskId
+  const handleBack = () => isSubtask
+    ? navigate({ to: '/tasks/$taskId', params: { taskId: task.parentTaskId! }, search: { tab: undefined } })
+    : navigate({ to: '/tasks', search: {} as any })
+
+  const resolvedTabs: { key: Tab; label: string; count: number }[] = [
+    ...(!isSubtask ? [{ key: 'subtasks' as Tab, label: 'Subtasks', count: visibleSubtasks.length }] : []),
+    { key: 'assignTo' as Tab, label: 'Assign To', count: task.assignees.length },
+    ...(!isSubtask ? [{ key: 'attachments' as Tab, label: 'Attachments', count: attachmentCount }] : []),
+  ]
+
   const hasIncompleteSubtasks = task.subtasks.some(s => s.status !== 'completed')
   const allowed = allowedStatuses(task.status).filter(s =>
     !(s === 'completed' && hasIncompleteSubtasks)
@@ -208,10 +196,10 @@ function TaskViewPage() {
 
       {/* Back */}
       <button
-        onClick={() => navigate({ to: '/tasks', search: {} as any })}
+        onClick={handleBack}
         className="flex-shrink-0 flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
       >
-        <ArrowLeft size={15} /> Back to Tasks
+        <ArrowLeft size={15} /> {isSubtask ? 'Back to Parent Task' : 'Back to Tasks'}
       </button>
 
       <div className="flex flex-1 gap-5 min-h-0">
@@ -232,7 +220,7 @@ function TaskViewPage() {
                   <div className="relative">
                     <button
                       onClick={() => setStatusOpen(!statusOpen)}
-                      className={`flex items-center gap-2 border-2 rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors ${statusButtonClass[task.status] ?? statusButtonFallback}`}
+                      className={`flex items-center gap-2 border-2 rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors cursor-pointer ${statusButtonClass[task.status] ?? statusButtonFallback}`}
                     >
                       {statusLabel(task.status)}
                       <ChevronDown size={14} />
@@ -250,7 +238,7 @@ function TaskViewPage() {
                               <button
                                 key={s}
                                 onClick={() => handleStatusChange(s)}
-                                className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-gray-50 ${s === task.status ? 'text-orange-500 bg-orange-50' : 'text-gray-700'}`}
+                                className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-gray-50 cursor-pointer ${s === task.status ? 'text-orange-500 bg-orange-50' : 'text-gray-700'}`}
                               >
                                 {statusLabel(s)}
                               </button>
@@ -264,7 +252,7 @@ function TaskViewPage() {
                 {isAdmin && task.status !== 'completed' && (
                   <button
                     onClick={() => navigate({ to: '/tasks/$taskId/edit', params: { taskId } })}
-                    className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
                     title="Edit task"
                   >
                     <Pencil size={14} />
@@ -343,7 +331,7 @@ function TaskViewPage() {
 
           {/* Sticky tabs nav */}
           <div className="flex-shrink-0 flex gap-0 border-b border-gray-100 px-6">
-            {tabs.map((tab) => (
+            {resolvedTabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
@@ -385,10 +373,7 @@ function TaskViewPage() {
                       key={s.id}
                       subtask={s}
                       parentOnHold={task.status === 'on_hold'}
-                      onView={(sub) => navigate({ to: '/tasks/$taskId', params: { taskId: sub.id } })}
-                      onEdit={(sub) => navigate({ to: '/tasks/$taskId/edit', params: { taskId: sub.id } })}
                       onStatusChange={handleSubtaskStatusChange}
-                      isAdmin={isAdmin}
                     />
                   ))
                 )}
@@ -467,16 +452,18 @@ function TaskViewPage() {
 
         </div>{/* end left panel */}
 
-        {/* ── Right panel — Comments ──────────────────────────────────────── */}
-        <div className="w-96 flex-shrink-0">
-          <CommentsSection
-            taskId={taskId}
-            userId={user?.id ?? ''}
-            userName={user?.name ?? ''}
-            avatarUrl={user?.avatarUrl ?? null}
-            assignees={task.assignees.map(a => ({ id: a.id, name: a.name, email: a.email, avatarUrl: a.avatarUrl }))}
-          />
-        </div>
+        {/* ── Right panel — Comments (main tasks only) ────────────────────── */}
+        {!isSubtask && (
+          <div className="w-96 flex-shrink-0">
+            <CommentsSection
+              taskId={taskId}
+              userId={user?.id ?? ''}
+              userName={user?.name ?? ''}
+              avatarUrl={user?.avatarUrl ?? null}
+              assignees={task.assignees.map(a => ({ id: a.id, name: a.name, email: a.email, avatarUrl: a.avatarUrl }))}
+            />
+          </div>
+        )}
 
       </div>
     </div>

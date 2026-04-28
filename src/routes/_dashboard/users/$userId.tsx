@@ -1,4 +1,4 @@
-import { useState, useEffect }                          from 'react'
+import { useEffect }                                     from 'react'
 import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router'
 import {
   ArrowLeft, Eye,
@@ -10,6 +10,7 @@ import { useUser, useToggleUserStatusMutation } from '../../../queries/users.que
 import { useAuth }                            from '../../../hooks/useAuth'
 import { UserDetailSkeleton } from '../../../components/ui/Skeleton'
 import Pagination from '../../../components/ui/Pagination'
+import Tooltip from '../../../components/ui/Tooltip'
 import ErrorMessage                           from '../../../components/common/ErrorMessage'
 import StatusBadge                            from '../../../components/ui/StatusBadge'
 import PriorityBadge                          from '../../../components/ui/PriorityBadge'
@@ -22,8 +23,9 @@ import type { ApiError }                      from '../../../types/api.types'
 
 export const Route = createFileRoute('/_dashboard/users/$userId')({
   validateSearch: (search: Record<string, unknown>) => ({
-    page:  Number(search.page)  > 1 ? Number(search.page)  : undefined,
-    limit: Number(search.limit) > 0 ? Number(search.limit) : undefined,
+    page:      Number(search.page)  > 1 ? Number(search.page)  : undefined,
+    limit:     Number(search.limit) > 0 ? Number(search.limit) : undefined,
+    projectId: typeof search.projectId === 'string' ? search.projectId : undefined,
   }),
   beforeLoad: () => {
     const role = authStore.state.user?.role
@@ -140,13 +142,14 @@ function TasksTable({
                     }
                   </td>
                   <td className="px-3 py-3">
-                    <button
-                      onClick={() => navigate({ to: '/tasks/$taskId', params: { taskId: task.id } })}
-                      className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-500 transition-colors"
-                      title="View task"
-                    >
-                      <Eye size={13} />
-                    </button>
+                    <Tooltip label="View task">
+                      <button
+                        onClick={() => navigate({ to: '/tasks/$taskId', params: { taskId: task.id }, search: { tab: undefined } })}
+                        className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-500 transition-colors cursor-pointer"
+                      >
+                        <Eye size={13} />
+                      </button>
+                    </Tooltip>
                   </td>
                 </tr>
               ))}
@@ -178,7 +181,7 @@ function TasksTable({
 
 function UserDetailPage() {
   const { userId }  = Route.useParams()
-  const { page = 1, limit = 5 } = Route.useSearch()
+  const { page = 1, limit = 5, projectId } = Route.useSearch()
   const navigate    = useNavigate()
   const { isAdmin, user: me } = useAuth()
 
@@ -195,9 +198,8 @@ function UserDetailPage() {
   const { mutate: toggleStatus, isPending: isToggling } = useToggleUserStatusMutation()
 
   const projects = user?.projects ?? []
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
 
-  const selectedProject = projects.find((p) => p.id === selectedProjectId) ?? projects[0]
+  const selectedProject = projects.find((p) => p.id === projectId) ?? projects[0]
 
   if (isLoading) return <UserDetailSkeleton />
 
@@ -305,13 +307,12 @@ function UserDetailPage() {
             </div>
             <div className="overflow-y-auto flex-1">
               {projects.map((p) => {
-                const isSelected = (selectedProjectId ?? projects[0]?.id) === p.id
+                const isSelected = (projectId ?? projects[0]?.id) === p.id
                 return (
                   <button
                     key={p.id}
                     onClick={() => {
-                      setSelectedProjectId(p.id)
-                      setParams({ page: undefined })
+                      setParams({ projectId: p.id, page: undefined })
                     }}
                     className={`w-full text-left px-4 py-3 flex items-center justify-between gap-2 transition-colors border-b border-gray-50 last:border-0 ${
                       isSelected ? 'bg-gray-900 text-white' : 'hover:bg-gray-50 text-gray-700'

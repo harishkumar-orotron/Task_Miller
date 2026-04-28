@@ -14,7 +14,7 @@ function EditTaskPage() {
   const { taskId } = Route.useParams()
   const navigate   = useNavigate()
   const { data: task, isLoading, isError, error } = useTask(taskId)
-  const onBack = () => navigate({ to: '/tasks/$taskId', params: { taskId } })
+  const onBack = () => navigate({ to: '/tasks/$taskId', params: { taskId }, search: { tab: undefined } })
 
   if (isLoading) return <FormSkeleton />
 

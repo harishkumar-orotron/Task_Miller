@@ -8,7 +8,7 @@ import { useUsers } from '../../queries/users.queries'
 import { useAuth } from '../../hooks/useAuth'
 import { useOrgContext } from '../../store/orgContext.store'
 import { avatarColors } from '../../lib/utils'
-import type { Task, TaskPriority, TaskStatus, CreateTaskBody } from '../../types/task.types'
+import type { Task, TaskPriority, CreateTaskBody } from '../../types/task.types'
 import type { ApiError } from '../../types/api.types'
 
 interface TaskFormProps {
@@ -25,12 +25,6 @@ const priorityOptions: { value: TaskPriority; label: string }[] = [
   { value: 'urgent', label: 'Urgent' },
 ]
 
-const allStatusOptions: { value: TaskStatus; label: string }[] = [
-  { value: 'to_do',       label: 'To Do'       },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'on_hold',     label: 'On Hold'     },
-  { value: 'completed',   label: 'Completed'   },
-]
 
 export default function TaskForm({ onClose, task, parentTaskId, projectId: preProjectId }: TaskFormProps) {
   const isEdit    = !!task
@@ -44,7 +38,6 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
   const [title,           setTitle]           = useState(task?.title       ?? '')
   const [description,     setDescription]     = useState(task?.description ?? '')
   const [priority,        setPriority]        = useState<TaskPriority>(task?.priority ?? 'medium')
-  const [status,          setStatus]          = useState<TaskStatus>(task?.status     ?? 'to_do')
   const [dueDate,         setDueDate]         = useState<Date | null>(task?.dueDate ? new Date(task.dueDate) : null)
   const [selectedProject, setSelectedProject] = useState(task?.projectId ?? preProjectId ?? '')
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>(
@@ -118,7 +111,6 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
           body: {
             title,
             description:     description || undefined,
-            status,
             priority,
             dueDate:         dueDate ? dueDate.toISOString().slice(0, 10) : undefined,
             assignedUserIds: selectedUserIds.length > 0 ? selectedUserIds : undefined,
@@ -149,17 +141,12 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
           </h2>
         </div>
 
-        {errorMessage && Object.keys(fieldErrors).length === 0 && (
-          <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2.5 rounded-lg mb-4">
-            {errorMessage}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Title <span className="text-red-500">*</span></label>
             <input
               type="text"
               value={title}
@@ -188,7 +175,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
           {/* Project — create mode only, hidden for subtasks (inherited) */}
           {!isEdit && !isSubtask && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Project <span className="text-red-500">*</span></label>
               <div className="relative">
                 <button
                   ref={projectTriggerRef}
@@ -245,7 +232,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
 
           {/* Priority */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Priority <span className="text-red-500">*</span></label>
             <div className="flex gap-2">
               {priorityOptions.map((opt) => (
                 <button
@@ -264,43 +251,6 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
             </div>
           </div>
 
-          {/* Status — edit mode only */}
-          {isEdit && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <div className="relative">
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value as TaskStatus)}
-                  className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-orange-400 transition-colors cursor-pointer"
-                >
-                  {/* If current status is overdue (not in allStatusOptions), show it as a disabled label */}
-                  {!allStatusOptions.find((o) => o.value === task?.status) && (
-                    <option value={task?.status} disabled>
-                      {task?.status?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-                    </option>
-                  )}
-                  {allStatusOptions
-                    .filter((opt) => {
-                      const current = task?.status
-                      const transitions: Record<string, TaskStatus[]> = {
-                        to_do:       ['in_progress'],
-                        in_progress: ['on_hold', 'completed'],
-                        on_hold:     ['in_progress'],
-                        completed:   [],
-                        overdue:     ['completed'],
-                      }
-                      if (opt.value === current) return true
-                      return (transitions[current ?? ''] ?? []).includes(opt.value)
-                    })
-                    .map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                </select>
-                <ChevronDown size={14} className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
-              </div>
-            </div>
-          )}
 
           {/* Due Date */}
           <div>
@@ -399,6 +349,10 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
               )}
             </div>
           </div>
+
+          {errorMessage && Object.keys(fieldErrors).length === 0 && (
+            <p className="text-xs text-red-500">{errorMessage}</p>
+          )}
 
           <div className="flex gap-3 pt-1">
             <button

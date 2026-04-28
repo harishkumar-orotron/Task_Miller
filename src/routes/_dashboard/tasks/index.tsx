@@ -153,6 +153,7 @@ function TasksPage() {
                 <option value="to_do">To Do</option>
                 <option value="in_progress">In Progress</option>
                 <option value="on_hold">On Hold</option>
+                <option value="overdue">Overdue</option>
                 <option value="completed">Completed</option>
               </select>
               <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
@@ -173,7 +174,7 @@ function TasksPage() {
             {isAdmin && (
               <button
                 onClick={() => navigate({ to: '/tasks/new' })}
-                className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800"
+                className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 cursor-pointer"
               >
                 <Plus size={13} /> Add Task
               </button>

@@ -5,6 +5,7 @@ import { useUsers } from '../../queries/users.queries'
 import { useOrgContext } from '../../store/orgContext.store'
 import { useAuth } from '../../hooks/useAuth'
 import { userColor } from '../../lib/utils'
+import S3Image from '../ui/S3Image'
 import type { Comment, MentionUser } from '../../types/comment.types'
 
 interface MentionCandidate { id: string; name: string; email: string }
@@ -53,8 +54,6 @@ function renderBody(body: string, mentions: MentionUser[]) {
 }
 
 
-
-import S3Image from '../ui/S3Image'
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
 
@@ -260,7 +259,7 @@ function ReplyRow({
             <div className="flex items-center gap-1 flex-shrink-0">
               <button
                 onClick={() => onReply(reply.id)}
-                className="flex items-center gap-1 text-xs font-medium text-teal-500 hover:text-teal-600 transition-colors"
+                className="flex items-center gap-1 text-xs font-medium text-teal-500 hover:text-teal-600 transition-colors cursor-pointer"
               >
                 <Reply size={11} /> Reply
               </button>
@@ -374,7 +373,7 @@ function CommentItem({
             <div className="flex items-center gap-1 flex-shrink-0">
               <button
                 onClick={() => onReply(comment.id)}
-                className="flex items-center gap-1 text-xs font-medium text-teal-500 hover:text-teal-600 transition-colors"
+                className="flex items-center gap-1 text-xs font-medium text-teal-500 hover:text-teal-600 transition-colors cursor-pointer"
               >
                 <Reply size={12} /> Reply
               </button>
@@ -434,7 +433,7 @@ function CommentItem({
           {allReplies.length > 0 && (
             <button
               onClick={() => setShowReplies(!showReplies)}
-              className="mt-2 flex items-center gap-1 text-xs font-semibold text-teal-500 hover:text-teal-600 transition-colors"
+              className="mt-2 flex items-center gap-1 text-xs font-semibold text-teal-500 hover:text-teal-600 transition-colors cursor-pointer"
             >
               {showReplies ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
               {showReplies ? 'Hide' : 'View'} {allReplies.length} {allReplies.length === 1 ? 'reply' : 'replies'}

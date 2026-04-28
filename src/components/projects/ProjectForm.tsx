@@ -7,7 +7,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { avatarColors } from '../../lib/utils'
 import S3Image from '../ui/S3Image'
 import ImageCropperModal from '../ui/ImageCropperModal'
-import type { Project, ProjectStatus } from '../../types/project.types'
+import type { Project } from '../../types/project.types'
 import type { ApiError } from '../../types/api.types'
 
 interface ProjectFormProps {
@@ -15,11 +15,6 @@ interface ProjectFormProps {
   project?: Project        // pass to enter edit mode
 }
 
-const statusOptions: { value: ProjectStatus; label: string }[] = [
-  { value: 'active',    label: 'Active'    },
-  { value: 'on_hold',   label: 'On Hold'   },
-  { value: 'completed', label: 'Completed' },
-]
 
 export default function ProjectForm({ onClose, project }: ProjectFormProps) {
   const isEdit        = !!project
@@ -27,7 +22,6 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
 
   const [title,           setTitle]           = useState(project?.title       ?? '')
   const [description,     setDescription]     = useState(project?.description ?? '')
-  const [status,          setStatus]          = useState<ProjectStatus>(project?.status ?? 'active')
   const [logoUrl,         setLogoUrl]         = useState<string | null>(project?.logoUrl ?? null)
   const [orgId,           setOrgId]           = useState(project?.orgId ?? (!isSuperAdmin ? (adminOrgId ?? '') : ''))
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>(
@@ -128,7 +122,7 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
     e.preventDefault()
     if (isEdit) {
       updateProject(
-        { id: project.id, body: { title, description: description || undefined, status, logoUrl: logoUrl || undefined } },
+        { id: project.id, body: { title, description: description || undefined, logoUrl: logoUrl || undefined } },
         { onSuccess: onClose },
       )
     } else {
@@ -154,11 +148,6 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
           </h2>
         </div>
 
-        {errorMessage && Object.keys(fieldErrors).length === 0 && (
-          <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2.5 rounded-lg mb-4">
-            {errorMessage}
-          </div>
-        )}
 
         {/* Logo Upload Section */}
         <div className="flex flex-col items-center mb-6 mt-2">
@@ -210,7 +199,7 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
 
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Title <span className="text-red-500">*</span></label>
             <input
               type="text"
               value={title}
@@ -240,7 +229,7 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
           {/* Org — create mode, superadmin only */}
           {!isEdit && isSuperAdmin && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Organization</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Organization <span className="text-red-500">*</span></label>
               <div className="relative">
                 <button
                   ref={orgTriggerRef}
@@ -370,27 +359,9 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
             </div>
           )}
 
-          {/* Status — edit mode only */}
-          {isEdit && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <div className="flex gap-2">
-                {statusOptions.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setStatus(opt.value)}
-                    className={`flex-1 py-2 rounded-lg text-xs font-medium border transition-colors ${
-                      status === opt.value
-                        ? 'bg-orange-500 text-white border-orange-500'
-                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+
+          {errorMessage && Object.keys(fieldErrors).length === 0 && (
+            <p className="text-xs text-red-500">{errorMessage}</p>
           )}
 
           <div className="flex gap-3 pt-1">

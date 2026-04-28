@@ -33,15 +33,10 @@ export default function OrgForm({ onClose }: OrgFormProps) {
           <h2 className="text-base font-semibold text-gray-800">Create Organization</h2>
         </div>
 
-        {errorMessage && (
-          <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2.5 rounded-lg mb-4">
-            {errorMessage}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name <span className="text-red-500">*</span></label>
             <input
               type="text"
               value={name}
@@ -68,6 +63,10 @@ export default function OrgForm({ onClose }: OrgFormProps) {
               className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-orange-400 transition-colors resize-none"
             />
           </div>
+
+          {errorMessage && (
+            <p className="text-xs text-red-500">{errorMessage}</p>
+          )}
 
           <div className="flex gap-3 pt-1">
             <button

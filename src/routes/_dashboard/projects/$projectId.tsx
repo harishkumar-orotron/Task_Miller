@@ -158,7 +158,7 @@ function ProjectViewPage() {
                   <>
                     <button
                       onClick={() => navigate({ to: '/projects/$projectId/edit', params: { projectId } })}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
                     >
                       <Pencil size={13} /> Edit
                     </button>
@@ -166,14 +166,14 @@ function ProjectViewPage() {
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => setConfirmDelete(false)}
-                          className="px-2.5 py-1.5 text-xs border border-gray-200 text-gray-500 rounded-lg hover:bg-gray-50 transition-colors"
+                          className="px-2.5 py-1.5 text-xs border border-gray-200 text-gray-500 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={handleDelete}
                           disabled={isDeleting}
-                          className="px-2.5 py-1.5 text-xs font-medium bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-60"
+                          className="px-2.5 py-1.5 text-xs font-medium bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-60 cursor-pointer"
                         >
                           {isDeleting ? 'Deleting...' : 'Confirm'}
                         </button>
@@ -181,7 +181,7 @@ function ProjectViewPage() {
                     ) : (
                       <button
                         onClick={() => setConfirmDelete(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
                       >
                         <Trash2 size={13} /> Delete
                       </button>
@@ -245,7 +245,6 @@ function ProjectViewPage() {
                       <tr className="text-xs text-gray-600 font-semibold">
                         <th className="px-5 py-3 text-left bg-[#ccfbf1]">#</th>
                         <th className="px-5 py-3 text-left bg-[#ccfbf1]">Name</th>
-                        <th className="px-5 py-3 text-left bg-[#ccfbf1]">Date</th>
                         <th className="px-5 py-3 text-left bg-[#ccfbf1]">Tasks Assigned</th>
                         <th className="px-5 py-3 text-left bg-[#ccfbf1]">Email</th>
                       </tr>
@@ -267,9 +266,6 @@ function ProjectViewPage() {
                               </div>
                               <span className="font-medium text-gray-700 whitespace-nowrap">{m.name}</span>
                             </div>
-                          </td>
-                          <td className="px-5 py-3 text-gray-500 text-xs whitespace-nowrap">
-                            {formatDate(project.createdAt)}
                           </td>
                           <td className="px-5 py-3">
                             <span className="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 text-xs font-semibold">
