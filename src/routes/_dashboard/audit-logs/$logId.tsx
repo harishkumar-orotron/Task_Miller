@@ -274,7 +274,7 @@ function AuditLogDetailPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate({ to: '/audit-logs', search: {} as any })}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors cursor-pointer"
         >
           <ArrowLeft size={15} />
           Audit Logs

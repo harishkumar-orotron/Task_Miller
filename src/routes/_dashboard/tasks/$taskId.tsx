@@ -180,7 +180,7 @@ function TaskViewPage() {
 
   if (isError || !task) return (
     <div className="py-8">
-      <button onClick={() => navigate({ to: '/tasks', search: {} as any })} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4">
+      <button onClick={() => navigate({ to: '/tasks', search: {} as any })} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4 cursor-pointer">
         <ArrowLeft size={15} /> Back to Tasks
       </button>
       <ErrorMessage message={(error as ApiError)?.message ?? 'Task not found'} />
@@ -209,7 +209,7 @@ function TaskViewPage() {
       {/* Back */}
       <button
         onClick={handleBack}
-        className="flex-shrink-0 flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+        className="flex-shrink-0 flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
       >
         <ArrowLeft size={15} /> {isSubtask ? 'Back to Parent Task' : 'Back to Tasks'}
       </button>

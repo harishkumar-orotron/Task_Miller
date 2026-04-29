@@ -109,7 +109,7 @@ export default function DateRangeFilter({ from, to, onChange }: DateRangeFilterP
       <button
         ref={buttonRef}
         onClick={handleOpen}
-        className={`flex items-center gap-1.5 pl-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors whitespace-nowrap ${
+        className={`flex items-center gap-1.5 pl-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
           isActive
             ? 'bg-gray-900 text-white border-gray-900 pr-2'
             : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300 pr-2.5'
@@ -139,7 +139,7 @@ export default function DateRangeFilter({ from, to, onChange }: DateRangeFilterP
                 <button
                   key={p.label}
                   onClick={() => handlePreset(p)}
-                  className={`text-left px-3 py-2 text-xs font-medium transition-colors ${
+                  className={`text-left px-3 py-2 text-xs font-medium transition-colors cursor-pointer ${
                     activePreset === p.label
                       ? 'bg-gray-900 text-white'
                       : 'text-gray-600 hover:bg-gray-50'
@@ -214,7 +214,7 @@ export default function DateRangeFilter({ from, to, onChange }: DateRangeFilterP
                 {(isActive || startDate || endDate) && (
                   <button
                     onClick={() => handleRemove()}
-                    className="flex-1 py-1.5 text-xs font-medium text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                    className="flex-1 py-1.5 text-xs font-medium text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
                   >
                     Remove
                   </button>
@@ -222,7 +222,7 @@ export default function DateRangeFilter({ from, to, onChange }: DateRangeFilterP
                 <button
                   onClick={handleOk}
                   disabled={!startDate}
-                  className="flex-1 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-lg hover:bg-gray-800 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   OK
                 </button>

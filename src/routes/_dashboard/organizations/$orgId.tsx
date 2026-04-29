@@ -44,7 +44,7 @@ function OrgDetailPage() {
   if (error || !org) {
     return (
       <div className="space-y-4">
-        <button onClick={() => navigate({ to: '/organizations', search: {} as any })} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700">
+        <button onClick={() => navigate({ to: '/organizations', search: {} as any })} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 cursor-pointer">
           <ArrowLeft size={15} /> Back to Organizations
         </button>
         <ErrorMessage message={(error as ApiError)?.message ?? 'Organization not found'} />
@@ -74,7 +74,7 @@ function OrgDetailPage() {
       {/* Back */}
       <button
         onClick={() => navigate({ to: '/organizations', search: {} as any })}
-        className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
       >
         <ArrowLeft size={15} /> Back to Organizations
       </button>

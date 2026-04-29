@@ -86,7 +86,7 @@ export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => voi
         <div className="flex items-center gap-4">
           <button
             onClick={onToggleSidebar}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-500"
+            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 cursor-pointer"
             title="Toggle Sidebar"
           >
             <Menu size={20} />
@@ -114,7 +114,7 @@ export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => voi
           <div className="relative">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="flex items-center gap-2 hover:bg-gray-50 px-2 py-1 rounded-lg transition-colors"
+              className="flex items-center gap-2 hover:bg-gray-50 px-2 py-1 rounded-lg transition-colors cursor-pointer"
             >
               <div className={`w-8 h-8 ${userColor(profile?.id ?? '')} rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden`}>
                 {profile?.avatarUrl ? (
@@ -143,7 +143,7 @@ export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => voi
 
                   <button
                     onClick={() => { setMenuOpen(false); navigate({ to: '/profile' }) }}
-                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors border-b border-gray-100"
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors border-b border-gray-100 cursor-pointer"
                   >
                     <UserCog size={14} />
                     My Profile
@@ -152,7 +152,7 @@ export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => voi
                   <button
                     onClick={handleLogout}
                     disabled={isLoggingOut}
-                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-60"
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-60 cursor-pointer"
                   >
                     <LogOut size={14} />
                     {isLoggingOut ? 'Logging out...' : 'Logout'}

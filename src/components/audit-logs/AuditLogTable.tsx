@@ -1,5 +1,6 @@
-import { ExternalLink } from 'lucide-react'
+import { Eye } from 'lucide-react'
 import { formatRelativeTime } from '../../lib/utils'
+import Tooltip from '../ui/Tooltip'
 import type { AuditLog } from '../../types/audit-log.types'
 
 const actionStyle = (action: string): { label: string; cls: string } => {
@@ -93,13 +94,14 @@ export default function AuditLogTable({ logs, startEntry, onView }: Props) {
               </td>
 
               <td className="px-5 py-3">
-                <button
-                  onClick={() => onView(log.id)}
-                  className="flex items-center gap-1 text-xs font-medium text-orange-500 hover:text-orange-600 transition-colors whitespace-nowrap"
-                >
-                  <ExternalLink size={12} />
-                  View
-                </button>
+                <Tooltip label="View log">
+                  <button
+                    onClick={() => onView(log.id)}
+                    className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-500 transition-colors cursor-pointer"
+                  >
+                    <Eye size={13} />
+                  </button>
+                </Tooltip>
               </td>
             </tr>
           )
