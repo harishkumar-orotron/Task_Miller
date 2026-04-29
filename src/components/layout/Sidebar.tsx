@@ -19,7 +19,6 @@ const navItems = [
 
 interface SidebarProps {
   isCollapsed: boolean
-  setIsCollapsed: (v: boolean) => void
 }
 
 export default function Sidebar({ isCollapsed }: SidebarProps) {

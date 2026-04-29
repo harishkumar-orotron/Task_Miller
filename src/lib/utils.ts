@@ -16,7 +16,9 @@ export function formatRelativeTime(dateStr: string): string {
 
 export function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('en-IN', {
+  const datePart = dateStr.slice(0, 10)
+  const [y, m, d] = datePart.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('en-IN', {
     day:   '2-digit',
     month: 'short',
     year:  'numeric',

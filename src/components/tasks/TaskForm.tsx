@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { ChevronDown, Check, Search, CalendarDays } from 'lucide-react'
-import { useCreateTaskMutation, useUpdateTaskMutation } from '../../queries/tasks.queries'
-import { useProjects } from '../../queries/projects.queries'
+import { useCreateTaskMutation, useUpdateTaskMutation, useTask } from '../../queries/tasks.queries'
+import { useProjects, useProject } from '../../queries/projects.queries'
 import { useUsers } from '../../queries/users.queries'
 import { useAuth } from '../../hooks/useAuth'
 import { useOrgContext } from '../../store/orgContext.store'
@@ -53,8 +53,13 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
   const projectTriggerRef = useRef<HTMLButtonElement>(null)
   const memberTriggerRef  = useRef<HTMLButtonElement>(null)
 
-  const { data: projectsData } = useProjects({ limit: 100, orgId })
-  const { data: usersData }    = useUsers({ limit: 100, orgId, role: 'developer' })
+  const isEditingSubtask = isEdit && !!task?.parentTaskId
+  const projectIdForFilter = isEditingSubtask ? '' : (isEdit ? task?.projectId : selectedProject) ?? ''
+
+  const { data: projectsData }   = useProjects({ limit: 100, orgId })
+  const { data: usersData }      = useUsers({ limit: 100, orgId, role: 'developer' })
+  const { data: parentTaskData } = useTask(task?.parentTaskId ?? '')
+  const { data: projectData }    = useProject(projectIdForFilter)
 
   const { mutate: createTask, isPending: isCreating, error: createError } = useCreateTaskMutation()
   const { mutate: updateTask, isPending: isUpdating, error: updateError } = useUpdateTaskMutation()
@@ -68,8 +73,13 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
     {},
   ) ?? {}
 
-  const projects     = projectsData?.projects ?? []
-  const users        = (usersData?.users ?? []).filter((u) => u.role === 'developer')
+  const projects = projectsData?.projects ?? []
+  const allUsers = (usersData?.users ?? []).filter((u) => u.role === 'developer')
+  const users    = isEditingSubtask && parentTaskData
+    ? allUsers.filter((u) => parentTaskData.assignees.some((a) => a.id === u.id))
+    : projectData
+    ? allUsers.filter((u) => projectData.members.some((m) => m.id === u.id))
+    : allUsers
   const selectedProj = projects.find((p) => p.id === selectedProject)
 
   const filteredProjects = projects.filter((p) =>
@@ -85,6 +95,20 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
       prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId],
     )
   }
+
+  // Fix 1: re-run whenever the filtered user list changes (projectData / parentTaskData / usersData)
+  useEffect(() => {
+    if (!usersData) return
+    const validIds = new Set(users.map((u) => u.id))
+    setSelectedUserIds((prev) => prev.filter((id) => validIds.has(id)))
+  }, [usersData, parentTaskData, projectData])
+
+  // Fix 2: clear assignees when project changes in create mode
+  const isFirstRender = useRef(true)
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return }
+    if (!isEdit) setSelectedUserIds([])
+  }, [selectedProject])
 
   useEffect(() => {
     if (memberOpen && memberTriggerRef.current) {
@@ -137,7 +161,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
 
         <div className="flex items-center pt-6 pb-4 border-b border-gray-100 mb-2">
           <h2 className="text-base font-semibold text-gray-800">
-            {isEdit ? 'Edit Task' : isSubtask ? 'Add Subtask' : 'Create Task'}
+            {isEdit ? (isEditingSubtask ? 'Edit Subtask' : 'Edit Task') : isSubtask ? 'Add Subtask' : 'Create Task'}
           </h2>
         </div>
 
@@ -280,75 +304,75 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
 
           {/* Assignees */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Assignees{' '}
-              {selectedUserIds.length > 0 && (
-                <span className="ml-1.5 text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-medium">
-                  {selectedUserIds.length}
-                </span>
-              )}
-            </label>
-            <div className="relative">
-              <button
-                ref={memberTriggerRef}
-                type="button"
-                onClick={() => setMemberOpen((v) => !v)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-left flex items-center justify-between outline-none focus:border-orange-400 transition-colors"
-              >
-                <span className="text-gray-400">
-                  {selectedUserIds.length === 0
-                    ? 'Select assignees'
-                    : `${selectedUserIds.length} assignee${selectedUserIds.length > 1 ? 's' : ''} selected`}
-                </span>
-                <ChevronDown size={15} className="text-gray-400 flex-shrink-0" />
-              </button>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Assignees{' '}
+                {selectedUserIds.length > 0 && (
+                  <span className="ml-1.5 text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-medium">
+                    {selectedUserIds.length}
+                  </span>
+                )}
+              </label>
+              <div className="relative">
+                <button
+                  ref={memberTriggerRef}
+                  type="button"
+                  onClick={() => setMemberOpen((v) => !v)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-left flex items-center justify-between outline-none focus:border-orange-400 transition-colors"
+                >
+                  <span className="text-gray-400">
+                    {selectedUserIds.length === 0
+                      ? 'Select assignees'
+                      : `${selectedUserIds.length} assignee${selectedUserIds.length > 1 ? 's' : ''} selected`}
+                  </span>
+                  <ChevronDown size={15} className="text-gray-400 flex-shrink-0" />
+                </button>
 
-              {memberOpen && (
-                <>
-                <div className="fixed inset-0 z-[9]" onClick={() => { setMemberOpen(false); setMemberSearch('') }} />
-                <div className={`absolute ${memberDirection === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'} left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[10]`}>
-                  <div className="p-2 border-b border-gray-100">
-                    <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5">
-                      <Search size={12} className="text-gray-400 flex-shrink-0" />
-                      <input
-                        autoFocus
-                        value={memberSearch}
-                        onChange={(e) => setMemberSearch(e.target.value)}
-                        placeholder="Search by name or email..."
-                        className="bg-transparent outline-none flex-1 text-xs text-gray-700 placeholder-gray-400"
-                      />
+                {memberOpen && (
+                  <>
+                  <div className="fixed inset-0 z-[9]" onClick={() => { setMemberOpen(false); setMemberSearch('') }} />
+                  <div className={`absolute ${memberDirection === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'} left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[10]`}>
+                    <div className="p-2 border-b border-gray-100">
+                      <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5">
+                        <Search size={12} className="text-gray-400 flex-shrink-0" />
+                        <input
+                          autoFocus
+                          value={memberSearch}
+                          onChange={(e) => setMemberSearch(e.target.value)}
+                          placeholder="Search by name or email..."
+                          className="bg-transparent outline-none flex-1 text-xs text-gray-700 placeholder-gray-400"
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-48 overflow-y-auto">
+                      {filteredUsers.length === 0 ? (
+                        <p className="text-sm text-gray-400 px-3 py-3">No users found</p>
+                      ) : (
+                        filteredUsers.map((u, i) => (
+                          <button
+                            key={u.id}
+                            type="button"
+                            onClick={() => toggleUser(u.id)}
+                            className="w-full text-left px-3 py-2.5 hover:bg-orange-50 flex items-center gap-2.5 transition-colors"
+                          >
+                            <div className={`w-7 h-7 rounded-full ${avatarColors[i % avatarColors.length]} flex items-center justify-center flex-shrink-0`}>
+                              <span className="text-white text-xs font-semibold">{u.name.charAt(0).toUpperCase()}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-700 truncate">{u.name}</p>
+                              <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                            </div>
+                            <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${selectedUserIds.includes(u.id) ? 'bg-orange-500 border-orange-500' : 'border-gray-300'}`}>
+                              {selectedUserIds.includes(u.id) && <Check size={10} className="text-white" />}
+                            </div>
+                          </button>
+                        ))
+                      )}
                     </div>
                   </div>
-                  <div className="max-h-48 overflow-y-auto">
-                    {filteredUsers.length === 0 ? (
-                      <p className="text-sm text-gray-400 px-3 py-3">No users found</p>
-                    ) : (
-                      filteredUsers.map((u, i) => (
-                        <button
-                          key={u.id}
-                          type="button"
-                          onClick={() => toggleUser(u.id)}
-                          className="w-full text-left px-3 py-2.5 hover:bg-orange-50 flex items-center gap-2.5 transition-colors"
-                        >
-                          <div className={`w-7 h-7 rounded-full ${avatarColors[i % avatarColors.length]} flex items-center justify-center flex-shrink-0`}>
-                            <span className="text-white text-xs font-semibold">{u.name.charAt(0).toUpperCase()}</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-700 truncate">{u.name}</p>
-                            <p className="text-xs text-gray-400 truncate">{u.email}</p>
-                          </div>
-                          <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${selectedUserIds.includes(u.id) ? 'bg-orange-500 border-orange-500' : 'border-gray-300'}`}>
-                            {selectedUserIds.includes(u.id) && <Check size={10} className="text-white" />}
-                          </div>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </div>
-                </>
-              )}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
 
           {errorMessage && Object.keys(fieldErrors).length === 0 && (
             <p className="text-xs text-red-500">{errorMessage}</p>

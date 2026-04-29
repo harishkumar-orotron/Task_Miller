@@ -12,22 +12,26 @@ import { useOrgContext } from '../../../store/orgContext.store'
 import { useDebounce } from '../../../hooks/useDebounce'
 import StatsCard from '../../../components/ui/StatsCard'
 import Pagination from '../../../components/ui/Pagination'
+import DateRangeFilter from '../../../components/ui/DateRangeFilter'
 import TaskTable from '../../../components/tasks/TaskTable'
 import ConfirmDeleteModal from '../../../components/common/ConfirmDeleteModal'
 import { StatsSkeleton, TableSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
-import type { Task, TaskStatus } from '../../../types/task.types'
+import type { Task, TaskStatus, TaskPriority } from '../../../types/task.types'
 import type { ApiError } from '../../../types/api.types'
 
 export const Route = createFileRoute('/_dashboard/tasks/')({
   validateSearch: (search: Record<string, unknown>) => ({
-    search:    (search.search as string)    || undefined,
-    status:    ((search.status as string)   || undefined) as TaskStatus | undefined,
-    projectId: (search.projectId as string) || undefined,
-    sortBy:    (search.sortBy as string)    || undefined,
-    sortDir:   (search.sortDir as string) === 'desc' ? 'desc' as const : undefined,
-    page:      Number(search.page)  > 1  ? Number(search.page)  : undefined,
-    limit:     Number(search.limit) > 0 && Number(search.limit) !== 10 ? Number(search.limit) : undefined,
+    search:       (search.search as string)      || undefined,
+    status:       ((search.status as string)     || undefined) as TaskStatus | undefined,
+    priority:     ((search.priority as string)   || undefined) as TaskPriority | undefined,
+    projectId:    (search.projectId as string)   || undefined,
+    dueDateFrom:  (search.dueDateFrom as string) || undefined,
+    dueDateTo:    (search.dueDateTo   as string) || undefined,
+    sortBy:       (search.sortBy as string)      || undefined,
+    sortDir:      (search.sortDir as string) === 'desc' ? 'desc' as const : undefined,
+    page:         Number(search.page)  > 1  ? Number(search.page)  : undefined,
+    limit:        Number(search.limit) > 0 && Number(search.limit) !== 10 ? Number(search.limit) : undefined,
   }),
   component: TasksPage,
 })
@@ -40,7 +44,7 @@ function TasksPage() {
   const assignedUserId = isDeveloper ? (user?.id ?? undefined) : undefined
 
   const navigate = Route.useNavigate()
-  const { search = '', status = '', projectId = '', sortBy = '', sortDir = 'asc', page = 1, limit = 10 } = Route.useSearch()
+  const { search = '', status = '', priority = '', projectId = '', dueDateFrom, dueDateTo, sortBy = '', sortDir = 'asc', page = 1, limit = 10 } = Route.useSearch()
   const [deleteTask, setDeleteTask] = useState<Task | null>(null)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -57,12 +61,15 @@ function TasksPage() {
   const sortOrder = sortBy ? sortDir : undefined
 
   const { data, isLoading, isFetching, isError, error } = useTasks({
-    search:    debouncedSearch || undefined,
-    status:    status     || undefined,
-    projectId: projectId  || undefined,
+    search:      debouncedSearch || undefined,
+    status:      status          || undefined,
+    priority:    priority        || undefined,
+    projectId:   projectId       || undefined,
     orgId,
     assignedUserId,
-    sortBy:    sortBy     || undefined,
+    dueDateFrom: dueDateFrom     || undefined,
+    dueDateTo:   dueDateTo       || undefined,
+    sortBy:      sortBy          || undefined,
     sortOrder,
     page,
     limit,
@@ -99,9 +106,12 @@ function TasksPage() {
     if (!deleteTask) return
     deleteTaskMutation(deleteTask.id, { onSuccess: () => setDeleteTask(null) })
   }
-  const handleSearch        = (val: string) => setParams({ search: val || undefined, page: undefined })
-  const handleStatusChange  = (val: string) => setParams({ status: val || undefined, page: undefined })
-  const handleProjectChange = (val: string) => setParams({ projectId: val || undefined, page: undefined })
+  const handleSearch          = (val: string) => setParams({ search: val || undefined,    page: undefined })
+  const handleStatusChange    = (val: string) => setParams({ status: val || undefined,    page: undefined })
+  const handlePriorityChange  = (val: string) => setParams({ priority: val || undefined,  page: undefined })
+  const handleProjectChange   = (val: string) => setParams({ projectId: val || undefined, page: undefined })
+  const handleDateRange       = (from: string | undefined, to: string | undefined) =>
+    setParams({ dueDateFrom: from, dueDateTo: to, page: undefined })
   const handleLimit         = (val: number) => setParams({ limit: val !== 10 ? val : undefined, page: undefined })
   const handleSorting       = (updater: any) => {
     const next: SortingState = typeof updater === 'function' ? updater(sorting) : updater
@@ -161,6 +171,21 @@ function TasksPage() {
 
             <div className="relative">
               <select
+                value={priority}
+                onChange={(e) => handlePriorityChange(e.target.value)}
+                className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-500 bg-gray-50 outline-none cursor-pointer"
+              >
+                <option value="">All Priority</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+              <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
+            </div>
+
+            <div className="relative">
+              <select
                 value={projectId}
                 onChange={(e) => handleProjectChange(e.target.value)}
                 className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-500 bg-gray-50 outline-none cursor-pointer"
@@ -170,6 +195,12 @@ function TasksPage() {
               </select>
               <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
             </div>
+
+            <DateRangeFilter
+              from={dueDateFrom}
+              to={dueDateTo}
+              onChange={handleDateRange}
+            />
 
             {isAdmin && (
               <button

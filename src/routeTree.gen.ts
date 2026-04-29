@@ -14,13 +14,13 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardProfileRouteImport } from './routes/_dashboard/profile'
 import { Route as DashboardDashboardRouteImport } from './routes/_dashboard/dashboard'
-import { Route as DashboardAuditLogsRouteImport } from './routes/_dashboard/audit-logs'
 import { Route as AuthOtpRouteImport } from './routes/_auth/otp'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as DashboardUsersIndexRouteImport } from './routes/_dashboard/users/index'
 import { Route as DashboardTasksIndexRouteImport } from './routes/_dashboard/tasks/index'
 import { Route as DashboardProjectsIndexRouteImport } from './routes/_dashboard/projects/index'
 import { Route as DashboardOrganizationsIndexRouteImport } from './routes/_dashboard/organizations/index'
+import { Route as DashboardAuditLogsIndexRouteImport } from './routes/_dashboard/audit-logs/index'
 import { Route as DashboardUsersNewRouteImport } from './routes/_dashboard/users/new'
 import { Route as DashboardUsersUserIdRouteImport } from './routes/_dashboard/users/$userId'
 import { Route as DashboardTasksNewRouteImport } from './routes/_dashboard/tasks/new'
@@ -29,6 +29,7 @@ import { Route as DashboardProjectsNewRouteImport } from './routes/_dashboard/pr
 import { Route as DashboardProjectsProjectIdRouteImport } from './routes/_dashboard/projects/$projectId'
 import { Route as DashboardOrganizationsNewRouteImport } from './routes/_dashboard/organizations/new'
 import { Route as DashboardOrganizationsOrgIdRouteImport } from './routes/_dashboard/organizations/$orgId'
+import { Route as DashboardAuditLogsLogIdRouteImport } from './routes/_dashboard/audit-logs/$logId'
 import { Route as DashboardTasksTaskIdSubtaskRouteImport } from './routes/_dashboard/tasks/$taskId_/subtask'
 import { Route as DashboardTasksTaskIdEditRouteImport } from './routes/_dashboard/tasks/$taskId_/edit'
 import { Route as DashboardProjectsProjectIdEditRouteImport } from './routes/_dashboard/projects/$projectId_/edit'
@@ -55,11 +56,6 @@ const DashboardProfileRoute = DashboardProfileRouteImport.update({
 const DashboardDashboardRoute = DashboardDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardAuditLogsRoute = DashboardAuditLogsRouteImport.update({
-  id: '/audit-logs',
-  path: '/audit-logs',
   getParentRoute: () => DashboardRoute,
 } as any)
 const AuthOtpRoute = AuthOtpRouteImport.update({
@@ -93,6 +89,11 @@ const DashboardOrganizationsIndexRoute =
     path: '/organizations/',
     getParentRoute: () => DashboardRoute,
   } as any)
+const DashboardAuditLogsIndexRoute = DashboardAuditLogsIndexRouteImport.update({
+  id: '/audit-logs/',
+  path: '/audit-logs/',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardUsersNewRoute = DashboardUsersNewRouteImport.update({
   id: '/users/new',
   path: '/users/new',
@@ -136,6 +137,11 @@ const DashboardOrganizationsOrgIdRoute =
     path: '/organizations/$orgId',
     getParentRoute: () => DashboardRoute,
   } as any)
+const DashboardAuditLogsLogIdRoute = DashboardAuditLogsLogIdRouteImport.update({
+  id: '/audit-logs/$logId',
+  path: '/audit-logs/$logId',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardTasksTaskIdSubtaskRoute =
   DashboardTasksTaskIdSubtaskRouteImport.update({
     id: '/tasks/$taskId_/subtask',
@@ -165,9 +171,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof AuthLoginRoute
   '/otp': typeof AuthOtpRoute
-  '/audit-logs': typeof DashboardAuditLogsRoute
   '/dashboard': typeof DashboardDashboardRoute
   '/profile': typeof DashboardProfileRoute
+  '/audit-logs/$logId': typeof DashboardAuditLogsLogIdRoute
   '/organizations/$orgId': typeof DashboardOrganizationsOrgIdRoute
   '/organizations/new': typeof DashboardOrganizationsNewRoute
   '/projects/$projectId': typeof DashboardProjectsProjectIdRoute
@@ -176,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/tasks/new': typeof DashboardTasksNewRoute
   '/users/$userId': typeof DashboardUsersUserIdRoute
   '/users/new': typeof DashboardUsersNewRoute
+  '/audit-logs/': typeof DashboardAuditLogsIndexRoute
   '/organizations/': typeof DashboardOrganizationsIndexRoute
   '/projects/': typeof DashboardProjectsIndexRoute
   '/tasks/': typeof DashboardTasksIndexRoute
@@ -189,9 +196,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof AuthLoginRoute
   '/otp': typeof AuthOtpRoute
-  '/audit-logs': typeof DashboardAuditLogsRoute
   '/dashboard': typeof DashboardDashboardRoute
   '/profile': typeof DashboardProfileRoute
+  '/audit-logs/$logId': typeof DashboardAuditLogsLogIdRoute
   '/organizations/$orgId': typeof DashboardOrganizationsOrgIdRoute
   '/organizations/new': typeof DashboardOrganizationsNewRoute
   '/projects/$projectId': typeof DashboardProjectsProjectIdRoute
@@ -200,6 +207,7 @@ export interface FileRoutesByTo {
   '/tasks/new': typeof DashboardTasksNewRoute
   '/users/$userId': typeof DashboardUsersUserIdRoute
   '/users/new': typeof DashboardUsersNewRoute
+  '/audit-logs': typeof DashboardAuditLogsIndexRoute
   '/organizations': typeof DashboardOrganizationsIndexRoute
   '/projects': typeof DashboardProjectsIndexRoute
   '/tasks': typeof DashboardTasksIndexRoute
@@ -216,9 +224,9 @@ export interface FileRoutesById {
   '/_dashboard': typeof DashboardRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/otp': typeof AuthOtpRoute
-  '/_dashboard/audit-logs': typeof DashboardAuditLogsRoute
   '/_dashboard/dashboard': typeof DashboardDashboardRoute
   '/_dashboard/profile': typeof DashboardProfileRoute
+  '/_dashboard/audit-logs/$logId': typeof DashboardAuditLogsLogIdRoute
   '/_dashboard/organizations/$orgId': typeof DashboardOrganizationsOrgIdRoute
   '/_dashboard/organizations/new': typeof DashboardOrganizationsNewRoute
   '/_dashboard/projects/$projectId': typeof DashboardProjectsProjectIdRoute
@@ -227,6 +235,7 @@ export interface FileRoutesById {
   '/_dashboard/tasks/new': typeof DashboardTasksNewRoute
   '/_dashboard/users/$userId': typeof DashboardUsersUserIdRoute
   '/_dashboard/users/new': typeof DashboardUsersNewRoute
+  '/_dashboard/audit-logs/': typeof DashboardAuditLogsIndexRoute
   '/_dashboard/organizations/': typeof DashboardOrganizationsIndexRoute
   '/_dashboard/projects/': typeof DashboardProjectsIndexRoute
   '/_dashboard/tasks/': typeof DashboardTasksIndexRoute
@@ -242,9 +251,9 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/otp'
-    | '/audit-logs'
     | '/dashboard'
     | '/profile'
+    | '/audit-logs/$logId'
     | '/organizations/$orgId'
     | '/organizations/new'
     | '/projects/$projectId'
@@ -253,6 +262,7 @@ export interface FileRouteTypes {
     | '/tasks/new'
     | '/users/$userId'
     | '/users/new'
+    | '/audit-logs/'
     | '/organizations/'
     | '/projects/'
     | '/tasks/'
@@ -266,9 +276,9 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/otp'
-    | '/audit-logs'
     | '/dashboard'
     | '/profile'
+    | '/audit-logs/$logId'
     | '/organizations/$orgId'
     | '/organizations/new'
     | '/projects/$projectId'
@@ -277,6 +287,7 @@ export interface FileRouteTypes {
     | '/tasks/new'
     | '/users/$userId'
     | '/users/new'
+    | '/audit-logs'
     | '/organizations'
     | '/projects'
     | '/tasks'
@@ -292,9 +303,9 @@ export interface FileRouteTypes {
     | '/_dashboard'
     | '/_auth/login'
     | '/_auth/otp'
-    | '/_dashboard/audit-logs'
     | '/_dashboard/dashboard'
     | '/_dashboard/profile'
+    | '/_dashboard/audit-logs/$logId'
     | '/_dashboard/organizations/$orgId'
     | '/_dashboard/organizations/new'
     | '/_dashboard/projects/$projectId'
@@ -303,6 +314,7 @@ export interface FileRouteTypes {
     | '/_dashboard/tasks/new'
     | '/_dashboard/users/$userId'
     | '/_dashboard/users/new'
+    | '/_dashboard/audit-logs/'
     | '/_dashboard/organizations/'
     | '/_dashboard/projects/'
     | '/_dashboard/tasks/'
@@ -356,13 +368,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardDashboardRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/_dashboard/audit-logs': {
-      id: '/_dashboard/audit-logs'
-      path: '/audit-logs'
-      fullPath: '/audit-logs'
-      preLoaderRoute: typeof DashboardAuditLogsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/_auth/otp': {
       id: '/_auth/otp'
       path: '/otp'
@@ -403,6 +408,13 @@ declare module '@tanstack/react-router' {
       path: '/organizations'
       fullPath: '/organizations/'
       preLoaderRoute: typeof DashboardOrganizationsIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/audit-logs/': {
+      id: '/_dashboard/audit-logs/'
+      path: '/audit-logs'
+      fullPath: '/audit-logs/'
+      preLoaderRoute: typeof DashboardAuditLogsIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/users/new': {
@@ -461,6 +473,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardOrganizationsOrgIdRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/audit-logs/$logId': {
+      id: '/_dashboard/audit-logs/$logId'
+      path: '/audit-logs/$logId'
+      fullPath: '/audit-logs/$logId'
+      preLoaderRoute: typeof DashboardAuditLogsLogIdRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/tasks/$taskId_/subtask': {
       id: '/_dashboard/tasks/$taskId_/subtask'
       path: '/tasks/$taskId/subtask'
@@ -505,9 +524,9 @@ const AuthRouteChildren: AuthRouteChildren = {
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface DashboardRouteChildren {
-  DashboardAuditLogsRoute: typeof DashboardAuditLogsRoute
   DashboardDashboardRoute: typeof DashboardDashboardRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
+  DashboardAuditLogsLogIdRoute: typeof DashboardAuditLogsLogIdRoute
   DashboardOrganizationsOrgIdRoute: typeof DashboardOrganizationsOrgIdRoute
   DashboardOrganizationsNewRoute: typeof DashboardOrganizationsNewRoute
   DashboardProjectsProjectIdRoute: typeof DashboardProjectsProjectIdRoute
@@ -516,6 +535,7 @@ interface DashboardRouteChildren {
   DashboardTasksNewRoute: typeof DashboardTasksNewRoute
   DashboardUsersUserIdRoute: typeof DashboardUsersUserIdRoute
   DashboardUsersNewRoute: typeof DashboardUsersNewRoute
+  DashboardAuditLogsIndexRoute: typeof DashboardAuditLogsIndexRoute
   DashboardOrganizationsIndexRoute: typeof DashboardOrganizationsIndexRoute
   DashboardProjectsIndexRoute: typeof DashboardProjectsIndexRoute
   DashboardTasksIndexRoute: typeof DashboardTasksIndexRoute
@@ -527,9 +547,9 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardAuditLogsRoute: DashboardAuditLogsRoute,
   DashboardDashboardRoute: DashboardDashboardRoute,
   DashboardProfileRoute: DashboardProfileRoute,
+  DashboardAuditLogsLogIdRoute: DashboardAuditLogsLogIdRoute,
   DashboardOrganizationsOrgIdRoute: DashboardOrganizationsOrgIdRoute,
   DashboardOrganizationsNewRoute: DashboardOrganizationsNewRoute,
   DashboardProjectsProjectIdRoute: DashboardProjectsProjectIdRoute,
@@ -538,6 +558,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardTasksNewRoute: DashboardTasksNewRoute,
   DashboardUsersUserIdRoute: DashboardUsersUserIdRoute,
   DashboardUsersNewRoute: DashboardUsersNewRoute,
+  DashboardAuditLogsIndexRoute: DashboardAuditLogsIndexRoute,
   DashboardOrganizationsIndexRoute: DashboardOrganizationsIndexRoute,
   DashboardProjectsIndexRoute: DashboardProjectsIndexRoute,
   DashboardTasksIndexRoute: DashboardTasksIndexRoute,

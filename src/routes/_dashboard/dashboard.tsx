@@ -12,19 +12,23 @@ import { useAuth } from '../../hooks/useAuth'
 import { useDebounce } from '../../hooks/useDebounce'
 import StatsCard from '../../components/ui/StatsCard'
 import Pagination from '../../components/ui/Pagination'
+import DateRangeFilter from '../../components/ui/DateRangeFilter'
 import TaskTable from '../../components/tasks/TaskTable'
 import { StatsSkeleton, TableSkeleton } from '../../components/ui/Skeleton'
-import type { TaskStatus } from '../../types/task.types'
+import type { TaskStatus, TaskPriority } from '../../types/task.types'
 
 export const Route = createFileRoute('/_dashboard/dashboard')({
   validateSearch: (search: Record<string, unknown>) => ({
-    search:        (search.search as string)        || undefined,
-    statusFilter:  ((search.statusFilter as string) || undefined) as TaskStatus | undefined,
-    projectFilter: (search.projectFilter as string) || undefined,
-    sortBy:        (search.sortBy as string)        || undefined,
-    sortDir:       (search.sortDir as string) === 'desc' ? 'desc' as const : undefined,
-    page:          Number(search.page)  > 1  ? Number(search.page)  : undefined,
-    limit:         Number(search.limit) > 0 && Number(search.limit) !== 10 ? Number(search.limit) : undefined,
+    search:          (search.search as string)           || undefined,
+    statusFilter:    ((search.statusFilter as string)    || undefined) as TaskStatus | undefined,
+    priorityFilter:  ((search.priorityFilter as string)  || undefined) as TaskPriority | undefined,
+    projectFilter:   (search.projectFilter as string)    || undefined,
+    dueDateFrom:     (search.dueDateFrom as string)      || undefined,
+    dueDateTo:       (search.dueDateTo   as string)      || undefined,
+    sortBy:          (search.sortBy as string)           || undefined,
+    sortDir:         (search.sortDir as string) === 'desc' ? 'desc' as const : undefined,
+    page:            Number(search.page)  > 1  ? Number(search.page)  : undefined,
+    limit:           Number(search.limit) > 0 && Number(search.limit) !== 10 ? Number(search.limit) : undefined,
   }),
   component: DashboardPage,
 })
@@ -37,7 +41,7 @@ function DashboardPage() {
   const assignedUserId = isDeveloper ? (user?.id ?? undefined) : undefined
 
   const navigate = Route.useNavigate()
-  const { search = '', statusFilter = '', projectFilter = '', sortBy = '', sortDir = 'asc', page = 1, limit = 10 } = Route.useSearch()
+  const { search = '', statusFilter = '', priorityFilter = '', projectFilter = '', dueDateFrom, dueDateTo, sortBy = '', sortDir = 'asc', page = 1, limit = 10 } = Route.useSearch()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setParams = (params: Record<string, any>) =>
     navigate({ search: (prev) => ({ ...prev, ...params }) as any })
@@ -51,12 +55,15 @@ function DashboardPage() {
   const sortOrder = sortBy ? sortDir : undefined
 
   const { data: tasksData, isLoading: isLoadingTasks, isFetching } = useTasks({
-    search:    debouncedSearch || undefined,
-    status:    statusFilter    || undefined,
-    projectId: projectFilter   || undefined,
+    search:      debouncedSearch  || undefined,
+    status:      statusFilter     || undefined,
+    priority:    priorityFilter   || undefined,
+    projectId:   projectFilter    || undefined,
     orgId,
     assignedUserId,
-    sortBy:    sortBy || undefined,
+    dueDateFrom: dueDateFrom      || undefined,
+    dueDateTo:   dueDateTo        || undefined,
+    sortBy:      sortBy           || undefined,
     sortOrder,
     page,
     limit,
@@ -105,9 +112,12 @@ function DashboardPage() {
     },
   ]
 
-  const handleSearch        = (val: string)          => setParams({ search: val || undefined,        page: undefined })
-  const handleStatusChange  = (val: TaskStatus | '') => setParams({ statusFilter: val || undefined,  page: undefined })
-  const handleProjectChange = (val: string)          => setParams({ projectFilter: val || undefined, page: undefined })
+  const handleSearch          = (val: string)            => setParams({ search: val || undefined,          page: undefined })
+  const handleStatusChange    = (val: TaskStatus | '')   => setParams({ statusFilter: val || undefined,    page: undefined })
+  const handlePriorityChange  = (val: TaskPriority | '') => setParams({ priorityFilter: val || undefined,  page: undefined })
+  const handleProjectChange   = (val: string)            => setParams({ projectFilter: val || undefined,   page: undefined })
+  const handleDateRange       = (from: string | undefined, to: string | undefined) =>
+    setParams({ dueDateFrom: from, dueDateTo: to, page: undefined })
   const handleLimit         = (val: number)          => setParams({ limit: val !== 10 ? val : undefined, page: undefined })
   const handleSorting       = (updater: any)         => {
     const next: SortingState = typeof updater === 'function' ? updater(sorting) : updater
@@ -167,6 +177,21 @@ function DashboardPage() {
 
             <div className="relative">
               <select
+                value={priorityFilter}
+                onChange={(e) => handlePriorityChange(e.target.value as TaskPriority | '')}
+                className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-500 bg-gray-50 outline-none cursor-pointer"
+              >
+                <option value="">All Priority</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+              <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
+            </div>
+
+            <div className="relative">
+              <select
                 value={projectFilter}
                 onChange={(e) => handleProjectChange(e.target.value)}
                 className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-500 bg-gray-50 outline-none cursor-pointer"
@@ -176,6 +201,12 @@ function DashboardPage() {
               </select>
               <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
             </div>
+
+            <DateRangeFilter
+              from={dueDateFrom}
+              to={dueDateTo}
+              onChange={handleDateRange}
+            />
 
           </div>
         </div>

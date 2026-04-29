@@ -88,9 +88,12 @@ export interface TasksResponse {
 export interface TasksParams {
   search?:         string
   status?:         TaskStatus
+  priority?:       TaskPriority
   projectId?:      string
   orgId?:          string
   assignedUserId?: string
+  dueDateFrom?:    string
+  dueDateTo?:      string
   sortBy?:         string
   sortOrder?:      'asc' | 'desc'
   page?:           number

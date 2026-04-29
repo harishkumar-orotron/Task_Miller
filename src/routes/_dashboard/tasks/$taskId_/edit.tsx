@@ -14,13 +14,16 @@ function EditTaskPage() {
   const { taskId } = Route.useParams()
   const navigate   = useNavigate()
   const { data: task, isLoading, isError, error } = useTask(taskId)
-  const onBack = () => navigate({ to: '/tasks/$taskId', params: { taskId }, search: { tab: undefined } })
+
+  const isSubtask  = !!task?.parentTaskId
+  const backTaskId = isSubtask ? task!.parentTaskId! : taskId
+  const onBack     = () => navigate({ to: '/tasks/$taskId', params: { taskId: backTaskId }, search: { tab: undefined } })
 
   if (isLoading) return <FormSkeleton />
 
   if (isError || !task) return (
     <div className="max-w-2xl mx-auto w-full space-y-4">
-      <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+      <button onClick={() => navigate({ to: '/tasks/$taskId', params: { taskId }, search: { tab: undefined } })} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors">
         <ArrowLeft size={15} /> Back to Task
       </button>
       <ErrorMessage message={(error as ApiError)?.message ?? 'Task not found'} />
@@ -30,7 +33,7 @@ function EditTaskPage() {
   return (
     <div className="max-w-2xl mx-auto w-full space-y-4">
       <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors">
-        <ArrowLeft size={15} /> Back to Task
+        <ArrowLeft size={15} /> {isSubtask ? 'Back to Parent Task' : 'Back to Task'}
       </button>
       <TaskForm task={task} onClose={onBack} />
     </div>

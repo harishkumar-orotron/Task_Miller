@@ -33,8 +33,9 @@ export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => voi
   const taskId = (matches.find((m) => (m.params as any).taskId)?.params as any)?.taskId
   const projectId = (matches.find((m) => (m.params as any).projectId)?.params as any)?.projectId
 
-  const { data: task } = useTask(taskId || '')
-  const { data: project } = useProject(projectId || '')
+  const { data: task }       = useTask(taskId || '')
+  const { data: parentTask } = useTask(task?.parentTaskId ?? '')
+  const { data: project }    = useProject(projectId || '')
 
   const matchedKey = Object.keys(pageConfig)
     .filter((k) => pathname === k || pathname.startsWith(k + '/'))
@@ -46,7 +47,15 @@ export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => voi
 
   let displayTitle: React.ReactNode = config.title
   if (taskId && task) {
-    displayTitle = (
+    displayTitle = task.parentTaskId && parentTask ? (
+      <div className="flex items-center gap-2">
+        <span className="text-gray-400 font-medium">{config.title}</span>
+        <span className="text-gray-300 text-sm font-light">/</span>
+        <span className="text-gray-400 truncate max-w-[180px]">{parentTask.title}</span>
+        <span className="text-gray-300 text-sm font-light">/</span>
+        <span className="truncate max-w-[180px]">{task.title}</span>
+      </div>
+    ) : (
       <div className="flex items-center gap-2">
         <span className="text-gray-400 font-medium">{config.title}</span>
         <span className="text-gray-300 text-sm font-light">/</span>

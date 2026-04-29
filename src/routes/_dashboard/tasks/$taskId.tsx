@@ -55,11 +55,12 @@ function allowedStatuses(current: string): TaskStatus[] {
 }
 
 function SubtaskCard({
-  subtask, parentOnHold, onStatusChange,
+  subtask, parentOnHold, onStatusChange, onEdit,
 }: {
   subtask: Subtask
   parentOnHold: boolean
   onStatusChange: (id: string, status: TaskStatus) => void
+  onEdit?: () => void
 }) {
   const statusSelectClass: Record<string, string> = {
     to_do: 'border-purple-300 text-purple-600 bg-purple-50',
@@ -72,10 +73,21 @@ function SubtaskCard({
   return (
     <div className="border border-gray-100 rounded-xl p-4 bg-gray-50 space-y-3">
 
-      {/* Title + Priority */}
+      {/* Title + Priority + Edit */}
       <div className="flex items-start justify-between gap-3">
         <p className="text-sm font-semibold text-gray-800 leading-snug">{subtask.title}</p>
-        <PriorityBadge priority={subtask.priority} />
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <PriorityBadge priority={subtask.priority} />
+          {onEdit && subtask.status !== 'completed' && (
+            <button
+              onClick={onEdit}
+              className="p-1 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+              title="Edit subtask"
+            >
+              <Pencil size={12} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Description */}
@@ -126,7 +138,7 @@ function SubtaskCard({
 function TaskViewPage() {
   const { taskId } = Route.useParams()
   const navigate = useNavigate()
-  const { isAdmin, isDeveloper, user } = useAuth()
+  const { isAdmin, isSuperAdmin, isDeveloper, user } = useAuth()
 
   const { tab } = Route.useSearch()
   const [statusOpen, setStatusOpen] = useState(false)
@@ -374,6 +386,7 @@ function TaskViewPage() {
                       subtask={s}
                       parentOnHold={task.status === 'on_hold'}
                       onStatusChange={handleSubtaskStatusChange}
+                      onEdit={isAdmin || isSuperAdmin ? () => navigate({ to: '/tasks/$taskId/edit', params: { taskId: s.id } }) : undefined}
                     />
                   ))
                 )}
