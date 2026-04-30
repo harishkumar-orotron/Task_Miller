@@ -7,20 +7,20 @@ import type { AuditLog } from '../../types/audit-log.types'
 const SKIP = new Set(['id', 'orgId', 'createdBy', 'createdAt', 'updatedAt', 'deletedAt', 'completedAt', 'parentTaskId', 'projectId'])
 
 const LABELS: Record<string, string> = {
-  title:       'Title',
-  name:        'Name',
+  title: 'Title',
+  name: 'Name',
   description: 'Description',
-  status:      'Status',
-  priority:    'Priority',
-  dueDate:     'Due Date',
-  logoUrl:     'Logo URL',
-  email:       'Email',
-  role:        'Role',
-  avatarUrl:   'Avatar URL',
-  slug:        'Slug',
-  members:     'Members',
-  creator:     'Creator',
-  assignees:   'Assignees',
+  status: 'Status',
+  priority: 'Priority',
+  dueDate: 'Due Date',
+  logoUrl: 'Logo URL',
+  email: 'Email',
+  role: 'Role',
+  avatarUrl: 'Avatar URL',
+  slug: 'Slug',
+  members: 'Members',
+  creator: 'Creator',
+  assignees: 'Assignees',
 }
 
 function displayLabel(key: string): string {
@@ -51,22 +51,22 @@ const actionStyle = (action: string): { label: string; cls: string } => {
   const verb = action.split('.')[1] ?? action
   const label = verb.replace(/_/g, ' ').replace(/^./, (s) => s.toUpperCase())
   const map: Record<string, string> = {
-    created:         'bg-green-100 text-green-700',
-    updated:         'bg-amber-100 text-amber-700',
-    deleted:         'bg-red-100 text-red-700',
-    status_updated:  'bg-blue-100 text-blue-700',
-    admin_assigned:  'bg-violet-100 text-violet-700',
+    created: 'bg-green-100 text-green-700',
+    updated: 'bg-amber-100 text-amber-700',
+    deleted: 'bg-red-100 text-red-700',
+    status_updated: 'bg-blue-100 text-blue-700',
+    admin_assigned: 'bg-violet-100 text-violet-700',
     developer_added: 'bg-teal-100 text-teal-700',
-    member_removed:  'bg-rose-100 text-rose-700',
-    member_added:    'bg-cyan-100 text-cyan-700',
+    member_removed: 'bg-rose-100 text-rose-700',
+    member_added: 'bg-cyan-100 text-cyan-700',
   }
   return { label, cls: map[verb] ?? 'bg-gray-100 text-gray-600' }
 }
 
 const entityStyle: Record<string, string> = {
-  task:         'bg-blue-100 text-blue-700',
-  project:      'bg-violet-100 text-violet-700',
-  user:         'bg-teal-100 text-teal-700',
+  task: 'bg-blue-100 text-blue-700',
+  project: 'bg-violet-100 text-violet-700',
+  user: 'bg-teal-100 text-teal-700',
   organization: 'bg-orange-100 text-orange-700',
 }
 
@@ -85,41 +85,45 @@ function HoverChanges({ log }: { log: AuditLog }) {
 
   if (!before && after) {
     return (
-      <>
-        <div className="px-3 py-2 bg-green-50 border-b border-green-100">
+      <div className="flex flex-col">
+        <div className="px-3 py-2 bg-green-50 border-b border-green-100 shrink-0">
           <p className="text-[10px] font-semibold text-green-700 uppercase tracking-wide">Created — New State</p>
         </div>
-        <table className="w-full text-xs">
-          <tbody>
-            {allKeys.map((key) => (
-              <tr key={key} className="border-b border-gray-50 last:border-0">
-                <td className="px-3 py-1.5 font-medium text-gray-400 w-28 align-top">{displayLabel(key)}</td>
-                <td className="px-3 py-1.5 text-gray-700 align-top">{displayValue(after[key])}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </>
+        <div className="max-h-[160px] overflow-y-auto">
+          <table className="w-full text-xs">
+            <tbody>
+              {allKeys.map((key) => (
+                <tr key={key} className="border-b border-gray-50 last:border-0">
+                  <td className="px-3 py-1.5 font-medium text-gray-400 w-28 align-top">{displayLabel(key)}</td>
+                  <td className="px-3 py-1.5 text-gray-700 align-top">{displayValue(after[key])}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     )
   }
 
   if (before && !after) {
     return (
-      <>
-        <div className="px-3 py-2 bg-red-50 border-b border-red-100">
+      <div className="flex flex-col">
+        <div className="px-3 py-2 bg-red-50 border-b border-red-100 shrink-0">
           <p className="text-[10px] font-semibold text-red-700 uppercase tracking-wide">Deleted — Last Known State</p>
         </div>
-        <table className="w-full text-xs">
-          <tbody>
-            {allKeys.map((key) => (
-              <tr key={key} className="border-b border-gray-50 last:border-0">
-                <td className="px-3 py-1.5 font-medium text-gray-400 w-28 align-top">{displayLabel(key)}</td>
-                <td className="px-3 py-1.5 text-gray-500 line-through align-top">{displayValue(before[key])}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </>
+        <div className="max-h-[160px] overflow-y-auto">
+          <table className="w-full text-xs">
+            <tbody>
+              {allKeys.map((key) => (
+                <tr key={key} className="border-b border-gray-50 last:border-0">
+                  <td className="px-3 py-1.5 font-medium text-gray-400 w-28 align-top">{displayLabel(key)}</td>
+                  <td className="px-3 py-1.5 text-gray-700 align-top">{displayValue(before[key])}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     )
   }
 
@@ -129,31 +133,33 @@ function HoverChanges({ log }: { log: AuditLog }) {
       return <p className="text-xs text-gray-400 text-center py-4">No field changes detected</p>
     }
     return (
-      <>
-        <div className="px-3 py-2 bg-amber-50 border-b border-amber-100">
+      <div className="flex flex-col">
+        <div className="px-3 py-2 bg-amber-50 border-b border-amber-100 shrink-0">
           <p className="text-[10px] font-semibold text-amber-700 uppercase tracking-wide">
             Changed Fields ({changed.length})
           </p>
         </div>
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="border-b border-gray-100 text-gray-400 font-medium">
-              <th className="px-3 py-1.5 text-left w-24">Field</th>
-              <th className="px-3 py-1.5 text-left">Before</th>
-              <th className="px-3 py-1.5 text-left">After</th>
-            </tr>
-          </thead>
-          <tbody>
-            {changed.map((key) => (
-              <tr key={key} className="border-b border-gray-50 last:border-0">
-                <td className="px-3 py-1.5 font-medium text-gray-500 align-top">{displayLabel(key)}</td>
-                <td className="px-3 py-1.5 text-red-500 bg-red-50/40 align-top">{displayValue(before[key])}</td>
-                <td className="px-3 py-1.5 text-green-700 bg-green-50/40 align-top">{displayValue(after[key])}</td>
+        <div className="max-h-[160px] overflow-y-auto">
+          <table className="w-full text-xs">
+            <thead className="sticky top-0 bg-white z-10">
+              <tr className="border-b border-gray-100 text-gray-400 font-medium">
+                <th className="px-3 py-1.5 text-left w-24">Field</th>
+                <th className="px-3 py-1.5 text-left">Before</th>
+                <th className="px-3 py-1.5 text-left">After</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </>
+            </thead>
+            <tbody>
+              {changed.map((key) => (
+                <tr key={key} className="border-b border-gray-50 last:border-0">
+                  <td className="px-3 py-1.5 font-medium text-gray-500 align-top">{displayLabel(key)}</td>
+                  <td className="px-3 py-1.5 text-gray-700 align-top">{displayValue(before[key])}</td>
+                  <td className="px-3 py-1.5 text-gray-700 align-top">{displayValue(after[key])}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     )
   }
 

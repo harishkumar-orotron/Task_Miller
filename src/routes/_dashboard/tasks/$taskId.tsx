@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, ChevronDown, Pencil, Plus, X, AlignLeft } from 'lucide-react'
+import { createFileRoute } from '@tanstack/react-router'
+import { ArrowLeft, ChevronDown, Pencil, Plus, X, AlignLeft, Search } from 'lucide-react'
 import { useTask, useUpdateTaskMutation } from '../../../queries/tasks.queries'
 import { useAttachments } from '../../../queries/attachments.queries'
 import { useProjects } from '../../../queries/projects.queries'
@@ -13,16 +13,25 @@ import CommentsSection from '../../../components/tasks/CommentsSection'
 import AttachmentsSection from '../../../components/tasks/AttachmentsSection'
 import { TaskDetailSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
-import Pagination from '../../../components/ui/Pagination'
-import { userColor, toAvatarShape, formatDate , getInitials} from '../../../lib/utils'
+import { userColor, toAvatarShape, formatDate, getInitials } from '../../../lib/utils'
 import type { TaskStatus, Subtask } from '../../../types/task.types'
 import type { ApiError } from '../../../types/api.types'
 
 const TABS: Tab[] = ['subtasks', 'assignTo', 'attachments']
 
+type TaskSearch = {
+  tab?: Tab
+  subtaskSearch?: string
+  assigneeSearch?: string
+  attachmentSearch?: string
+}
+
 export const Route = createFileRoute('/_dashboard/tasks/$taskId')({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): TaskSearch => ({
     tab: TABS.includes(search.tab as Tab) ? (search.tab as Tab) : undefined,
+    subtaskSearch: (search.subtaskSearch as string) || undefined,
+    assigneeSearch: (search.assigneeSearch as string) || undefined,
+    attachmentSearch: (search.attachmentSearch as string) || undefined,
   }),
   component: TaskViewPage,
 })
@@ -45,11 +54,11 @@ const statusButtonFallback = 'border-gray-300 text-gray-600 bg-white hover:bg-gr
 
 function allowedStatuses(current: string): TaskStatus[] {
   const transitions: Record<string, TaskStatus[]> = {
-    to_do:       ['in_progress'],
+    to_do: ['in_progress'],
     in_progress: ['on_hold', 'completed'],
-    on_hold:     ['in_progress'],
-    completed:   [],
-    overdue:     ['completed'],
+    on_hold: ['in_progress'],
+    completed: [],
+    overdue: ['completed'],
   }
   return transitions[current] ?? []
 }
@@ -137,14 +146,15 @@ function SubtaskCard({
 
 function TaskViewPage() {
   const { taskId } = Route.useParams()
-  const navigate = useNavigate()
+  const navigate = Route.useNavigate()
   const { isAdmin, isSuperAdmin, isDeveloper, user } = useAuth()
 
-  const { tab } = Route.useSearch()
+  const { tab, subtaskSearch = '', assigneeSearch = '' } = Route.useSearch()
   const [statusOpen, setStatusOpen] = useState(false)
   const [statusError, setStatusError] = useState<string | null>(null)
-  const [assigneesPage, setAssigneesPage] = useState(1)
-  const [assigneesLimit, setAssigneesLimit] = useState(10)
+  
+  const setSubtaskSearch = (val: string) => navigate({ search: (prev) => ({ ...prev, subtaskSearch: val || undefined }), replace: true })
+  const setAssigneeSearch = (val: string) => navigate({ search: (prev) => ({ ...prev, assigneeSearch: val || undefined }), replace: true })
 
   const { data: task, isLoading, isError, error } = useTask(taskId)
   const { data: projectsData } = useProjects({ limit: 100 })
@@ -161,6 +171,9 @@ function TaskViewPage() {
       ? task.subtasks.filter((s) => s.assignees.some((a) => a.id === user.id))
       : task.subtasks
     : []
+
+  const filteredSubtasks = visibleSubtasks.filter(s => s.title.toLowerCase().includes(subtaskSearch.toLowerCase()))
+  const filteredAssignees = task ? task.assignees.filter(a => a.name.toLowerCase().includes(assigneeSearch.toLowerCase()) || a.email.toLowerCase().includes(assigneeSearch.toLowerCase())) : []
   const attachmentCount = attachmentsData?.attachments.length ?? 0
 
   const handleStatusChange = (newStatus: TaskStatus) => {
@@ -325,11 +338,10 @@ function TaskViewPage() {
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Due Date</p>
                   {task.dueDate ? (
-                    <p className={`text-sm font-semibold px-3 py-1.5 rounded-lg border ${
-                      new Date(task.dueDate) < new Date()
+                    <p className={`text-sm font-semibold px-3 py-1.5 rounded-lg border ${new Date(task.dueDate) < new Date()
                         ? 'text-red-500 bg-red-50 border-red-100'
                         : 'text-gray-700 bg-gray-50 border-gray-200'
-                    }`}>
+                      }`}>
                       {formatDate(task.dueDate)}
                     </p>
                   ) : (
@@ -347,121 +359,126 @@ function TaskViewPage() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab.key
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.key
                     ? 'border-orange-500 text-orange-500'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+                  }`}
               >
                 {tab.label}
-                <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
-                  activeTab === tab.key ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'
-                }`}>
+                <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${activeTab === tab.key ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'
+                  }`}>
                   {String(tab.count).padStart(2, '0')}
                 </span>
               </button>
             ))}
           </div>
 
-          {/* Scrollable tab content */}
-          <div className="flex-1 overflow-y-auto px-6 pb-6 pt-4">
+          {/* Tab content wrapper */}
+          <div className="flex-1 flex flex-col min-h-0 relative">
 
             {/* Subtasks tab */}
             {activeTab === 'subtasks' && (
-              <div className="space-y-3">
-                {isAdmin && task.status !== 'completed' && (
-                  <button
-                    onClick={() => navigate({ to: '/tasks/$taskId/subtask', params: { taskId } })}
-                    className="flex items-center gap-1.5 text-xs font-medium text-orange-500 hover:text-orange-600 border border-orange-200 bg-orange-50 rounded-lg px-3 py-1.5 transition-colors"
-                  >
-                    <Plus size={13} /> Add Subtask
-                  </button>
-                )}
-                {visibleSubtasks.length === 0 ? (
-                  <p className="text-sm text-gray-400 py-6 text-center">No subtasks yet</p>
-                ) : (
-                  visibleSubtasks.map((s) => (
-                    <SubtaskCard
-                      key={s.id}
-                      subtask={s}
-                      parentOnHold={task.status === 'on_hold'}
-                      onStatusChange={handleSubtaskStatusChange}
-                      onEdit={isAdmin || isSuperAdmin ? () => navigate({ to: '/tasks/$taskId/edit', params: { taskId: s.id } }) : undefined}
+              <div className="flex flex-col h-full overflow-hidden">
+                <div className="flex-shrink-0 sticky top-0 z-20 bg-white px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-1.5 bg-gray-50 flex-1 max-w-sm">
+                    <Search size={14} className="text-gray-400" />
+                    <input
+                      value={subtaskSearch}
+                      onChange={(e) => setSubtaskSearch(e.target.value)}
+                      placeholder="Search subtasks..."
+                      className="bg-transparent outline-none w-full text-gray-700 placeholder-gray-400 text-xs"
                     />
-                  ))
-                )}
+                  </div>
+                  {isAdmin && task.status !== 'completed' && (
+                    <button
+                      onClick={() => navigate({ to: '/tasks/$taskId/subtask', params: { taskId } })}
+                      className="flex items-center gap-1.5 text-xs font-medium text-orange-500 hover:text-orange-600 border border-orange-200 bg-orange-50 rounded-lg px-3 py-1.5 transition-colors flex-shrink-0"
+                    >
+                      <Plus size={13} /> Add Subtask
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
+                  {filteredSubtasks.length === 0 ? (
+                    <p className="text-sm text-gray-400 py-6 text-center">No subtasks found</p>
+                  ) : (
+                    filteredSubtasks.map((s) => (
+                      <SubtaskCard
+                        key={s.id}
+                        subtask={s}
+                        parentOnHold={task.status === 'on_hold'}
+                        onStatusChange={handleSubtaskStatusChange}
+                        onEdit={isAdmin || isSuperAdmin ? () => navigate({ to: '/tasks/$taskId/edit', params: { taskId: s.id } }) : undefined}
+                      />
+                    ))
+                  )}
+                </div>
               </div>
             )}
 
             {/* Assign To tab */}
             {activeTab === 'assignTo' && (
-              <div className="flex flex-col h-full overflow-hidden -mx-6 px-6">
-                <div className="flex-1 overflow-y-auto min-h-0">
+              <div className="flex flex-col h-full overflow-hidden">
+                <div className="flex-shrink-0 sticky top-0 z-20 bg-white px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-1.5 bg-gray-50 flex-1 max-w-sm">
+                    <Search size={14} className="text-gray-400" />
+                    <input
+                      value={assigneeSearch}
+                      onChange={(e) => setAssigneeSearch(e.target.value)}
+                      placeholder="Search assignees by name or email..."
+                      className="bg-transparent outline-none w-full text-gray-700 placeholder-gray-400 text-xs"
+                    />
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto">
                   <table className="w-full text-sm">
-                    <thead className="sticky top-0 z-20">
+                    <thead className="sticky top-0 z-10">
                       <tr className="text-xs text-gray-600 font-semibold">
-                        <th className="px-4 py-2.5 text-left bg-[#ccfbf1]">S No</th>
-                        <th className="px-4 py-2.5 text-left bg-[#ccfbf1]">Name</th>
-                        <th className="px-4 py-2.5 text-left bg-[#ccfbf1]">Email</th>
+                        <th className="px-6 py-2.5 text-left bg-[#ccfbf1] w-20">S No</th>
+                        <th className="px-6 py-2.5 text-left bg-[#ccfbf1]">Name</th>
+                        <th className="px-6 py-2.5 text-left bg-[#ccfbf1]">Email</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
-                      {task.assignees.length === 0 ? (
+                      {filteredAssignees.length === 0 ? (
                         <tr>
-                          <td colSpan={3} className="px-4 py-6 text-center text-sm text-gray-400">No assignees</td>
+                          <td colSpan={3} className="px-6 py-6 text-center text-sm text-gray-400">No assignees found</td>
                         </tr>
                       ) : (
-                        (() => {
-                          const start = (assigneesPage - 1) * assigneesLimit
-                          const paged = task.assignees.slice(start, start + assigneesLimit)
-                          return paged.map((a, i) => (
-                            <tr key={a.id} className="hover:bg-gray-50 transition-colors">
-                              <td className="px-4 py-2.5 text-xs text-gray-400">{String(start + i + 1).padStart(2, '0')}</td>
-                              <td className="px-4 py-2.5">
-                                <div className="flex items-center gap-2.5">
-                                  <div className={`w-7 h-7 rounded-full ${userColor(a.id)} flex items-center justify-center relative overflow-hidden`}>
-                                    {a.avatarUrl ? (
-                                      <S3Image storageKey={a.avatarUrl} fallbackInitials={getInitials(a.name)} className="w-full h-full object-cover" />
-                                    ) : (
-                                      <span className="text-white text-xs font-semibold">{getInitials(a.name)}</span>
-                                    )}
-                                  </div>
-                                  <span className="font-medium text-gray-700">{a.name}</span>
+                        filteredAssignees.map((a, i) => (
+                          <tr key={a.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-6 py-2.5 text-xs text-gray-400">{String(i + 1).padStart(2, '0')}</td>
+                            <td className="px-6 py-2.5">
+                              <div className="flex items-center gap-2.5">
+                                <div className={`w-7 h-7 rounded-full ${userColor(a.id)} flex items-center justify-center relative overflow-hidden`}>
+                                  {a.avatarUrl ? (
+                                    <S3Image storageKey={a.avatarUrl} fallbackInitials={getInitials(a.name)} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span className="text-white text-xs font-semibold">{getInitials(a.name)}</span>
+                                  )}
                                 </div>
-                              </td>
-                              <td className="px-4 py-2.5 text-xs text-gray-400">{a.email}</td>
-                            </tr>
-                          ))
-                        })()
+                                <span className="font-medium text-gray-700">{a.name}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-2.5 text-xs text-gray-400">{a.email}</td>
+                          </tr>
+                        ))
                       )}
                     </tbody>
                   </table>
                 </div>
-
-                {task.assignees.length > 0 && (
-                  <Pagination
-                    page={assigneesPage}
-                    totalPages={Math.ceil(task.assignees.length / assigneesLimit)}
-                    totalRecords={task.assignees.length}
-                    startEntry={(assigneesPage - 1) * assigneesLimit + 1}
-                    endEntry={Math.min(assigneesPage * assigneesLimit, task.assignees.length)}
-                    limit={assigneesLimit}
-                    hasPrevPage={assigneesPage > 1}
-                    hasNextPage={assigneesPage < Math.ceil(task.assignees.length / assigneesLimit)}
-                    onPageChange={setAssigneesPage}
-                    onLimitChange={(l) => { setAssigneesLimit(l); setAssigneesPage(1) }}
-                    className="flex-shrink-0 flex items-center justify-between px-6 py-3 bg-white border-t border-gray-100"
-                  />
-                )}
               </div>
             )}
 
             {/* Attachments tab */}
             {activeTab === 'attachments' && (
-              <AttachmentsSection taskId={taskId} />
+              <div className="flex flex-col h-full overflow-hidden">
+                <AttachmentsSection taskId={taskId} />
+              </div>
             )}
 
-          </div>{/* end scrollable content */}
+          </div>{/* end tab content wrapper */}
 
         </div>{/* end left panel */}
 

@@ -287,15 +287,32 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
           {/* Members — create mode only, shown after org is selected */}
           {!isEdit && orgId && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Members{' '}
-                <span className="text-gray-400 font-normal">(optional)</span>
-                {selectedUserIds.length > 0 && (
-                  <span className="ml-1.5 text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-medium">
-                    {selectedUserIds.length}
-                  </span>
-                )}
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Members <span className="text-gray-400 font-normal">(optional)</span>
               </label>
+
+              {/* Selected Member Chips */}
+              {selectedUserIds.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {selectedUserIds.map((id) => {
+                    const u = members.find((user) => user.userId === id)
+                    if (!u) return null
+                    return (
+                      <div key={id} className="flex items-center gap-1.5 bg-orange-50 border border-orange-200 text-orange-700 px-2.5 py-1 rounded-full text-xs font-medium">
+                        {u.name}
+                        <button
+                          type="button"
+                          onClick={() => toggleMember(id)}
+                          className="hover:bg-orange-200 rounded-full p-0.5 transition-colors"
+                        >
+                          <X size={12} className="text-orange-600" />
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
               <div className="relative">
                 <button
                   ref={memberTriggerRef}
@@ -306,7 +323,7 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
                   <span className="text-gray-400">
                     {selectedUserIds.length === 0
                       ? 'Select members'
-                      : `${selectedUserIds.length} member${selectedUserIds.length > 1 ? 's' : ''} selected`}
+                      : 'Add more members...'}
                   </span>
                   <ChevronDown size={15} className="text-gray-400 flex-shrink-0" />
                 </button>
@@ -328,10 +345,10 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
                       </div>
                     </div>
                     <div className="max-h-48 overflow-y-auto">
-                      {filteredMembers.length === 0 ? (
-                        <p className="text-sm text-gray-400 px-3 py-3">No members found</p>
+                      {filteredMembers.filter(m => !selectedUserIds.includes(m.userId)).length === 0 ? (
+                        <p className="text-sm text-gray-400 px-3 py-3">No more members to assign</p>
                       ) : (
-                        filteredMembers.map((m, i) => (
+                        filteredMembers.filter(m => !selectedUserIds.includes(m.userId)).map((m, i) => (
                           <button
                             key={m.userId}
                             type="button"
@@ -344,9 +361,6 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-gray-700 truncate">{m.name}</p>
                               <p className="text-xs text-gray-400 truncate">{m.email}</p>
-                            </div>
-                            <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${selectedUserIds.includes(m.userId) ? 'bg-orange-500 border-orange-500' : 'border-gray-300'}`}>
-                              {selectedUserIds.includes(m.userId) && <Check size={10} className="text-white" />}
                             </div>
                           </button>
                         ))

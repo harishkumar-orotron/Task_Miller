@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { ChevronDown, Check, Search, CalendarDays } from 'lucide-react'
+import { ChevronDown, Check, Search, CalendarDays, X } from 'lucide-react'
 import { useCreateTaskMutation, useUpdateTaskMutation, useTask } from '../../queries/tasks.queries'
 import { useProjects, useProject } from '../../queries/projects.queries'
 import { useUsers } from '../../queries/users.queries'
@@ -304,14 +304,32 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
 
           {/* Assignees */}
           <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Assignees{' '}
-                {selectedUserIds.length > 0 && (
-                  <span className="ml-1.5 text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-medium">
-                    {selectedUserIds.length}
-                  </span>
-                )}
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Assignees
               </label>
+
+              {/* Selected User Chips */}
+              {selectedUserIds.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {selectedUserIds.map((id) => {
+                    const u = users.find((user) => user.id === id) || task?.assignees.find(a => a.id === id)
+                    if (!u) return null
+                    return (
+                      <div key={u.id} className="flex items-center gap-1.5 bg-orange-50 border border-orange-200 text-orange-700 px-2.5 py-1 rounded-full text-xs font-medium">
+                        {u.name}
+                        <button
+                          type="button"
+                          onClick={() => toggleUser(u.id)}
+                          className="hover:bg-orange-200 rounded-full p-0.5 transition-colors"
+                        >
+                          <X size={12} className="text-orange-600" />
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
               <div className="relative">
                 <button
                   ref={memberTriggerRef}
@@ -322,7 +340,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
                   <span className="text-gray-400">
                     {selectedUserIds.length === 0
                       ? 'Select assignees'
-                      : `${selectedUserIds.length} assignee${selectedUserIds.length > 1 ? 's' : ''} selected`}
+                      : 'Add more assignees...'}
                   </span>
                   <ChevronDown size={15} className="text-gray-400 flex-shrink-0" />
                 </button>
@@ -344,10 +362,10 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
                       </div>
                     </div>
                     <div className="max-h-48 overflow-y-auto">
-                      {filteredUsers.length === 0 ? (
-                        <p className="text-sm text-gray-400 px-3 py-3">No users found</p>
+                      {filteredUsers.filter(u => !selectedUserIds.includes(u.id)).length === 0 ? (
+                        <p className="text-sm text-gray-400 px-3 py-3">No more users to assign</p>
                       ) : (
-                        filteredUsers.map((u, i) => (
+                        filteredUsers.filter(u => !selectedUserIds.includes(u.id)).map((u, i) => (
                           <button
                             key={u.id}
                             type="button"
@@ -360,9 +378,6 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-gray-700 truncate">{u.name}</p>
                               <p className="text-xs text-gray-400 truncate">{u.email}</p>
-                            </div>
-                            <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${selectedUserIds.includes(u.id) ? 'bg-orange-500 border-orange-500' : 'border-gray-300'}`}>
-                              {selectedUserIds.includes(u.id) && <Check size={10} className="text-white" />}
                             </div>
                           </button>
                         ))
