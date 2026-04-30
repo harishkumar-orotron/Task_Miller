@@ -1,13 +1,14 @@
 import { useRouterState, useNavigate, useMatches } from '@tanstack/react-router'
-import { ChevronDown, Plus, LogOut, UserCog, Menu, LayoutDashboard } from 'lucide-react'
-import React, { useState } from 'react'
+import { ChevronDown, Plus, LogOut, UserCog, Menu, LayoutDashboard, Search } from 'lucide-react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { useLogoutMutation } from '../../queries/auth.queries'
 import { useMe } from '../../queries/users.queries'
 import { useTask } from '../../queries/tasks.queries'
 import { useProject } from '../../queries/projects.queries'
 import S3Image from '../ui/S3Image'
-import { roleBadgeClasses, userColor } from '../../lib/utils'
+import { Kbd } from '../ui/Kbd'
+import { roleBadgeClasses, userColor, getInitials } from '../../lib/utils'
 import NotificationPanel from '../notifications/NotificationPanel'
 
 const pageConfig: Record<string, { title: string; action?: string; actionTo?: string }> = {
@@ -32,6 +33,20 @@ export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => voi
   const { mutate: logout, isPending: isLoggingOut } = useLogoutMutation()
   const { data: profile } = useMe()
   const [menuOpen, setMenuOpen] = useState(false)
+  const searchRef       = useRef<HTMLInputElement>(null)
+  const showTaskSearch  = pathname === '/tasks' || pathname === '/admin/dashboard' || pathname === '/dashboard'
+  const taskSearchValue = useRouterState({ select: (s) => (s.location.search as any)?.search as string ?? '' })
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k' && showTaskSearch) {
+        e.preventDefault()
+        searchRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [showTaskSearch])
 
   const matches = useMatches()
   const taskId = (matches.find((m) => (m.params as any).taskId)?.params as any)?.taskId
@@ -100,6 +115,26 @@ export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => voi
 
         <div className="flex items-center gap-3">
 
+        {/* // Task search — visible on /tasks index only */}
+          {showTaskSearch && (
+            <div className="relative flex items-center border border-gray-200 rounded-lg bg-gray-50 focus-within:border-orange-400 focus-within:bg-white transition-colors">
+              <Search size={13} className="absolute left-3 text-gray-400 pointer-events-none" />
+              <input
+                ref={searchRef}
+                value={taskSearchValue}
+                onChange={(e) => (navigate as any)({ to: pathname, search: (prev: any) => ({ ...prev, search: e.target.value || undefined, page: undefined }) })}
+                placeholder="Search tasks..."
+                className="bg-transparent outline-none text-xs text-gray-700 placeholder-gray-400 pl-8 pr-16 py-1.5 w-44"
+              />
+              {!taskSearchValue && (
+                <div className="absolute right-2.5 flex items-center gap-0.5 pointer-events-none">
+                  <Kbd>Ctrl</Kbd>
+                  <Kbd>K</Kbd>
+                </div>
+              )}
+            </div>
+          )} 
+
           {/* Action button — admin+ only */}
           {showAction && config.actionTo && (
             <button
@@ -125,7 +160,7 @@ export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => voi
                   <S3Image storageKey={profile.avatarUrl} className="w-full h-full object-cover text-[10px]" />
                 ) : (
                   <span className="text-white text-sm font-semibold">
-                    {displayName.charAt(0).toUpperCase()}
+                    {getInitials(displayName)}
                   </span>
                 )}
               </div>

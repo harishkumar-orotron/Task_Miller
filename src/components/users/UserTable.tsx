@@ -5,7 +5,7 @@ import Tooltip from '../ui/Tooltip'
 import { createColumnHelper, type SortingState, type OnChangeFn } from '@tanstack/react-table'
 import DataTable from '../ui/DataTable'
 import { useToggleUserStatusMutation } from '../../queries/users.queries'
-import { userColor, formatDate } from '../../lib/utils'
+import { userColor, formatDate , getInitials} from '../../lib/utils'
 import S3Image from '../ui/S3Image'
 import type { User, UserStatus } from '../../types/user.types'
 
@@ -128,9 +128,9 @@ export default function UserTable({
         <div className="flex items-center gap-2.5">
           <div className={`w-8 h-8 rounded-full ${userColor(row.original.id)} flex items-center justify-center flex-shrink-0 relative overflow-hidden`}>
             {row.original.avatarUrl ? (
-              <S3Image storageKey={row.original.avatarUrl} fallbackInitials={getValue().charAt(0).toUpperCase()} className="w-full h-full object-cover" />
+              <S3Image storageKey={row.original.avatarUrl} fallbackInitials={getInitials(getValue())} className="w-full h-full object-cover" />
             ) : (
-              <span className="text-white text-xs font-semibold">{getValue().charAt(0).toUpperCase()}</span>
+              <span className="text-white text-xs font-semibold">{getInitials(getValue())}</span>
             )}
           </div>
           <span className="font-medium text-gray-700 whitespace-nowrap">{getValue()}</span>

@@ -1,7 +1,7 @@
 import { useNavigate } from '@tanstack/react-router'
 import AvatarStack from '../ui/AvatarStack'
 import S3Image from '../ui/S3Image'
-import { projectStatusBadge } from '../../lib/utils'
+import { projectStatusBadge, getInitials } from '../../lib/utils'
 import type { Project } from '../../types/project.types'
 
 interface ProjectCardProps {
@@ -25,7 +25,7 @@ const statusLabel: Record<string, string> = {
 export default function ProjectCard({ project, index }: ProjectCardProps) {
   const navigate = useNavigate()
   const color    = cardColors[index % cardColors.length]
-  const initials = project.title.slice(0, 2).toUpperCase()
+  const initials = getInitials(project.title)
   const avatars  = project.members.map((m, i) => ({
     id:    m.id,
     name:  m.name,

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Search, UserPlus, ShieldCheck, Code2 } from 'lucide-react'
 import { useUnassignedUsers, useAssignAdminMutation, useAddDeveloperMutation } from '../../queries/orgs.queries'
-import { avatarColors } from '../../lib/utils'
+import { avatarColors , getInitials} from '../../lib/utils'
 import type { ApiError } from '../../types/api.types'
 
 interface AddMemberModalProps {
@@ -105,7 +105,7 @@ export default function AddMemberModal({ mode, orgId, onClose }: AddMemberModalP
                     }`}
                   >
                     <div className={`w-8 h-8 rounded-full ${avatarColors[i % avatarColors.length]} flex items-center justify-center flex-shrink-0`}>
-                      <span className="text-white text-xs font-semibold">{user.name.charAt(0).toUpperCase()}</span>
+                      <span className="text-white text-xs font-semibold">{getInitials(user.name)}</span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-700 truncate">{user.name}</p>

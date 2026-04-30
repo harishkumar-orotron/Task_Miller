@@ -10,7 +10,7 @@ import { ProjectDetailSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
 import S3Image from '../../../components/ui/S3Image'
 import Pagination from '../../../components/ui/Pagination'
-import { userColor, formatDate } from '../../../lib/utils'
+import { userColor, formatDate , getInitials} from '../../../lib/utils'
 import type { ProjectStatus } from '../../../types/project.types'
 import type { ApiError } from '../../../types/api.types'
 
@@ -203,9 +203,9 @@ function ProjectViewPage() {
                 <div className="flex items-center gap-2">
                   <div className={`w-6 h-6 ${userColor(project.creator.id)} rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden`}>
                     {project.creator.avatarUrl ? (
-                      <S3Image storageKey={project.creator.avatarUrl} fallbackInitials={project.creator.name.charAt(0).toUpperCase()} className="w-full h-full object-cover" />
+                      <S3Image storageKey={project.creator.avatarUrl} fallbackInitials={getInitials(project.creator.name)} className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-white text-xs font-semibold">{project.creator.name.charAt(0).toUpperCase()}</span>
+                      <span className="text-white text-xs font-semibold">{getInitials(project.creator.name)}</span>
                     )}
                   </div>
                   <p className="text-sm font-medium text-gray-700 truncate">{project.creator.name}</p>
@@ -264,9 +264,9 @@ function ProjectViewPage() {
                             <div className="flex items-center gap-2.5">
                               <div className={`w-8 h-8 rounded-full ${userColor(m.id)} flex items-center justify-center flex-shrink-0 relative overflow-hidden`}>
                                 {m.avatarUrl ? (
-                                  <S3Image storageKey={m.avatarUrl} fallbackInitials={m.name.charAt(0).toUpperCase()} className="w-full h-full object-cover" />
+                                  <S3Image storageKey={m.avatarUrl} fallbackInitials={getInitials(m.name)} className="w-full h-full object-cover" />
                                 ) : (
-                                  <span className="text-white text-xs font-semibold">{m.name.charAt(0).toUpperCase()}</span>
+                                  <span className="text-white text-xs font-semibold">{getInitials(m.name)}</span>
                                 )}
                               </div>
                               <span className="font-medium text-gray-700 whitespace-nowrap">{m.name}</span>

@@ -10,7 +10,7 @@ import { OrgDetailSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
 import Pagination from '../../../components/ui/Pagination'
 import S3Image from '../../../components/ui/S3Image'
-import { userColor, formatDate } from '../../../lib/utils'
+import { userColor, formatDate , getInitials} from '../../../lib/utils'
 import type { OrgMember } from '../../../types/org.types'
 import type { ApiError } from '../../../types/api.types'
 
@@ -369,9 +369,9 @@ function MemberRow({
     <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
       <div className={`w-8 h-8 rounded-full ${userColor(member.userId)} flex items-center justify-center flex-shrink-0 relative overflow-hidden`}>
         {member.avatarUrl ? (
-          <S3Image storageKey={member.avatarUrl} fallbackInitials={member.name.charAt(0).toUpperCase()} className="w-full h-full object-cover" />
+          <S3Image storageKey={member.avatarUrl} fallbackInitials={getInitials(member.name)} className="w-full h-full object-cover" />
         ) : (
-          <span className="text-white text-xs font-semibold">{member.name.charAt(0).toUpperCase()}</span>
+          <span className="text-white text-xs font-semibold">{getInitials(member.name)}</span>
         )}
       </div>
       <div className="flex-1 min-w-0">

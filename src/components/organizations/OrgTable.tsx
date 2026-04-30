@@ -1,7 +1,7 @@
 import { useNavigate } from '@tanstack/react-router'
 import { Building2, ArrowRight, Calendar } from 'lucide-react'
 import type { Organization } from '../../types/org.types'
-import { userColor, formatDate } from '../../lib/utils'
+import { userColor, formatDate , getInitials} from '../../lib/utils'
 
 interface OrgTableProps {
   orgs: Organization[]
@@ -49,7 +49,7 @@ export default function OrgTable({ orgs, view, startEntry }: OrgTableProps) {
                 <td className="px-5 py-3">
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-lg ${color} flex items-center justify-center flex-shrink-0`}>
-                      <span className="text-white font-bold text-xs">{org.name.charAt(0)}</span>
+                      <span className="text-white font-bold text-xs">{getInitials(org.name)}</span>
                     </div>
                     <p className="font-medium text-gray-800">{org.name}</p>
                   </div>
@@ -79,7 +79,7 @@ export default function OrgTable({ orgs, view, startEntry }: OrgTableProps) {
           >
             <ArrowRight size={13} className="absolute top-3.5 right-3.5 text-gray-300 group-hover:text-orange-400 transition-colors" />
             <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center mb-3`}>
-              <span className="text-white font-bold text-sm">{org.name.charAt(0)}</span>
+              <span className="text-white font-bold text-sm">{getInitials(org.name)}</span>
             </div>
             <p className="font-semibold text-gray-800 text-sm leading-snug">{org.name}</p>
             <p className="text-xs text-gray-400 mt-0.5 mb-3">/{org.slug}</p>

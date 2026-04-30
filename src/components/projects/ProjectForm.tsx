@@ -4,7 +4,7 @@ import { useCreateProjectMutation, useUpdateProjectMutation } from '../../querie
 import { useOrgs, useOrg } from '../../queries/orgs.queries'
 import { useUploadFile } from '../../queries/uploads.queries'
 import { useAuth } from '../../hooks/useAuth'
-import { avatarColors } from '../../lib/utils'
+import { avatarColors , getInitials} from '../../lib/utils'
 import S3Image from '../ui/S3Image'
 import ImageCropperModal from '../ui/ImageCropperModal'
 import type { Project } from '../../types/project.types'
@@ -339,7 +339,7 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
                             className="w-full text-left px-3 py-2.5 hover:bg-orange-50 flex items-center gap-2.5 transition-colors"
                           >
                             <div className={`w-7 h-7 rounded-full ${avatarColors[i % avatarColors.length]} flex items-center justify-center flex-shrink-0`}>
-                              <span className="text-white text-xs font-semibold">{m.name.charAt(0).toUpperCase()}</span>
+                              <span className="text-white text-xs font-semibold">{getInitials(m.name)}</span>
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-gray-700 truncate">{m.name}</p>

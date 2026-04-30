@@ -3,7 +3,7 @@ import { FolderKanban, ArrowRight } from 'lucide-react'
 import ProjectCard from './ProjectCard'
 import AvatarStack from '../ui/AvatarStack'
 import S3Image from '../ui/S3Image'
-import { projectStatusBadge, formatDate } from '../../lib/utils'
+import { projectStatusBadge, formatDate, getInitials } from '../../lib/utils'
 import type { Project } from '../../types/project.types'
 
 const cardColors = [
@@ -57,7 +57,7 @@ export default function ProjectList({ projects, view, startEntry }: ProjectListP
         <tbody>
           {projects.map((project, idx) => {
             const color    = cardColors[idx % cardColors.length]
-            const initials = project.title.slice(0, 2).toUpperCase()
+            const initials = getInitials(project.title)
             const avatars  = project.members.map((m, i) => ({
               id:        m.id,
               name:      m.name,

@@ -4,7 +4,7 @@ import { useComments, useAddCommentMutation, useEditCommentMutation, useDeleteCo
 import { useUsers } from '../../queries/users.queries'
 import { useOrgContext } from '../../store/orgContext.store'
 import { useAuth } from '../../hooks/useAuth'
-import { userColor } from '../../lib/utils'
+import { userColor, getInitials } from '../../lib/utils'
 import S3Image from '../ui/S3Image'
 import type { Comment, MentionUser } from '../../types/comment.types'
 
@@ -61,9 +61,9 @@ function Avatar({ name, id, avatarUrl, small }: { name: string; id: string; avat
   return (
     <div className={`${small ? 'w-7 h-7 text-xs' : 'w-9 h-9 text-sm'} ${userColor(id)} rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden`}>
       {avatarUrl ? (
-        <S3Image storageKey={avatarUrl} fallbackInitials={name.charAt(0).toUpperCase()} className="w-full h-full object-cover" />
+        <S3Image storageKey={avatarUrl} fallbackInitials={getInitials(name)} className="w-full h-full object-cover" />
       ) : (
-        <span className="text-white font-semibold">{name.charAt(0).toUpperCase()}</span>
+        <span className="text-white font-semibold">{getInitials(name)}</span>
       )}
     </div>
   )
@@ -149,7 +149,7 @@ function MentionInput({ value, onChange, onSubmit, placeholder, inputClass, cand
               className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-teal-50 text-left transition-colors"
             >
               <div className={`w-6 h-6 rounded-full ${userColor(user.id)} flex items-center justify-center flex-shrink-0`}>
-                <span className="text-white text-xs font-semibold">{user.name.charAt(0).toUpperCase()}</span>
+                <span className="text-white text-xs font-semibold">{getInitials(user.name)}</span>
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-gray-800 truncate">{user.name}</p>

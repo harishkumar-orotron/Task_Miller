@@ -14,7 +14,7 @@ import Tooltip from '../../../components/ui/Tooltip'
 import ErrorMessage                           from '../../../components/common/ErrorMessage'
 import StatusBadge                            from '../../../components/ui/StatusBadge'
 import PriorityBadge                          from '../../../components/ui/PriorityBadge'
-import { formatDate, roleAvatarColor, roleBadgeClasses, toAvatarShape } from '../../../lib/utils'
+import { formatDate, roleAvatarColor, roleBadgeClasses, toAvatarShape , getInitials} from '../../../lib/utils'
 import AvatarStack                               from '../../../components/ui/AvatarStack'
 import S3Image                                   from '../../../components/ui/S3Image'
 import type { TaskStatus, TaskPriority }      from '../../../types/task.types'
@@ -249,7 +249,7 @@ function UserDetailPage() {
               {user.avatarUrl ? (
                 <S3Image storageKey={user.avatarUrl} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-white font-bold text-lg">{user.name.charAt(0).toUpperCase()}</span>
+                <span className="text-white font-bold text-lg">{getInitials(user.name)}</span>
               )}
             </div>
             <div>
