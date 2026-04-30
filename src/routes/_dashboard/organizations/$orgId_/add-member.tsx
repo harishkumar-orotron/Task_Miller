@@ -17,7 +17,7 @@ function AddMemberPage() {
   const navigate        = useNavigate()
   const { data: orgsData, isLoading } = useOrgs()
   const resolvedId = (orgsData?.organizations ?? []).find((o) => o.slug === slug)?.id ?? ''
-  const onBack = () => navigate({ to: '/organizations/$orgId', params: { orgId: slug } })
+  const onBack = () => navigate({ to: '/organizations/$orgId', params: { orgId: slug }, search: {} as any })
 
   if (isLoading) return <FormSkeleton />
 

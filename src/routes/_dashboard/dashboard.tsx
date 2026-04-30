@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { authStore } from '../../store/auth.store'
 import {
   Search, ChevronDown,
   FolderKanban, CheckCircle2, Clock, AlertCircle, TrendingUp, ListTodo, Timer, PauseCircle, Hourglass,
@@ -18,6 +19,11 @@ import { StatsSkeleton, TableSkeleton } from '../../components/ui/Skeleton'
 import type { TaskStatus, TaskPriority } from '../../types/task.types'
 
 export const Route = createFileRoute('/_dashboard/dashboard')({
+  beforeLoad: () => {
+    const role = authStore.state.user?.role
+    if (role === 'superadmin') throw redirect({ to: '/superadmin/dashboard', search: {} as any })
+    if (role === 'admin')      throw redirect({ to: '/admin/dashboard',      search: {} as any })
+  },
   validateSearch: (search: Record<string, unknown>) => ({
     search:          (search.search as string)           || undefined,
     statusFilter:    ((search.statusFilter as string)    || undefined) as TaskStatus | undefined,

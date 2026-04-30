@@ -95,3 +95,9 @@ export function toSlug(str: string): string {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
 }
+
+export function dashboardByRole(role: string | null | undefined): string {
+  if (role === 'superadmin') return '/superadmin/dashboard'
+  if (role === 'admin')      return '/admin/dashboard'
+  return '/dashboard'
+}

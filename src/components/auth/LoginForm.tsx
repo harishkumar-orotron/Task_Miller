@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { useNavigate, Link } from '@tanstack/react-router'
 import { Eye, EyeOff } from 'lucide-react'
 import { useLoginMutation } from '../../queries/auth.queries'
+import { authStore } from '../../store/auth.store'
+import { dashboardByRole } from '../../lib/utils'
 import type { ApiError } from '../../types/api.types'
 
 const TEST_CREDENTIALS = [
@@ -27,7 +29,11 @@ export default function LoginForm() {
     e.preventDefault()
     login(
       { email, password },
-      { onSuccess: () => navigate({ to: '/dashboard', search: {} as any }) },
+      {
+        onSuccess: () => {
+          navigate({ to: dashboardByRole(authStore.state.user?.role) as any, search: {} as any })
+        },
+      },
     )
   }
 

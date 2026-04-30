@@ -35,9 +35,10 @@ interface DateRangeFilterProps {
   from:     string | undefined
   to:       string | undefined
   onChange: (from: string | undefined, to: string | undefined) => void
+  label?:   string
 }
 
-export default function DateRangeFilter({ from, to, onChange }: DateRangeFilterProps) {
+export default function DateRangeFilter({ from, to, onChange, label: defaultLabel = 'Due Date' }: DateRangeFilterProps) {
   const [open,         setOpen]         = useState(false)
   const [startDate,    setStartDate]    = useState<Date | null>(null)
   const [endDate,      setEndDate]      = useState<Date | null>(null)
@@ -100,7 +101,7 @@ export default function DateRangeFilter({ from, to, onChange }: DateRangeFilterP
     ? `${fmtDisplay(from)} – ${fmtDisplay(to)}`
     : isActive && from
     ? `From ${fmtDisplay(from)}`
-    : 'Due Date'
+    : defaultLabel
 
   return (
     <div ref={wrapRef}>

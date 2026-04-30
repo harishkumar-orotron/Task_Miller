@@ -14,7 +14,7 @@ function EditProjectPage() {
   const { projectId } = Route.useParams()
   const navigate      = useNavigate()
   const { data: project, isLoading, isError, error } = useProject(projectId)
-  const onBack = () => navigate({ to: '/projects/$projectId', params: { projectId } })
+  const onBack = () => navigate({ to: '/projects/$projectId', params: { projectId }, search: {} as any })
 
   if (isLoading) return <FormSkeleton />
 

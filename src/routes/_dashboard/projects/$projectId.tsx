@@ -15,6 +15,9 @@ import type { ProjectStatus } from '../../../types/project.types'
 import type { ApiError } from '../../../types/api.types'
 
 export const Route = createFileRoute('/_dashboard/projects/$projectId')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    view: (search.view as string) === 'list' ? ('list' as const) : undefined,
+  }),
   component: ProjectViewPage,
 })
 
@@ -41,8 +44,10 @@ const allStatuses: ProjectStatus[] = ['active', 'on_hold', 'completed']
 
 function ProjectViewPage() {
   const { projectId } = Route.useParams()
+  const { view }      = Route.useSearch()
   const navigate      = useNavigate()
   const { isAdmin }   = useAuth()
+  const backSearch    = { view: view ?? undefined } as any
 
   const { data: project, isLoading, error } = useProject(projectId)
   const { mutate: deleteProject, isPending: isDeleting } = useDeleteProjectMutation()
@@ -55,7 +60,7 @@ function ProjectViewPage() {
 
   const handleDelete = () => {
     deleteProject(projectId, {
-      onSuccess: () => navigate({ to: '/projects', search: {} as any }),
+      onSuccess: () => navigate({ to: '/projects', search: backSearch }),
     })
   }
 
@@ -64,7 +69,7 @@ function ProjectViewPage() {
   if (error || !project) {
     return (
       <div className="space-y-4">
-        <button onClick={() => navigate({ to: '/projects', search: {} as any })} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 cursor-pointer">
+        <button onClick={() => navigate({ to: '/projects', search: backSearch })} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 cursor-pointer">
           <ArrowLeft size={15} /> Back to Projects
         </button>
         <ErrorMessage message={(error as ApiError)?.message ?? 'Project not found'} />
@@ -96,7 +101,7 @@ function ProjectViewPage() {
 
       {/* Back */}
       <button
-        onClick={() => navigate({ to: '/projects', search: {} as any })}
+        onClick={() => navigate({ to: '/projects', search: backSearch })}
         className="flex-shrink-0 flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
       >
         <ArrowLeft size={15} /> Back to Projects

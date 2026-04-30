@@ -15,13 +15,26 @@ import type { OrgMember } from '../../../types/org.types'
 import type { ApiError } from '../../../types/api.types'
 
 export const Route = createFileRoute('/_dashboard/organizations/$orgId')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    view: (search.view as string) === 'list' ? ('list' as const) : undefined,
+    from: (search.from as string) === 'superadmin' ? ('superadmin' as const) : undefined,
+  }),
   component: OrgDetailPage,
 })
 
 function OrgDetailPage() {
   const { orgId: slug } = Route.useParams()
+  const { view, from }  = Route.useSearch()
   const navigate        = useNavigate()
   const { isSuperAdmin, isAdmin } = useAuth()
+
+  const goBack = () => {
+    if (from === 'superadmin') {
+      navigate({ to: '/superadmin/organizations' as any, search: { view: view ?? undefined } as any })
+    } else {
+      navigate({ to: '/organizations', search: { view: view ?? undefined } as any })
+    }
+  }
 
   const { data: orgsData, isLoading: isLoadingOrgs } = useOrgs()
   const orgsList   = orgsData?.organizations ?? []
@@ -44,7 +57,7 @@ function OrgDetailPage() {
   if (error || !org) {
     return (
       <div className="space-y-4">
-        <button onClick={() => navigate({ to: '/organizations', search: {} as any })} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 cursor-pointer">
+        <button onClick={goBack} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 cursor-pointer">
           <ArrowLeft size={15} /> Back to Organizations
         </button>
         <ErrorMessage message={(error as ApiError)?.message ?? 'Organization not found'} />
@@ -52,7 +65,7 @@ function OrgDetailPage() {
     )
   }
 
-  const adminMember   = org.members.find((m) => m.role === 'admin')
+  const adminMembers  = org.members.filter((m) => m.role === 'admin')
   const developers    = org.members.filter((m) => m.role === 'developer')
   const devTotal      = developers.length
   const devTotalPages = Math.max(1, Math.ceil(devTotal / devLimit))
@@ -65,7 +78,7 @@ function OrgDetailPage() {
   }
 
   const handleDeleteOrg = () => {
-    deleteOrg(resolvedId, { onSuccess: () => navigate({ to: '/organizations', search: {} as any }) })
+    deleteOrg(resolvedId, { onSuccess: goBack })
   }
 
   return (
@@ -73,7 +86,7 @@ function OrgDetailPage() {
 
       {/* Back */}
       <button
-        onClick={() => navigate({ to: '/organizations', search: {} as any })}
+        onClick={goBack}
         className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
       >
         <ArrowLeft size={15} /> Back to Organizations
@@ -119,7 +132,7 @@ function OrgDetailPage() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-400">Admin</p>
-                  <p className="text-lg font-bold text-gray-800 leading-none mt-0.5">{adminMember ? 1 : 0}</p>
+                  <p className="text-lg font-bold text-gray-800 leading-none mt-0.5">{adminMembers.length}</p>
                 </div>
               </div>
               <div className="bg-gray-50 rounded-lg px-4 py-3 flex items-center gap-3">
@@ -139,37 +152,43 @@ function OrgDetailPage() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-gray-800 flex items-center gap-2">
                 <ShieldCheck size={15} className="text-blue-500" />
-                Admin
+                Admins
+                <span className="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                  {adminMembers.length}
+                </span>
               </h3>
               {isSuperAdmin && (
                 <button
                   onClick={() => navigate({ to: '/organizations/$orgId/add-member', params: { orgId: slug }, search: { mode: 'admin' } })}
-                  disabled={!!adminMember}
-                  title={adminMember ? 'This org already has an admin' : 'Assign admin'}
-                  className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
                 >
                   <UserPlus size={13} /> Assign Admin
                 </button>
               )}
             </div>
 
-            {adminMember ? (
-              <MemberRow
-                member={adminMember}
-                index={0}
-                canRemove={isSuperAdmin}
-                isRemoving={isRemoving && confirmRemove === adminMember.userId}
-                confirming={confirmRemove === adminMember.userId}
-                onRemoveClick={() => setConfirmRemove(adminMember.userId)}
-                onConfirmRemove={() => handleRemove(adminMember.userId)}
-                onCancelRemove={() => setConfirmRemove(null)}
-              />
-            ) : (
+            {adminMembers.length === 0 ? (
               <EmptySlot
                 icon={ShieldCheck}
                 label="No admin assigned"
                 sublabel={isSuperAdmin ? 'Use the Assign Admin button to add one.' : 'Contact your superadmin to assign an admin.'}
               />
+            ) : (
+              <div className="space-y-1">
+                {adminMembers.map((member, i) => (
+                  <MemberRow
+                    key={member.memberId}
+                    member={member}
+                    index={i}
+                    canRemove={isSuperAdmin}
+                    isRemoving={isRemoving && confirmRemove === member.userId}
+                    confirming={confirmRemove === member.userId}
+                    onRemoveClick={() => setConfirmRemove(member.userId)}
+                    onConfirmRemove={() => handleRemove(member.userId)}
+                    onCancelRemove={() => setConfirmRemove(null)}
+                  />
+                ))}
+              </div>
             )}
           </div>
 

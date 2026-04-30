@@ -1,5 +1,5 @@
 import { useRouterState, useNavigate, useMatches } from '@tanstack/react-router'
-import { ChevronDown, Plus, LogOut, UserCog, Menu } from 'lucide-react'
+import { ChevronDown, Plus, LogOut, UserCog, Menu, LayoutDashboard } from 'lucide-react'
 import React, { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { useLogoutMutation } from '../../queries/auth.queries'
@@ -11,6 +11,8 @@ import { roleBadgeClasses, userColor } from '../../lib/utils'
 import NotificationPanel from '../notifications/NotificationPanel'
 
 const pageConfig: Record<string, { title: string; action?: string; actionTo?: string }> = {
+  '/superadmin':   { title: 'Dashboard'                                                            },
+  '/admin':        { title: 'Dashboard',     action: 'Add Task',    actionTo: '/tasks/new'         },
   '/dashboard':    { title: 'Dashboard',     action: 'Add Task',    actionTo: '/tasks/new'         },
   '/tasks':        { title: 'Tasks',         action: 'Add Task',    actionTo: '/tasks/new'         },
   '/projects':     { title: 'Projects',      action: 'Add Project', actionTo: '/projects/new'      },
@@ -24,7 +26,9 @@ const pageConfig: Record<string, { title: string; action?: string; actionTo?: st
 export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const navigate = useNavigate()
-  const { isAdmin } = useAuth()
+  const { isAdmin, isSuperAdmin } = useAuth()
+  const locationHref = useRouterState({ select: (s) => s.location.href })
+  const isAdminView  = !pathname.startsWith('/superadmin') && !locationHref.includes('from=superadmin')
   const { mutate: logout, isPending: isLoggingOut } = useLogoutMutation()
   const { data: profile } = useMe()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -148,6 +152,29 @@ export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => voi
                     <UserCog size={14} />
                     My Profile
                   </button>
+
+                  {isSuperAdmin && (
+                    <>
+                      <button
+                        onClick={() => { setMenuOpen(false); navigate({ to: '/superadmin/dashboard', search: {} as any }) }}
+                        className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm transition-colors border-b border-gray-100 cursor-pointer ${
+                          !isAdminView ? 'bg-orange-50 text-orange-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        <LayoutDashboard size={14} />
+                        SuperAdmin View
+                      </button>
+                      <button
+                        onClick={() => { setMenuOpen(false); navigate({ to: '/admin/dashboard', search: {} as any }) }}
+                        className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm transition-colors border-b border-gray-100 cursor-pointer ${
+                          isAdminView ? 'bg-orange-50 text-orange-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        <LayoutDashboard size={14} />
+                        Admin View
+                      </button>
+                    </>
+                  )}
 
                   <button
                     onClick={handleLogout}

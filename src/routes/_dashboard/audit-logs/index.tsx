@@ -108,6 +108,7 @@ function AuditLogsPage() {
               from={from}
               to={to}
               onChange={handleDateRange}
+              label="Log Date"
             />
           </div>
         </div>
@@ -123,9 +124,6 @@ function AuditLogsPage() {
             <AuditLogTable
               logs={logs}
               startEntry={startEntry}
-              onView={(id) => {
-                navigate({ to: '/audit-logs/$logId' as any, params: { logId: id } } as any)
-              }}
             />
           )}
         </div>
