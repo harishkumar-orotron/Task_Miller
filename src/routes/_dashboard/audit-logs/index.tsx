@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { ChevronDown, Search } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { authStore } from '../../../store/auth.store'
 import { useAuditLogs } from '../../../queries/audit-logs.queries'
 import { useAuth } from '../../../hooks/useAuth'
@@ -18,11 +18,10 @@ export const Route = createFileRoute('/_dashboard/audit-logs/')({
   },
   validateSearch: (search: Record<string, unknown>) => ({
     entityType: (search.entityType as string) || undefined,
-    entityId:   (search.entityId   as string) || undefined,
-    from:       (search.from        as string) || undefined,
-    to:         (search.to          as string) || undefined,
-    page:       Number(search.page)  > 1  ? Number(search.page)  : undefined,
-    limit:      Number(search.limit) > 0 && Number(search.limit) !== 20 ? Number(search.limit) : undefined,
+    from: (search.from as string) || undefined,
+    to: (search.to as string) || undefined,
+    page: Number(search.page) > 1 ? Number(search.page) : undefined,
+    limit: Number(search.limit) > 0 && Number(search.limit) !== 20 ? Number(search.limit) : undefined,
   }),
   component: AuditLogsPage,
 })
@@ -34,7 +33,7 @@ function AuditLogsPage() {
 
   const orgId = isSuperAdmin && selectedOrg ? selectedOrg.id : undefined
 
-  const { entityType = '', entityId = '', from, to, page = 1, limit = 20 } = Route.useSearch()
+  const { entityType = '', from, to, page = 1, limit = 20 } = Route.useSearch()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setParams = (params: Record<string, any>) =>
@@ -43,25 +42,24 @@ function AuditLogsPage() {
   const handleDateRange = (f: string | undefined, t: string | undefined) =>
     setParams({ from: f, to: t, page: undefined })
 
-  const { data, isLoading, isFetching, isError, error } = useAuditLogs({
+  const { data, isLoading, isError, error } = useAuditLogs({
     orgId,
     entityType: entityType || undefined,
-    entityId:   entityId   || undefined,
-    from:       from       || undefined,
-    to:         to         || undefined,
+    from: from || undefined,
+    to: to || undefined,
     page,
     limit,
   })
 
-  const logs       = data?.auditLogs   ?? []
+  const logs = data?.auditLogs ?? []
   const pagination = data?.pagination
 
   const totalRecords = pagination?.totalRecords ?? 0
-  const totalPages   = pagination?.totalPages   ?? 1
-  const activePage   = pagination?.currentPage  ?? page
-  const activeLimit  = pagination?.limit        ?? limit
-  const startEntry   = totalRecords === 0 ? 0 : (activePage - 1) * activeLimit + 1
-  const endEntry     = Math.min(activePage * activeLimit, totalRecords)
+  const totalPages = pagination?.totalPages ?? 1
+  const activePage = pagination?.currentPage ?? page
+  const activeLimit = pagination?.limit ?? limit
+  const startEntry = totalRecords === 0 ? 0 : (activePage - 1) * activeLimit + 1
+  const endEntry = Math.min(activePage * activeLimit, totalRecords)
 
   if (!isAdmin) return null
 
@@ -80,7 +78,7 @@ function AuditLogsPage() {
             <div className="relative">
               <select
                 value={entityType}
-                onChange={(e) => setParams({ entityType: e.target.value || undefined, entityId: undefined, page: undefined })}
+                onChange={(e) => setParams({ entityType: e.target.value || undefined, page: undefined })}
                 className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-500 bg-gray-50 outline-none cursor-pointer"
               >
                 <option value="">All Entities</option>
@@ -92,17 +90,6 @@ function AuditLogsPage() {
               <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
             </div>
 
-            {entityType && (
-              <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-1.5 bg-gray-50">
-                <Search size={14} className={isFetching ? 'text-orange-400 animate-pulse' : 'text-gray-400'} />
-                <input
-                  value={entityId}
-                  onChange={(e) => setParams({ entityId: e.target.value || undefined, page: undefined })}
-                  placeholder={`${entityType === 'task' ? 'Task' : entityType === 'project' ? 'Project' : entityType === 'user' ? 'User' : 'Org'} ID`}
-                  className="bg-transparent outline-none w-44 text-gray-700 placeholder-gray-400 text-xs font-mono"
-                />
-              </div>
-            )}
 
             <DateRangeFilter
               from={from}

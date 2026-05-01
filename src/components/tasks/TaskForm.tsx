@@ -58,7 +58,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
 
   const { data: projectsData }   = useProjects({ limit: 100, orgId })
   const { data: usersData }      = useUsers({ limit: 100, orgId, role: 'developer' })
-  const { data: parentTaskData } = useTask(task?.parentTaskId ?? '')
+  const { data: parentTaskData } = useTask(task?.parentTaskId || parentTaskId || '')
   const { data: projectData }    = useProject(projectIdForFilter)
 
   const { mutate: createTask, isPending: isCreating, error: createError } = useCreateTaskMutation()
@@ -75,7 +75,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
 
   const projects = projectsData?.projects ?? []
   const allUsers = (usersData?.users ?? []).filter((u) => u.role === 'developer')
-  const users    = isEditingSubtask && parentTaskData
+  const users = (isSubtask || isEditingSubtask) && parentTaskData
     ? allUsers.filter((u) => parentTaskData.assignees.some((a) => a.id === u.id))
     : projectData
     ? allUsers.filter((u) => projectData.members.some((m) => m.id === u.id))

@@ -57,7 +57,7 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
   ) ?? {}
 
   const orgs    = orgsData?.organizations ?? []
-  const members = orgDetail?.members ?? []
+  const members = orgDetail?.members.filter((m) => m.role === 'developer') ?? []
 
   const selectedOrg = orgs.find((o) => o.id === orgId)
 
@@ -122,7 +122,15 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
     e.preventDefault()
     if (isEdit) {
       updateProject(
-        { id: project.id, body: { title, description: description || undefined, logoUrl: logoUrl || undefined } },
+        {
+          id: project.id,
+          body: {
+            title,
+            description:     description || undefined,
+            logoUrl:         logoUrl || undefined,
+            assignedUserIds: selectedUserIds,
+          },
+        },
         { onSuccess: onClose },
       )
     } else {
@@ -284,8 +292,8 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
             </div>
           )}
 
-          {/* Members — create mode only, shown after org is selected */}
-          {!isEdit && orgId && (
+          {/* Members — shown after org is selected */}
+          {orgId && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Members <span className="text-gray-400 font-normal">(optional)</span>

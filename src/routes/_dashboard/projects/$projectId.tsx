@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
-  ArrowLeft, Pencil, Trash2, ChevronDown,
+  ArrowLeft, Pencil, Trash2, ChevronDown, Download, Upload,
   ListTodo, Timer, AlertCircle, CheckCircle2, LayoutList, PauseCircle,
 } from 'lucide-react'
 import { useProject, useDeleteProjectMutation, useUpdateProjectMutation } from '../../../queries/projects.queries'
@@ -10,6 +10,9 @@ import { ProjectDetailSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
 import S3Image from '../../../components/ui/S3Image'
 import Pagination from '../../../components/ui/Pagination'
+import { MoreMenu } from '../../../components/common/MoreMenu'
+import { useExportProjectDetailsMutation } from '../../../queries/import-export.queries'
+import ImportTasksModal from '../../../components/projects/ImportTasksModal'
 import { userColor, formatDate , getInitials} from '../../../lib/utils'
 import type { ProjectStatus } from '../../../types/project.types'
 import type { ApiError } from '../../../types/api.types'
@@ -52,9 +55,11 @@ function ProjectViewPage() {
   const { data: project, isLoading, error } = useProject(projectId)
   const { mutate: deleteProject, isPending: isDeleting } = useDeleteProjectMutation()
   const { mutate: updateProject, isPending: isUpdatingStatus } = useUpdateProjectMutation()
+  const { mutate: exportProjectDetails, isPending: isExporting } = useExportProjectDetailsMutation()
 
 
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [showImportTasks, setShowImportTasks] = useState(false)
   const [membersPage,  setMembersPage]  = useState(1)
   const [membersLimit, setMembersLimit] = useState(10)
 
@@ -161,6 +166,21 @@ function ProjectViewPage() {
 
                 {isAdmin && (
                   <>
+                    <MoreMenu>
+                      <button
+                        onClick={() => exportProjectDetails(projectId)}
+                        disabled={isExporting}
+                        className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full text-left disabled:opacity-50"
+                      >
+                        <Download size={14} /> {isExporting ? 'Exporting...' : 'Export Project Details'}
+                      </button>
+                      <button
+                        onClick={() => setShowImportTasks(true)}
+                        className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full text-left"
+                      >
+                        <Upload size={14} className="text-gray-400" /> Import Tasks
+                      </button>
+                    </MoreMenu>
                     <button
                       onClick={() => navigate({ to: '/projects/$projectId/edit', params: { projectId } })}
                       className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
@@ -328,6 +348,19 @@ function ProjectViewPage() {
         </div>
 
       </div>
+
+      {/* Import Tasks Modal */}
+      {showImportTasks && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-3xl">
+            <ImportTasksModal
+              projectId={projectId}
+              projectTitle={project.title}
+              onClose={() => setShowImportTasks(false)}
+            />
+          </div>
+        </div>
+      )}
 
     </div>
   )

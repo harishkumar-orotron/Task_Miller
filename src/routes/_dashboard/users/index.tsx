@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { authStore } from '../../../store/auth.store'
-import { Plus, Search, ChevronDown } from 'lucide-react'
+import { Plus, Search, ChevronDown, Download } from 'lucide-react'
 import { type SortingState } from '@tanstack/react-table'
 import { useUsers } from '../../../queries/users.queries'
 import { useOrgContext } from '../../../store/orgContext.store'
@@ -11,6 +11,8 @@ import UserTable from '../../../components/users/UserTable'
 import Pagination from '../../../components/ui/Pagination'
 import { TableSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
+import { useExportOrgMembersMutation } from '../../../queries/import-export.queries'
+import { MoreMenu } from '../../../components/common/MoreMenu'
 import type { ApiError } from '../../../types/api.types'
 import type { UserStatus } from '../../../types/user.types'
 
@@ -41,6 +43,8 @@ function UsersPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setParams = (params: Record<string, any>) =>
     navigate({ search: (prev) => ({ ...prev, ...params }) as any })
+
+  const { mutate: exportMembers, isPending: isExporting } = useExportOrgMembersMutation()
 
   const sorting: SortingState = sortBy ? [{ id: sortBy, desc: sortDir === 'desc' }] : []
 
@@ -121,12 +125,23 @@ function UsersPage() {
             </div>
 
             {isAdmin && (
-              <button
-                onClick={() => navigate({ to: '/users/new' })}
-                className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors cursor-pointer"
-              >
-                <Plus size={13} /> Add User
-              </button>
+              <>
+                <button
+                  onClick={() => navigate({ to: '/users/new' })}
+                  className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors cursor-pointer"
+                >
+                  <Plus size={13} /> Add User
+                </button>
+                <MoreMenu>
+                  <button
+                    onClick={() => { if (selectedOrg) exportMembers(selectedOrg.id) }}
+                    disabled={isExporting || !selectedOrg}
+                    className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full text-left disabled:opacity-50"
+                  >
+                    <Download size={14} /> {isExporting ? 'Exporting...' : 'Export Members (CSV)'}
+                  </button>
+                </MoreMenu>
+              </>
             )}
 
           </div>
