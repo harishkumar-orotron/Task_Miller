@@ -11,6 +11,7 @@ import ErrorMessage from '../../../components/common/ErrorMessage'
 import S3Image from '../../../components/ui/S3Image'
 import Pagination from '../../../components/ui/Pagination'
 import { MoreMenu } from '../../../components/common/MoreMenu'
+import ConfirmDeleteModal from '../../../components/common/ConfirmDeleteModal'
 import { useExportProjectDetailsMutation } from '../../../queries/import-export.queries'
 import ImportTasksModal from '../../../components/projects/ImportTasksModal'
 import { userColor, formatDate , getInitials} from '../../../lib/utils'
@@ -58,7 +59,7 @@ function ProjectViewPage() {
   const { mutate: exportProjectDetails, isPending: isExporting } = useExportProjectDetailsMutation()
 
 
-  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showImportTasks, setShowImportTasks] = useState(false)
   const [membersPage,  setMembersPage]  = useState(1)
   const [membersLimit, setMembersLimit] = useState(10)
@@ -165,53 +166,34 @@ function ProjectViewPage() {
                 )}
 
                 {isAdmin && (
-                  <>
-                    <MoreMenu>
-                      <button
-                        onClick={() => exportProjectDetails(projectId)}
-                        disabled={isExporting}
-                        className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full text-left disabled:opacity-50"
-                      >
-                        <Download size={14} /> {isExporting ? 'Exporting...' : 'Export Project Details'}
-                      </button>
-                      <button
-                        onClick={() => setShowImportTasks(true)}
-                        className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full text-left"
-                      >
-                        <Upload size={14} className="text-gray-400" /> Import Tasks
-                      </button>
-                    </MoreMenu>
+                  <MoreMenu>
                     <button
                       onClick={() => navigate({ to: '/projects/$projectId/edit', params: { projectId } })}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                      className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full text-left"
                     >
-                      <Pencil size={13} /> Edit
+                      <Pencil size={14} /> Edit
                     </button>
-                    {confirmDelete ? (
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => setConfirmDelete(false)}
-                          className="px-2.5 py-1.5 text-xs border border-gray-200 text-gray-500 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleDelete}
-                          disabled={isDeleting}
-                          className="px-2.5 py-1.5 text-xs font-medium bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-60 cursor-pointer"
-                        >
-                          {isDeleting ? 'Deleting...' : 'Confirm'}
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setConfirmDelete(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
-                      >
-                        <Trash2 size={13} /> Delete
-                      </button>
-                    )}
-                  </>
+                    <button
+                      onClick={() => exportProjectDetails(projectId)}
+                      disabled={isExporting}
+                      className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full text-left disabled:opacity-50"
+                    >
+                      <Download size={14} /> {isExporting ? 'Exporting...' : 'Export Project Details'}
+                    </button>
+                    <button
+                      onClick={() => setShowImportTasks(true)}
+                      className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full text-left"
+                    >
+                      <Upload size={14} className="text-gray-400" /> Import Tasks
+                    </button>
+                    <div className="border-t border-gray-100 my-1" />
+                    <button
+                      onClick={() => setShowDeleteModal(true)}
+                      className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-red-500 hover:bg-red-50 transition-colors w-full text-left"
+                    >
+                      <Trash2 size={14} /> Delete
+                    </button>
+                  </MoreMenu>
                 )}
               </div>
             </div>
@@ -349,7 +331,6 @@ function ProjectViewPage() {
 
       </div>
 
-      {/* Import Tasks Modal */}
       {showImportTasks && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-3xl">
@@ -360,6 +341,16 @@ function ProjectViewPage() {
             />
           </div>
         </div>
+      )}
+
+      {showDeleteModal && (
+        <ConfirmDeleteModal
+          title="Delete Project"
+          description={`Are you sure you want to delete "${project.title}"? This action cannot be undone.`}
+          isLoading={isDeleting}
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteModal(false)}
+        />
       )}
 
     </div>

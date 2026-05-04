@@ -1,8 +1,14 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router'
+import { authStore } from '../../../store/auth.store'
 import { ArrowLeft } from 'lucide-react'
 import OrgForm from '../../../components/organizations/OrgForm'
 
 export const Route = createFileRoute('/_dashboard/organizations/new')({
+  beforeLoad: () => {
+    const role = authStore.state.user?.role
+    if (role === 'superadmin') throw redirect({ to: '/superadmin/organizations/new', search: {} as any })
+    if (role === 'developer')  throw redirect({ to: '/dashboard',                   search: {} as any })
+  },
   component: NewOrgPage,
 })
 

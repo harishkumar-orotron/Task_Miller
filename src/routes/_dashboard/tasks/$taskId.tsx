@@ -54,20 +54,22 @@ const statusButtonFallback = 'border-gray-300 text-gray-600 bg-white hover:bg-gr
 
 function allowedStatuses(current: string): TaskStatus[] {
   const transitions: Record<string, TaskStatus[]> = {
-    to_do: ['in_progress'],
+    to_do:       ['in_progress', 'on_hold', 'completed'],
     in_progress: ['on_hold', 'completed'],
-    on_hold: ['in_progress'],
-    completed: [],
-    overdue: ['completed'],
+    on_hold:     ['in_progress'],
+    completed:   ['to_do'],
+    overdue:     ['completed'],
   }
   return transitions[current] ?? []
 }
 
 function SubtaskCard({
-  subtask, parentOnHold, onStatusChange, onEdit,
+  subtask, parentOnHold, parentCompleted, isDeveloper, onStatusChange, onEdit,
 }: {
   subtask: Subtask
   parentOnHold: boolean
+  parentCompleted: boolean
+  isDeveloper: boolean
   onStatusChange: (id: string, status: TaskStatus) => void
   onEdit?: () => void
 }) {
@@ -78,6 +80,18 @@ function SubtaskCard({
     overdue: 'border-red-300    text-red-600    bg-red-50',
     completed: 'border-green-300  text-green-600  bg-green-50',
   }
+
+  // on_hold parent blocks everyone; completed parent blocks developers only
+  const locked = parentOnHold || (parentCompleted && isDeveloper)
+  const lockReason = parentOnHold
+    ? 'Parent task is on hold — update the parent first'
+    : 'Parent task is completed — only admin can change subtask status'
+
+  const allowedForRole = isDeveloper
+    ? allowedStatuses(subtask.status).filter(s => s !== 'to_do')
+    : allowedStatuses(subtask.status)
+
+  const canChange = !locked && allowedForRole.length > 0
 
   return (
     <div className="border border-gray-100 rounded-xl p-4 bg-gray-50 space-y-3">
@@ -107,13 +121,7 @@ function SubtaskCard({
       {/* Status + Avatars */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 flex-wrap">
-          {subtask.status === 'completed' ? (
-            <StatusBadge status={subtask.status} />
-          ) : parentOnHold ? (
-            <div title="Task is on hold — subtask status cannot be changed">
-              <StatusBadge status={subtask.status} />
-            </div>
-          ) : (
+          {canChange ? (
             <div className="relative">
               <select
                 value={subtask.status}
@@ -121,11 +129,15 @@ function SubtaskCard({
                 className={`appearance-none border rounded-full pl-3 pr-6 py-1 text-xs font-medium outline-none cursor-pointer transition-colors ${statusSelectClass[subtask.status] ?? ''}`}
               >
                 <option value={subtask.status} disabled>{statusLabel(subtask.status)}</option>
-                {allowedStatuses(subtask.status as TaskStatus).map((s) => (
+                {allowedForRole.map((s) => (
                   <option key={s} value={s}>{statusLabel(s)}</option>
                 ))}
               </select>
               <ChevronDown size={11} className="absolute right-1.5 top-1.5 pointer-events-none opacity-60" />
+            </div>
+          ) : (
+            <div title={locked ? lockReason : ''}>
+              <StatusBadge status={subtask.status} />
             </div>
           )}
         </div>
@@ -212,9 +224,11 @@ function TaskViewPage() {
   ]
 
   const hasIncompleteSubtasks = task.subtasks.some(s => s.status !== 'completed')
-  const allowed = allowedStatuses(task.status).filter(s =>
-    !(s === 'completed' && hasIncompleteSubtasks)
-  )
+  const allowed = allowedStatuses(task.status).filter(s => {
+    if (s === 'completed' && hasIncompleteSubtasks) return false
+    if (s === 'to_do' && isDeveloper) return false
+    return true
+  })
 
   return (
     <div className="flex flex-col flex-1 gap-4 overflow-hidden pb-4">
@@ -408,6 +422,8 @@ function TaskViewPage() {
                         key={s.id}
                         subtask={s}
                         parentOnHold={task.status === 'on_hold'}
+                        parentCompleted={task.status === 'completed'}
+                        isDeveloper={isDeveloper}
                         onStatusChange={handleSubtaskStatusChange}
                         onEdit={isAdmin || isSuperAdmin ? () => navigate({ to: '/tasks/$taskId/edit', params: { taskId: s.id } }) : undefined}
                       />

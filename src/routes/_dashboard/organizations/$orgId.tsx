@@ -1,11 +1,12 @@
-import { useState } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useState, useEffect } from 'react'
+import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router'
 import {
   ArrowLeft, Hash, Users, ShieldCheck, Code2,
   Plus, Trash2, AlertTriangle, UserPlus,
 } from 'lucide-react'
 import { useOrg, useOrgs, useRemoveMemberMutation, useDeleteOrgMutation } from '../../../queries/orgs.queries'
 import { useAuth } from '../../../hooks/useAuth'
+import { authStore } from '../../../store/auth.store'
 import { OrgDetailSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
 import Pagination from '../../../components/ui/Pagination'
@@ -15,6 +16,12 @@ import type { OrgMember } from '../../../types/org.types'
 import type { ApiError } from '../../../types/api.types'
 
 export const Route = createFileRoute('/_dashboard/organizations/$orgId')({
+  beforeLoad: ({ search }) => {
+    const role = authStore.state.user?.role
+    if (role === 'developer') throw redirect({ to: '/dashboard',               search: {} as any })
+    if (role === 'superadmin' && (search as any).from !== 'superadmin')
+      throw redirect({ to: '/superadmin/organizations', search: {} as any })
+  },
   validateSearch: (search: Record<string, unknown>) => ({
     view: (search.view as string) === 'list' ? ('list' as const) : undefined,
     from: (search.from as string) === 'superadmin' ? ('superadmin' as const) : undefined,
@@ -51,6 +58,13 @@ function OrgDetailPage() {
   const [devLimit, setDevLimit] = useState(5)
 
   const isLoading = isLoadingOrgs || isLoadingOrg
+
+  // Redirect admins who manually type a foreign org slug in the URL
+  useEffect(() => {
+    if (!isLoadingOrgs && !resolvedId && !isSuperAdmin && from !== 'superadmin') {
+      navigate({ to: '/dashboard', search: {} as any })
+    }
+  }, [isLoadingOrgs, resolvedId, isSuperAdmin, from, navigate])
 
   if (isLoading) return <OrgDetailSkeleton />
 

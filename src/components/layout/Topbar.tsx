@@ -12,8 +12,9 @@ import { roleBadgeClasses, userColor, getInitials } from '../../lib/utils'
 import NotificationPanel from '../notifications/NotificationPanel'
 
 const pageConfig: Record<string, { title: string; action?: string; actionTo?: string }> = {
-  '/superadmin':   { title: 'Dashboard'                                                            },
-  '/admin':        { title: 'Dashboard',     action: 'Add Task',    actionTo: '/tasks/new'         },
+  '/superadmin/dashboard': { title: 'Dashboard', action: 'Add Organization', actionTo: '/superadmin/organizations/new' },
+  '/superadmin':           { title: 'Dashboard'                                                                        },
+  '/admin':                { title: 'Dashboard', action: 'Add Task',         actionTo: '/tasks/new'                    },
   '/dashboard':    { title: 'Dashboard',     action: 'Add Task',    actionTo: '/tasks/new'         },
   '/tasks':        { title: 'Tasks',         action: 'Add Task',    actionTo: '/tasks/new'         },
   '/projects':     { title: 'Projects',      action: 'Add Project', actionTo: '/projects/new'      },

@@ -14,10 +14,10 @@ import type { Project } from '../../types/project.types'
 import type { ApiError } from '../../types/api.types'
 
 const statusTransitions: Record<string, TaskStatus[]> = {
-  to_do:       ['in_progress'],
+  to_do:       ['in_progress', 'on_hold', 'completed'],
   in_progress: ['on_hold', 'completed'],
   on_hold:     ['in_progress'],
-  completed:   [],
+  completed:   ['to_do'],
   overdue:     ['completed'],
 }
 
@@ -129,7 +129,8 @@ export default function TaskTable({
       meta:          { align: 'center' },
       cell: (info) => {
         const task    = info.row.original
-        const allowed = statusTransitions[task.status] ?? []
+        const transitions = statusTransitions[task.status] ?? []
+        const allowed = isAdmin ? transitions : transitions.filter(s => s !== 'to_do')
         const style   = statusSelectStyle[task.status] ?? 'bg-gray-50 text-gray-600 border-gray-200'
         const err     = statusError?.taskId === task.id ? statusError.message : null
 

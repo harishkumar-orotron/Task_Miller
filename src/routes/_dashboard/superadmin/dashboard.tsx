@@ -101,14 +101,14 @@ function SuperAdminDashboard() {
             <span className="text-gray-400 font-normal ml-1.5">({totalOrgs})</span>
           </h2>
           <div className="relative flex items-center border border-gray-200 rounded-lg bg-gray-50 focus-within:border-teal-400 focus-within:bg-white transition-colors">
-            <Search size={13} className="absolute left-3 text-gray-400 pointer-events-none" />
-            <input
-              value={orgSearch}
-              onChange={(e) => setParams({ orgSearch: e.target.value || undefined, page: undefined })}
-              placeholder="Search organizations..."
-              className="bg-transparent outline-none text-xs text-gray-700 placeholder-gray-400 pl-8 pr-3 py-1.5 w-48"
-            />
-          </div>
+              <Search size={13} className="absolute left-3 text-gray-400 pointer-events-none" />
+              <input
+                value={orgSearch}
+                onChange={(e) => setParams({ orgSearch: e.target.value || undefined, page: undefined })}
+                placeholder="Search organizations..."
+                className="bg-transparent outline-none text-xs text-gray-700 placeholder-gray-400 pl-8 pr-3 py-1.5 w-48"
+              />
+            </div>
         </div>
         <div className="flex-1 overflow-y-auto">
           {isLoadingOrgs ? (

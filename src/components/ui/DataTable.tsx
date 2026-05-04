@@ -35,11 +35,19 @@ export default function DataTable<TData>({
   const table = useReactTable({
     data,
     columns,
-    state:         { sorting },
+    state:           { sorting },
     onSortingChange,
-    manualSorting: true,
+    manualSorting:   true,
     getCoreRowModel: getCoreRowModel(),
   })
+
+  const handleSortClick = (columnId: string, canSort: boolean) => {
+    if (!canSort || !onSortingChange) return
+    const current = sorting.find(s => s.id === columnId)
+    if (!current)        onSortingChange([{ id: columnId, desc: false }])
+    else if (!current.desc) onSortingChange([{ id: columnId, desc: true }])
+    else                 onSortingChange([])
+  }
 
   if (data.length === 0) {
     return <div className="py-16 text-center text-sm text-gray-400">{emptyMessage}</div>
@@ -57,7 +65,7 @@ export default function DataTable<TData>({
                 <th
                   key={header.id}
                   className={`px-2 py-3 text-left whitespace-nowrap select-none bg-[#ccfbf1] ${header.column.columnDef.meta?.headerClassName || ''}`}
-                  onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                  onClick={canSort ? () => handleSortClick(header.column.id, canSort) : undefined}
                   style={{ cursor: canSort ? 'pointer' : 'default' }}
                 >
                   <div className={`flex items-center gap-1 ${header.column.columnDef.meta?.align === 'center' ? 'justify-center' : ''}`}>

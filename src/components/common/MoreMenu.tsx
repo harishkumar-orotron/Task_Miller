@@ -19,14 +19,14 @@ export function MoreMenu({ children }: { children: React.ReactNode }) {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+        className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
       >
-        <MoreVertical size={16} />
+        <MoreVertical size={16} strokeWidth={2.5} />
       </button>
 
       {isOpen && (
         <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
-          <div onClick={() => setIsOpen(false)}>
+          <div onClick={() => setIsOpen(false)} className="[&>button]:cursor-pointer">
             {children}
           </div>
         </div>

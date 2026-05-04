@@ -16,8 +16,10 @@ export function getTasksApi(params: TasksParams = {}): Promise<TasksResponse> {
   if (params.assignedUserId) query.set('assignedUserId', params.assignedUserId)
   if (params.dueDateFrom)    query.set('dueDateFrom',  params.dueDateFrom)
   if (params.dueDateTo)      query.set('dueDateTo',    params.dueDateTo)
-  if (params.sortBy)         query.set('sortBy',       params.sortBy)
-  if (params.sortOrder)      query.set('order',        params.sortOrder)
+  if (params.sortBy) {
+    query.set('sortBy', params.sortBy)
+    query.set('order',  params.sortOrder ?? 'asc')
+  }
   if (params.page)           query.set('page',         String(params.page))
   if (params.limit)          query.set('limit',        String(params.limit))
   const qs = query.toString()

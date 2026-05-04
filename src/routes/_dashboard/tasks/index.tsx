@@ -13,6 +13,7 @@ import { useDebounce } from '../../../hooks/useDebounce'
 import StatsCard from '../../../components/ui/StatsCard'
 import Pagination from '../../../components/ui/Pagination'
 import DateRangeFilter from '../../../components/ui/DateRangeFilter'
+import ProjectFilterDropdown from '../../../components/ui/ProjectFilterDropdown'
 import TaskTable from '../../../components/tasks/TaskTable'
 import ConfirmDeleteModal from '../../../components/common/ConfirmDeleteModal'
 import { StatsSkeleton, TableSkeleton } from '../../../components/ui/Skeleton'
@@ -184,17 +185,11 @@ function TasksPage() {
               <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
             </div>
 
-            <div className="relative">
-              <select
-                value={projectId}
-                onChange={(e) => handleProjectChange(e.target.value)}
-                className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-500 bg-gray-50 outline-none cursor-pointer"
-              >
-                <option value="">All Projects</option>
-                {projects.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
-              </select>
-              <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
-            </div>
+            <ProjectFilterDropdown
+              value={projectId}
+              onChange={handleProjectChange}
+              projects={projects}
+            />
 
             <DateRangeFilter
               from={dueDateFrom}

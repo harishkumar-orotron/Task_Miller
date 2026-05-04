@@ -57,7 +57,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
   const projectIdForFilter = isEditingSubtask ? '' : (isEdit ? task?.projectId : selectedProject) ?? ''
 
   const { data: projectsData }   = useProjects({ limit: 100, orgId })
-  const { data: usersData }      = useUsers({ limit: 100, orgId, role: 'developer' })
+  const { data: usersData }      = useUsers({ limit: 100, orgId })
   const { data: parentTaskData } = useTask(task?.parentTaskId || parentTaskId || '')
   const { data: projectData }    = useProject(projectIdForFilter)
 
@@ -74,7 +74,7 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
   ) ?? {}
 
   const projects = projectsData?.projects ?? []
-  const allUsers = (usersData?.users ?? []).filter((u) => u.role === 'developer')
+  const allUsers = usersData?.users ?? []
   const users = (isSubtask || isEditingSubtask) && parentTaskData
     ? allUsers.filter((u) => parentTaskData.assignees.some((a) => a.id === u.id))
     : projectData
@@ -210,7 +210,17 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
                   <span className={selectedProj ? 'text-gray-800' : 'text-gray-400'}>
                     {selectedProj ? selectedProj.title : 'Select a project'}
                   </span>
-                  <ChevronDown size={15} className="text-gray-400 flex-shrink-0" />
+                  {selectedProj ? (
+                    <span
+                      role="button"
+                      onClick={(e) => { e.stopPropagation(); setSelectedProject(''); setSelectedUserIds([]) }}
+                      className="p-0.5 rounded-full hover:bg-gray-200 transition-colors flex-shrink-0"
+                    >
+                      <X size={13} className="text-gray-400" />
+                    </span>
+                  ) : (
+                    <ChevronDown size={15} className="text-gray-400 flex-shrink-0" />
+                  )}
                 </button>
 
                 {projectOpen && (
@@ -349,8 +359,8 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
                   <>
                   <div className="fixed inset-0 z-[9]" onClick={() => { setMemberOpen(false); setMemberSearch('') }} />
                   <div className={`absolute ${memberDirection === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'} left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[10]`}>
-                    <div className="p-2 border-b border-gray-100">
-                      <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5">
+                    <div className="p-2 border-b border-gray-100 flex items-center gap-2">
+                      <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5 flex-1">
                         <Search size={12} className="text-gray-400 flex-shrink-0" />
                         <input
                           autoFocus
@@ -360,6 +370,13 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
                           className="bg-transparent outline-none flex-1 text-xs text-gray-700 placeholder-gray-400"
                         />
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => { setMemberOpen(false); setMemberSearch('') }}
+                        className="p-1 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                      >
+                        <X size={14} />
+                      </button>
                     </div>
                     <div className="max-h-48 overflow-y-auto">
                       {filteredUsers.filter(u => !selectedUserIds.includes(u.id)).length === 0 ? (
@@ -376,7 +393,12 @@ export default function TaskForm({ onClose, task, parentTaskId, projectId: prePr
                               <span className="text-white text-xs font-semibold">{getInitials(u.name)}</span>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-700 truncate">{u.name}</p>
+                              <div className="flex items-center gap-1.5">
+                                <p className="text-sm font-medium text-gray-700 truncate">{u.name}</p>
+                                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0 ${u.role === 'admin' ? 'bg-violet-100 text-violet-600' : 'bg-blue-50 text-blue-500'}`}>
+                                  {u.role === 'admin' ? 'Admin' : 'Dev'}
+                                </span>
+                              </div>
                               <p className="text-xs text-gray-400 truncate">{u.email}</p>
                             </div>
                           </button>

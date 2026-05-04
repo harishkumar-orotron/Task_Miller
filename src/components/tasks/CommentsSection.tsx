@@ -538,9 +538,6 @@ export default function CommentsSection({ taskId, userId, userName, avatarUrl, a
             </span>
           )}
         </div>
-        <button className="px-3 py-1.5 text-xs font-semibold bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-colors">
-          Check Activity
-        </button>
       </div>
 
       {/* Comment list */}

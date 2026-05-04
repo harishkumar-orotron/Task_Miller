@@ -1,4 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { authStore } from '../../../store/auth.store'
 import { Plus, Search, ChevronDown, LayoutGrid, List } from 'lucide-react'
 import { useOrgs } from '../../../queries/orgs.queries'
 import { useDebounce } from '../../../hooks/useDebounce'
@@ -9,6 +10,11 @@ import ErrorMessage from '../../../components/common/ErrorMessage'
 import type { ApiError } from '../../../types/api.types'
 
 export const Route = createFileRoute('/_dashboard/organizations/')({
+  beforeLoad: () => {
+    const role = authStore.state.user?.role
+    if (role === 'superadmin') throw redirect({ to: '/superadmin/organizations', search: {} as any })
+    if (role === 'developer')  throw redirect({ to: '/dashboard',               search: {} as any })
+  },
   validateSearch: (search: Record<string, unknown>) => ({
     search: (search.search as string) || undefined,
     sortBy: ((search.sortBy as string) || undefined) as 'name' | 'createdAt' | undefined,

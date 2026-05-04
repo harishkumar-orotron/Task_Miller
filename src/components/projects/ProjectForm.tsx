@@ -57,7 +57,7 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
   ) ?? {}
 
   const orgs    = orgsData?.organizations ?? []
-  const members = orgDetail?.members.filter((m) => m.role === 'developer') ?? []
+  const members = orgDetail?.members ?? []
 
   const selectedOrg = orgs.find((o) => o.id === orgId)
 
@@ -200,7 +200,10 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
               className="hidden"
             />
           </div>
-          {uploadError && <p className="text-xs text-red-500 mt-2 font-medium">{uploadError}</p>}
+          {uploadError
+            ? <p className="text-xs text-red-500 mt-2 font-medium">{uploadError}</p>
+            : <p className="text-xs text-gray-400 mt-2">Note: File must be under 10MB</p>
+          }
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -248,7 +251,17 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
                   <span className={selectedOrg ? 'text-gray-800' : 'text-gray-400'}>
                     {selectedOrg ? selectedOrg.name : 'Select an organization'}
                   </span>
-                  <ChevronDown size={15} className="text-gray-400 flex-shrink-0" />
+                  {selectedOrg ? (
+                    <span
+                      role="button"
+                      onClick={(e) => { e.stopPropagation(); setOrgId(''); setSelectedUserIds([]) }}
+                      className="p-0.5 rounded-full hover:bg-gray-200 transition-colors flex-shrink-0"
+                    >
+                      <X size={13} className="text-gray-400" />
+                    </span>
+                  ) : (
+                    <ChevronDown size={15} className="text-gray-400 flex-shrink-0" />
+                  )}
                 </button>
 
                 {orgOpen && (
@@ -340,8 +353,8 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
                   <>
                   <div className="fixed inset-0 z-[9]" onClick={() => { setMemberOpen(false); setMemberSearch('') }} />
                   <div className={`absolute ${memberDirection === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'} left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[10]`}>
-                    <div className="p-2 border-b border-gray-100">
-                      <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5">
+                    <div className="p-2 border-b border-gray-100 flex items-center gap-2">
+                      <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5 flex-1">
                         <Search size={12} className="text-gray-400 flex-shrink-0" />
                         <input
                           autoFocus
@@ -351,6 +364,13 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
                           className="bg-transparent outline-none flex-1 text-xs text-gray-700 placeholder-gray-400"
                         />
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => { setMemberOpen(false); setMemberSearch('') }}
+                        className="p-1 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                      >
+                        <X size={14} />
+                      </button>
                     </div>
                     <div className="max-h-48 overflow-y-auto">
                       {filteredMembers.filter(m => !selectedUserIds.includes(m.userId)).length === 0 ? (
@@ -367,7 +387,12 @@ export default function ProjectForm({ onClose, project }: ProjectFormProps) {
                               <span className="text-white text-xs font-semibold">{getInitials(m.name)}</span>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-700 truncate">{m.name}</p>
+                              <div className="flex items-center gap-1.5">
+                                <p className="text-sm font-medium text-gray-700 truncate">{m.name}</p>
+                                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0 ${m.role === 'admin' ? 'bg-violet-100 text-violet-600' : 'bg-blue-50 text-blue-500'}`}>
+                                  {m.role === 'admin' ? 'Admin' : 'Dev'}
+                                </span>
+                              </div>
                               <p className="text-xs text-gray-400 truncate">{m.email}</p>
                             </div>
                           </button>

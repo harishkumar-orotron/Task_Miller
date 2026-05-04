@@ -139,9 +139,10 @@ function ProfilePage() {
           </button>
         </div>
 
-        {avatarUploadError && (
-          <p className="text-xs text-red-500 mt-3">{avatarUploadError}</p>
-        )}
+        {avatarUploadError
+          ? <p className="text-xs text-red-500 mt-3">{avatarUploadError}</p>
+          : !profile.avatarUrl && <p className="text-xs text-gray-400 mt-3">Can upload image under 10MB</p>
+        }
 
         {/* Info grid */}
         <div className="grid grid-cols-2 gap-x-6 gap-y-4 pt-5">
