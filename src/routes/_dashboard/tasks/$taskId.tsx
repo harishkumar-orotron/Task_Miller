@@ -253,7 +253,7 @@ function TaskViewPage() {
             <div className="flex items-start justify-between gap-4">
               <h2 className="text-xl font-bold text-gray-800 leading-snug">{task.title}</h2>
               <div className="flex items-center gap-2 flex-shrink-0">
-                {task.status === 'completed' ? (
+                {task.status === 'completed' && !isAdmin ? (
                   <StatusBadge status={task.status} />
                 ) : (
                   <div className="relative">

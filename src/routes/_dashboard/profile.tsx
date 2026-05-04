@@ -2,8 +2,10 @@ import React, { useState, useRef } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import {
   Mail, ShieldCheck, Phone, Building2, Clock, Camera, Loader2, Pencil, X,
+  Lock, Eye, EyeOff, CheckCircle2,
 } from 'lucide-react'
 import { useMe, useUpdateMeMutation } from '../../queries/users.queries'
+import { useChangePasswordMutation } from '../../queries/auth.queries'
 import { useUploadFile } from '../../queries/uploads.queries'
 import S3Image from '../../components/ui/S3Image'
 import ImageCropperModal from '../../components/ui/ImageCropperModal'
@@ -26,8 +28,24 @@ function ProfilePage() {
 
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
+  const [cpOpen,        setCpOpen]        = useState(false)
+  const [cpCurrent,     setCpCurrent]     = useState('')
+  const [cpNew,         setCpNew]         = useState('')
+  const [cpConfirm,     setCpConfirm]     = useState('')
+  const [cpShowCurrent, setCpShowCurrent] = useState(false)
+  const [cpShowNew,     setCpShowNew]     = useState(false)
+  const [cpShowConfirm, setCpShowConfirm] = useState(false)
+  const [cpConfirmError, setCpConfirmError] = useState<string | null>(null)
+  const [cpSuccess,     setCpSuccess]     = useState(false)
+
   const { mutate: updateMe, isPending: isUpdating, error } = useUpdateMeMutation()
   const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile()
+  const {
+    mutate: changePassword,
+    isPending: isChangingPassword,
+    error: cpError,
+    reset: resetCp,
+  } = useChangePasswordMutation()
 
   const apiError     = error as ApiError | null
   const errorMessage = apiError?.message ?? null
@@ -71,6 +89,36 @@ function ProfilePage() {
     } catch {
       setAvatarUploadError('Failed to upload image. Please try again.')
     }
+  }
+
+  const handleChangePassword = (e: React.SyntheticEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (cpNew !== cpConfirm) {
+      setCpConfirmError("Passwords don't match")
+      return
+    }
+    setCpConfirmError(null)
+    changePassword(
+      { currentPassword: cpCurrent, newPassword: cpNew },
+      {
+        onSuccess: () => {
+          setCpSuccess(true)
+          setCpCurrent('')
+          setCpNew('')
+          setCpConfirm('')
+        },
+      },
+    )
+  }
+
+  const handleCloseCp = () => {
+    setCpOpen(false)
+    setCpCurrent('')
+    setCpNew('')
+    setCpConfirm('')
+    setCpConfirmError(null)
+    setCpSuccess(false)
+    resetCp()
   }
 
   if (isLoading || !profile) {
@@ -264,6 +312,138 @@ function ProfilePage() {
           </form>
         </div>
       )}
+
+      {/* ── Change Password card ───────────────────────────────────────────── */}
+      <div className="bg-white rounded-xl border border-gray-100 p-6">
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
+              <Lock size={15} className="text-orange-500" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-800">Change Password</h3>
+              <p className="text-xs text-gray-400">Update your account password</p>
+            </div>
+          </div>
+          <button
+            onClick={cpOpen ? handleCloseCp : () => setCpOpen(true)}
+            className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors flex-shrink-0"
+            title={cpOpen ? 'Close' : 'Change password'}
+          >
+            {cpOpen ? <X size={15} /> : <Pencil size={15} />}
+          </button>
+        </div>
+
+        {cpOpen && (
+          <div className="mt-5 pt-5 border-t border-gray-100">
+            {cpSuccess ? (
+              <div className="text-center py-3">
+                <CheckCircle2 size={40} className="text-green-500 mx-auto mb-3" strokeWidth={1.5} />
+                <p className="text-sm font-semibold text-gray-800 mb-1">Password Updated!</p>
+                <p className="text-xs text-gray-400 mb-4">Your password has been changed successfully.</p>
+                <button
+                  onClick={handleCloseCp}
+                  className="text-sm text-orange-500 hover:underline font-medium"
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
+              <>
+                {(cpError as ApiError | null)?.message && (
+                  <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2.5 rounded-lg mb-4">
+                    {(cpError as ApiError).message}
+                  </div>
+                )}
+
+                <form onSubmit={handleChangePassword} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                    <div className="relative">
+                      <input
+                        type={cpShowCurrent ? 'text' : 'password'}
+                        value={cpCurrent}
+                        onChange={(e) => setCpCurrent(e.target.value)}
+                        required
+                        placeholder="Enter current password"
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2.5 pr-10 text-sm outline-none focus:border-orange-400 transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setCpShowCurrent((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        {cpShowCurrent ? <Eye size={15} /> : <EyeOff size={15} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                    <div className="relative">
+                      <input
+                        type={cpShowNew ? 'text' : 'password'}
+                        value={cpNew}
+                        onChange={(e) => setCpNew(e.target.value)}
+                        required
+                        placeholder="Enter new password"
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2.5 pr-10 text-sm outline-none focus:border-orange-400 transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setCpShowNew((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        {cpShowNew ? <Eye size={15} /> : <EyeOff size={15} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                    <div className="relative">
+                      <input
+                        type={cpShowConfirm ? 'text' : 'password'}
+                        value={cpConfirm}
+                        onChange={(e) => { setCpConfirm(e.target.value); setCpConfirmError(null) }}
+                        required
+                        placeholder="Re-enter new password"
+                        className={`w-full border rounded-lg px-3 py-2.5 pr-10 text-sm outline-none focus:border-orange-400 transition-colors ${cpConfirmError ? 'border-red-400' : 'border-gray-200'}`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setCpShowConfirm((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        {cpShowConfirm ? <Eye size={15} /> : <EyeOff size={15} />}
+                      </button>
+                    </div>
+                    {cpConfirmError && <p className="text-red-500 text-xs mt-1">{cpConfirmError}</p>}
+                  </div>
+
+                  <div className="flex gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleCloseCp}
+                      className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isChangingPassword}
+                      className="flex-1 bg-orange-500 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {isChangingPassword ? 'Updating...' : 'Update Password'}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
+          </div>
+        )}
+      </div>
 
       {selectedFileForCrop && (
         <ImageCropperModal
