@@ -4,13 +4,13 @@ import { Eye, Pencil, Trash2, ChevronDown } from 'lucide-react'
 import Tooltip from '../ui/Tooltip'
 import { createColumnHelper, type SortingState, type OnChangeFn } from '@tanstack/react-table'
 import { useUpdateTaskMutation } from '../../queries/tasks.queries'
+import { useAuth } from '../../hooks/useAuth'
 import DataTable from '../ui/DataTable'
 import StatusBadge from '../ui/StatusBadge'
 import PriorityBadge from '../ui/PriorityBadge'
 import AvatarStack from '../ui/AvatarStack'
 import { toAvatarShape, formatDate } from '../../lib/utils'
 import type { Task, TaskStatus, TaskPriority } from '../../types/task.types'
-import type { Project } from '../../types/project.types'
 import type { ApiError } from '../../types/api.types'
 
 const statusTransitions: Record<string, TaskStatus[]> = {
@@ -39,7 +39,6 @@ const statusSelectStyle: Record<string, string> = {
 
 interface TaskTableProps {
   tasks:            Task[]
-  projects:         Project[]
   startEntry:       number
   isAdmin:          boolean
   sorting:          SortingState
@@ -52,7 +51,6 @@ const columnHelper = createColumnHelper<Task>()
 
 export default function TaskTable({
   tasks,
-  projects,
   startEntry,
   isAdmin,
   sorting,
@@ -61,6 +59,7 @@ export default function TaskTable({
   onDelete,
 }: TaskTableProps) {
   const navigate = useNavigate()
+  const { isSuperAdmin } = useAuth()
   const { mutate: updateTask } = useUpdateTaskMutation()
   const [statusError, setStatusError] = useState<{ taskId: string; message: string } | null>(null)
 
@@ -93,10 +92,9 @@ export default function TaskTable({
     columnHelper.display({
       id:     'project',
       header: 'Project',
-      cell:   ({ row }) => {
-        const proj = projects.find((p) => p.id === row.original.projectId)
-        return <span className="font-medium text-gray-700">{proj?.title ?? '—'}</span>
-      },
+      cell:   ({ row }) => (
+        <span className="font-medium text-gray-700">{row.original.projectTitle ?? '—'}</span>
+      ),
     }),
 
     columnHelper.accessor('title', {
@@ -130,7 +128,7 @@ export default function TaskTable({
       cell: (info) => {
         const task    = info.row.original
         const transitions = statusTransitions[task.status] ?? []
-        const allowed = isAdmin ? transitions : transitions.filter(s => s !== 'to_do')
+        const allowed = isSuperAdmin ? [] : isAdmin ? transitions : transitions.filter(s => s !== 'to_do')
         const style   = statusSelectStyle[task.status] ?? 'bg-gray-50 text-gray-600 border-gray-200'
         const err     = statusError?.taskId === task.id ? statusError.message : null
 
@@ -236,7 +234,7 @@ export default function TaskTable({
       },
     }),
 
-  ], [startEntry, projects, isAdmin, onEdit, onDelete, navigate, handleStatusChange, statusError, updateTask])
+  ], [startEntry, isAdmin, onEdit, onDelete, navigate, handleStatusChange, statusError, updateTask, isSuperAdmin])
 
   return (
     <DataTable

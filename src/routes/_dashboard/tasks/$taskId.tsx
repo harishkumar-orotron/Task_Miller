@@ -3,7 +3,6 @@ import { createFileRoute } from '@tanstack/react-router'
 import { ArrowLeft, ChevronDown, Pencil, Plus, X, AlignLeft, Search } from 'lucide-react'
 import { useTask, useUpdateTaskMutation } from '../../../queries/tasks.queries'
 import { useAttachments } from '../../../queries/attachments.queries'
-import { useProjects } from '../../../queries/projects.queries'
 import { useAuth } from '../../../hooks/useAuth'
 import StatusBadge from '../../../components/ui/StatusBadge'
 import PriorityBadge from '../../../components/ui/PriorityBadge'
@@ -159,7 +158,7 @@ function SubtaskCard({
 function TaskViewPage() {
   const { taskId } = Route.useParams()
   const navigate = Route.useNavigate()
-  const { isAdmin, isSuperAdmin, isDeveloper, user } = useAuth()
+  const { isSuperAdmin, isDeveloper, isOrgAdmin, user } = useAuth()
 
   const { tab, subtaskSearch = '', assigneeSearch = '' } = Route.useSearch()
   const [statusOpen, setStatusOpen] = useState(false)
@@ -169,15 +168,12 @@ function TaskViewPage() {
   const setAssigneeSearch = (val: string) => navigate({ search: (prev) => ({ ...prev, assigneeSearch: val || undefined }), replace: true })
 
   const { data: task, isLoading, isError, error } = useTask(taskId)
-  const { data: projectsData } = useProjects({ limit: 100 })
   const { data: attachmentsData } = useAttachments(taskId)
   const { mutate: updateTask } = useUpdateTaskMutation()
 
   const activeTab: Tab = tab ?? (task?.parentTaskId ? 'assignTo' : 'subtasks')
   const setActiveTab = (t: Tab) => navigate({ to: Route.fullPath, params: { taskId }, search: { tab: t === (task?.parentTaskId ? 'assignTo' : 'subtasks') ? undefined : t }, replace: true })
 
-  const projects = projectsData?.projects ?? []
-  const proj = projects.find((p) => p.id === task?.projectId)
   const visibleSubtasks = task
     ? isDeveloper && user
       ? task.subtasks.filter((s) => s.assignees.some((a) => a.id === user.id))
@@ -253,7 +249,7 @@ function TaskViewPage() {
             <div className="flex items-start justify-between gap-4">
               <h2 className="text-xl font-bold text-gray-800 leading-snug">{task.title}</h2>
               <div className="flex items-center gap-2 flex-shrink-0">
-                {task.status === 'completed' && !isAdmin ? (
+                {(task.status === 'completed' && !isOrgAdmin) || isSuperAdmin ? (
                   <StatusBadge status={task.status} />
                 ) : (
                   <div className="relative">
@@ -288,7 +284,7 @@ function TaskViewPage() {
                     )}
                   </div>
                 )}
-                {isAdmin && task.status !== 'completed' && (
+                {isOrgAdmin && task.status !== 'completed' && (
                   <button
                     onClick={() => navigate({ to: '/tasks/$taskId/edit', params: { taskId } })}
                     className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
@@ -313,7 +309,7 @@ function TaskViewPage() {
             {/* Project */}
             <div>
               <p className="text-xs text-gray-400 mb-0.5">Project</p>
-              <p className="text-sm font-bold text-gray-800">{proj?.title ?? '—'}</p>
+              <p className="text-sm font-bold text-gray-800">{task.projectTitle ?? '—'}</p>
             </div>
 
             <hr className="border-gray-300" />
@@ -403,7 +399,7 @@ function TaskViewPage() {
                       className="bg-transparent outline-none w-full text-gray-700 placeholder-gray-400 text-xs"
                     />
                   </div>
-                  {isAdmin && task.status !== 'completed' && (
+                  {isOrgAdmin && task.status !== 'completed' && (
                     <button
                       onClick={() => navigate({ to: '/tasks/$taskId/subtask', params: { taskId } })}
                       className="flex items-center gap-1.5 text-xs font-medium text-orange-500 hover:text-orange-600 border border-orange-200 bg-orange-50 rounded-lg px-3 py-1.5 transition-colors flex-shrink-0"
@@ -425,7 +421,7 @@ function TaskViewPage() {
                         parentCompleted={task.status === 'completed'}
                         isDeveloper={isDeveloper}
                         onStatusChange={handleSubtaskStatusChange}
-                        onEdit={isAdmin || isSuperAdmin ? () => navigate({ to: '/tasks/$taskId/edit', params: { taskId: s.id } }) : undefined}
+                        onEdit={isOrgAdmin ? () => navigate({ to: '/tasks/$taskId/edit', params: { taskId: s.id } }) : undefined}
                       />
                     ))
                   )}

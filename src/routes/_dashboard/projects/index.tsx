@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
-import { Plus, Search, ChevronDown, LayoutGrid, List, Upload } from 'lucide-react'
+import { Plus, Search, ChevronDown, LayoutGrid, List } from 'lucide-react'
 import { useProjects } from '../../../queries/projects.queries'
 import { useOrgContext } from '../../../store/orgContext.store'
 import { useDebounce } from '../../../hooks/useDebounce'
@@ -9,8 +8,6 @@ import ProjectList from '../../../components/projects/ProjectList'
 import Pagination from '../../../components/ui/Pagination'
 import { CardSkeleton, TableSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
-import { MoreMenu } from '../../../components/common/MoreMenu'
-import ImportProjectModal from '../../../components/projects/ImportProjectModal'
 import type { ApiError } from '../../../types/api.types'
 import type { ProjectStatus } from '../../../types/project.types'
 
@@ -26,10 +23,8 @@ export const Route = createFileRoute('/_dashboard/projects/')({
 })
 
 function ProjectsPage() {
-  const { isAdmin, isSuperAdmin, orgId } = useAuth()
+  const { isSuperAdmin, isOrgAdmin } = useAuth()
   const { selectedOrg } = useOrgContext()
-  const [showImportProject, setShowImportProject] = useState(false)
-  const importOrgId = isSuperAdmin ? (selectedOrg?.id ?? '') : (orgId ?? '')
   const navigate = Route.useNavigate()
   const { search = '', status = '', page = 1, limit = 10, view = 'grid' } = Route.useSearch()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -119,25 +114,13 @@ function ProjectsPage() {
               <Search size={13} className={isFetching ? 'text-orange-400 animate-pulse' : 'text-gray-400'} />
             </div>
 
-            {/* Add Project + Import — admin+ only */}
-            {isAdmin && (
-              <>
-                <button
-                  onClick={() => navigate({ to: '/projects/new' })}
-                  className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors cursor-pointer"
-                >
-                  <Plus size={13} /> Add Project
-                </button>
-                <MoreMenu>
-                  <button
-                    onClick={() => setShowImportProject(true)}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-                  >
-                    <Upload size={13} className="text-gray-400" />
-                    Import Full Project
-                  </button>
-                </MoreMenu>
-              </>
+            {isOrgAdmin && (
+              <button
+                onClick={() => navigate({ to: '/projects/new' })}
+                className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors cursor-pointer"
+              >
+                <Plus size={13} /> Add Project
+              </button>
             )}
 
           </div>
@@ -178,18 +161,6 @@ function ProjectsPage() {
           onPageChange={(p) => setParams({ page: p > 1 ? p : undefined })}
           onLimitChange={handleLimit}
         />
-      )}
-
-      {/* Import Project Modal */}
-      {showImportProject && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-3xl">
-            <ImportProjectModal
-              orgId={importOrgId}
-              onClose={() => setShowImportProject(false)}
-            />
-          </div>
-        </div>
       )}
 
     </div>

@@ -46,8 +46,8 @@ export default function ProjectFilterDropdown({ value, onChange, projects }: Pro
 
       {open && (
         <>
-          <div className="fixed inset-0 z-[9]" onClick={close} />
-          <div className="absolute top-full mt-1 left-0 min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-lg z-[10]">
+          <div className="fixed inset-0 z-[99]" onClick={close} />
+          <div className="absolute top-full mt-1 left-0 min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-lg z-[100]">
             <div className="p-2 border-b border-gray-100 flex items-center gap-2">
               <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-md px-2 py-1 flex-1">
                 <Search size={11} className="text-gray-400 flex-shrink-0" />

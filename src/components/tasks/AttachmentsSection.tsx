@@ -181,7 +181,7 @@ function AttachmentCard({ attachment, taskId, canDelete }: { attachment: Attachm
 // ─── AttachmentsSection ───────────────────────────────────────────────────────
 
 export default function AttachmentsSection({ taskId }: AttachmentsSectionProps) {
-  const { user, isAdmin } = useAuth()
+  const { user, isOrgAdmin } = useAuth()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
   
@@ -285,7 +285,7 @@ export default function AttachmentsSection({ taskId }: AttachmentsSectionProps) 
                 key={attachment.id}
                 attachment={attachment}
                 taskId={taskId}
-                canDelete={isAdmin || user?.id === attachment.uploader.id}
+                canDelete={isOrgAdmin || user?.id === attachment.uploader.id}
               />
             ))}
           </div>

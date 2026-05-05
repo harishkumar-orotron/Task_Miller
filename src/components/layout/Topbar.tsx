@@ -28,7 +28,7 @@ const pageConfig: Record<string, { title: string; action?: string; actionTo?: st
 export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const navigate = useNavigate()
-  const { isAdmin, isSuperAdmin } = useAuth()
+  const { isAdmin, isSuperAdmin, isOrgAdmin } = useAuth()
   const locationHref = useRouterState({ select: (s) => s.location.href })
   const isAdminView  = !pathname.startsWith('/superadmin') && !locationHref.includes('from=superadmin')
   const { mutate: logout, isPending: isLoggingOut } = useLogoutMutation()
@@ -63,7 +63,8 @@ export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => voi
 
   const config     = matchedKey ? pageConfig[matchedKey] : { title: 'Task Miller' }
   const isIndexPage = pathname === matchedKey
-  const showAction  = isAdmin && config.action && isIndexPage
+  // Superadmin can only act on /superadmin/dashboard (Add Organization); all other action buttons are org-admin only
+  const showAction  = config.action && isIndexPage && (matchedKey === '/superadmin/dashboard' ? isAdmin : isOrgAdmin)
 
   let displayTitle: React.ReactNode = config.title
   if (taskId && task) {

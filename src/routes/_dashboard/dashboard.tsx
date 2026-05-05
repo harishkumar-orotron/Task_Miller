@@ -41,7 +41,7 @@ export const Route = createFileRoute('/_dashboard/dashboard')({
 })
 
 function DashboardPage() {
-  const { isSuperAdmin, isDeveloper, user, isAdmin } = useAuth()
+  const { isSuperAdmin, isDeveloper, user, isOrgAdmin } = useAuth()
   const { selectedOrg }                              = useOrgContext()
 
   const orgId          = isSuperAdmin && selectedOrg ? selectedOrg.id : undefined
@@ -221,9 +221,8 @@ function DashboardPage() {
           ) : (
             <TaskTable
               tasks={tasks}
-              projects={projects}
               startEntry={startEntry}
-              isAdmin={isAdmin}
+              isAdmin={isOrgAdmin}
               sorting={sorting}
               onSortingChange={handleSorting}
             />

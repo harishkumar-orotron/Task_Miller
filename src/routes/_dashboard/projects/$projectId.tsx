@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
-  ArrowLeft, Pencil, Trash2, ChevronDown, Download, Upload,
+  ArrowLeft, Pencil, Trash2, ChevronDown,
   ListTodo, Timer, AlertCircle, CheckCircle2, LayoutList, PauseCircle,
 } from 'lucide-react'
 import { useProject, useDeleteProjectMutation, useUpdateProjectMutation } from '../../../queries/projects.queries'
@@ -12,8 +12,6 @@ import S3Image from '../../../components/ui/S3Image'
 import Pagination from '../../../components/ui/Pagination'
 import { MoreMenu } from '../../../components/common/MoreMenu'
 import ConfirmDeleteModal from '../../../components/common/ConfirmDeleteModal'
-import { useExportProjectDetailsMutation } from '../../../queries/import-export.queries'
-import ImportTasksModal from '../../../components/projects/ImportTasksModal'
 import { userColor, formatDate , getInitials} from '../../../lib/utils'
 import type { ProjectStatus } from '../../../types/project.types'
 import type { ApiError } from '../../../types/api.types'
@@ -50,17 +48,13 @@ function ProjectViewPage() {
   const { projectId } = Route.useParams()
   const { view }      = Route.useSearch()
   const navigate      = useNavigate()
-  const { isAdmin }   = useAuth()
+  const { isOrgAdmin } = useAuth()
   const backSearch    = { view: view ?? undefined } as any
 
   const { data: project, isLoading, error } = useProject(projectId)
   const { mutate: deleteProject, isPending: isDeleting } = useDeleteProjectMutation()
   const { mutate: updateProject, isPending: isUpdatingStatus } = useUpdateProjectMutation()
-  const { mutate: exportProjectDetails, isPending: isExporting } = useExportProjectDetailsMutation()
-
-
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [showImportTasks, setShowImportTasks] = useState(false)
   const [membersPage,  setMembersPage]  = useState(1)
   const [membersLimit, setMembersLimit] = useState(10)
 
@@ -145,7 +139,7 @@ function ProjectViewPage() {
               <div className="flex items-center gap-2 flex-shrink-0">
 
                 {/* Status dropdown */}
-                {isAdmin ? (
+                {isOrgAdmin ? (
                   <div className="relative inline-flex items-center">
                     <select
                       value={project.status}
@@ -165,26 +159,13 @@ function ProjectViewPage() {
                   </span>
                 )}
 
-                {isAdmin && (
+                {isOrgAdmin && (
                   <MoreMenu>
                     <button
                       onClick={() => navigate({ to: '/projects/$projectId/edit', params: { projectId } })}
                       className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full text-left"
                     >
                       <Pencil size={14} /> Edit
-                    </button>
-                    <button
-                      onClick={() => exportProjectDetails(projectId)}
-                      disabled={isExporting}
-                      className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full text-left disabled:opacity-50"
-                    >
-                      <Download size={14} /> {isExporting ? 'Exporting...' : 'Export Project Details'}
-                    </button>
-                    <button
-                      onClick={() => setShowImportTasks(true)}
-                      className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full text-left"
-                    >
-                      <Upload size={14} className="text-gray-400" /> Import Tasks
                     </button>
                     <div className="border-t border-gray-100 my-1" />
                     <button
@@ -330,18 +311,6 @@ function ProjectViewPage() {
         </div>
 
       </div>
-
-      {showImportTasks && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-3xl">
-            <ImportTasksModal
-              projectId={projectId}
-              projectTitle={project.title}
-              onClose={() => setShowImportTasks(false)}
-            />
-          </div>
-        </div>
-      )}
 
       {showDeleteModal && (
         <ConfirmDeleteModal

@@ -13,7 +13,7 @@ export default function UserForm({ onClose }: UserFormProps) {
   const [name,     setName]     = useState('')
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
-  const [role,     setRole]     = useState<'admin' | 'developer'>('developer')
+  const [role] = useState<'admin' | 'developer'>(isSuperAdmin ? 'admin' : 'developer')
   const [showPass, setShowPass] = useState(false)
 
   const { mutate: createUser, isPending, error } = useCreateUserMutation()
@@ -91,25 +91,12 @@ export default function UserForm({ onClose }: UserFormProps) {
             {fieldErrors.password && <p className="text-xs text-red-500 mt-1">{fieldErrors.password}</p>}
           </div>
 
-          {/* Role — superadmin can pick, admin always creates as developer */}
+          {/* Role — superadmin always creates admins; org admin always creates developers */}
           {isSuperAdmin && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-              <div className="flex gap-3">
-                {(['admin', 'developer'] as const).map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setRole(r)}
-                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors capitalize ${
-                      role === r
-                        ? 'bg-orange-500 text-white border-orange-500'
-                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    {r}
-                  </button>
-                ))}
+              <div className="w-full py-2.5 rounded-lg text-sm font-medium border bg-orange-500 text-white border-orange-500 text-center capitalize">
+                Admin
               </div>
             </div>
           )}

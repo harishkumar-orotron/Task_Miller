@@ -1,9 +1,7 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useAuth } from '../../hooks/useAuth'
 import { Send, Pencil, Trash2, Check, X, Reply, ChevronDown, ChevronUp } from 'lucide-react'
 import { useComments, useAddCommentMutation, useEditCommentMutation, useDeleteCommentMutation } from '../../queries/comments.queries'
-import { useUsers } from '../../queries/users.queries'
-import { useOrgContext } from '../../store/orgContext.store'
-import { useAuth } from '../../hooks/useAuth'
 import { userColor, getInitials } from '../../lib/utils'
 import S3Image from '../ui/S3Image'
 import type { Comment, MentionUser } from '../../types/comment.types'
@@ -81,22 +79,44 @@ interface MentionInputProps {
   autoFocus?:  boolean
 }
 
+// Converts a raw value (containing @uuid tokens) to a display string (with @Name)
+function toDisplay(raw: string, candidates: MentionCandidate[]): string {
+  return raw.replace(
+    /@([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/g,
+    (_, id) => {
+      const user = candidates.find(c => c.id === id)
+      return user ? `@${user.name}` : `@${id}`
+    },
+  )
+}
+
+// Converts a display string (with @Name) back to raw (with @uuid)
+function toRaw(display: string, candidates: MentionCandidate[]): string {
+  return display.replace(/@([\w\s.'-]+)/g, (match, name) => {
+    const trimmed = name.trimEnd()
+    const user = candidates.find(c => c.name.toLowerCase() === trimmed.toLowerCase())
+    return user ? `@${user.id}${name.slice(trimmed.length)}` : match
+  })
+}
+
 function MentionInput({ value, onChange, onSubmit, placeholder, inputClass, candidates, autoFocus }: MentionInputProps) {
   const [mentionQuery, setMentionQuery] = useState<string | null>(null)
   const [atPos,        setAtPos]        = useState(0)
   const [dropdownPos,  setDropdownPos]  = useState<{ bottom: number; left: number } | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const displayValue = toDisplay(value, candidates)
+
   const filtered = mentionQuery !== null
     ? candidates.filter(c => c.name.toLowerCase().includes(mentionQuery.toLowerCase()))
     : []
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val    = e.target.value
-    const cursor = e.target.selectionStart ?? val.length
-    onChange(val)
-    const before = val.slice(0, cursor)
-    const match  = before.match(/@([^@\n]*)$/)
+    const display = e.target.value
+    const cursor  = e.target.selectionStart ?? display.length
+    onChange(toRaw(display, candidates))
+    const before  = display.slice(0, cursor)
+    const match   = before.match(/@([^@\n]*)$/)
     if (match) {
       const rect = e.target.getBoundingClientRect()
       setDropdownPos({ bottom: window.innerHeight - rect.top + 4, left: Math.min(rect.left, window.innerWidth - 240) })
@@ -117,9 +137,10 @@ function MentionInput({ value, onChange, onSubmit, placeholder, inputClass, cand
   }
 
   const pickMention = (user: MentionCandidate) => {
-    const cursor  = inputRef.current?.selectionStart ?? value.length
-    const newText = value.slice(0, atPos) + '@' + user.id + ' ' + value.slice(cursor)
-    onChange(newText)
+    const display    = toDisplay(value, candidates)
+    const cursorDisp = inputRef.current?.selectionStart ?? display.length
+    const newDisplay = display.slice(0, atPos) + '@' + user.name + ' ' + display.slice(cursorDisp)
+    onChange(toRaw(newDisplay, candidates))
     setMentionQuery(null)
     setDropdownPos(null)
     setTimeout(() => inputRef.current?.focus(), 0)
@@ -129,7 +150,7 @@ function MentionInput({ value, onChange, onSubmit, placeholder, inputClass, cand
     <div className="flex-1">
       <input
         ref={inputRef}
-        value={value}
+        value={displayValue}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
@@ -227,6 +248,7 @@ interface ReplyRowProps {
   avatarUrl?:       string | null
   isAdding:         boolean
   candidates:       MentionCandidate[]
+  readOnly?:        boolean
   onReply:          (id: string) => void
   onCancelReply:    () => void
   onSubmitReply:    (body: string) => void
@@ -239,7 +261,7 @@ interface ReplyRowProps {
 
 function ReplyRow({
   reply, isOwn, isEditingThis, isEditing, editText,
-  replyingTo, userId, userName, avatarUrl, isAdding, candidates,
+  replyingTo, userId, userName, avatarUrl, isAdding, candidates, readOnly,
   onReply, onCancelReply, onSubmitReply,
   onEdit, onDelete, onCancelEdit, onEditTextChange, onSaveEdit,
 }: ReplyRowProps) {
@@ -257,13 +279,15 @@ function ReplyRow({
               {reply.updatedAt !== reply.createdAt && <span className="text-xs text-gray-300 italic">edited</span>}
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
-              <button
-                onClick={() => onReply(reply.id)}
-                className="flex items-center gap-1 text-xs font-medium text-teal-500 hover:text-teal-600 transition-colors cursor-pointer"
-              >
-                <Reply size={11} /> Reply
-              </button>
-              {isOwn && hovered && !isEditingThis && (
+              {!readOnly && (
+                <button
+                  onClick={() => onReply(reply.id)}
+                  className="flex items-center gap-1 text-xs font-medium text-teal-500 hover:text-teal-600 transition-colors cursor-pointer"
+                >
+                  <Reply size={11} /> Reply
+                </button>
+              )}
+              {!readOnly && isOwn && hovered && !isEditingThis && (
                 <>
                   <button onClick={onEdit} className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors ml-1">
                     <Pencil size={10} />
@@ -336,6 +360,7 @@ interface CommentItemProps {
   editText:         string
   isAdding:         boolean
   isEditing:        boolean
+  readOnly?:        boolean
   onReply:          (id: string) => void
   onCancelReply:    () => void
   onSubmitReply:    (body: string) => void
@@ -348,7 +373,7 @@ interface CommentItemProps {
 
 function CommentItem({
   comment, replies, isOwn, userId, userName, avatarUrl, candidates,
-  replyingTo, editComment, editText, isAdding, isEditing,
+  replyingTo, editComment, editText, isAdding, isEditing, readOnly,
   onReply, onCancelReply, onSubmitReply,
   onEdit, onCancelEdit, onEditTextChange, onSaveEdit, onDelete,
 }: CommentItemProps) {
@@ -371,13 +396,15 @@ function CommentItem({
               {comment.updatedAt !== comment.createdAt && <span className="text-xs text-gray-300 italic">edited</span>}
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
-              <button
-                onClick={() => onReply(comment.id)}
-                className="flex items-center gap-1 text-xs font-medium text-teal-500 hover:text-teal-600 transition-colors cursor-pointer"
-              >
-                <Reply size={12} /> Reply
-              </button>
-              {isOwn && hovered && !isEditingThis && (
+              {!readOnly && (
+                <button
+                  onClick={() => onReply(comment.id)}
+                  className="flex items-center gap-1 text-xs font-medium text-teal-500 hover:text-teal-600 transition-colors cursor-pointer"
+                >
+                  <Reply size={12} /> Reply
+                </button>
+              )}
+              {!readOnly && isOwn && hovered && !isEditingThis && (
                 <>
                   <button onClick={() => onEdit(comment)} className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors ml-1">
                     <Pencil size={11} />
@@ -459,6 +486,7 @@ function CommentItem({
               avatarUrl={avatarUrl}
               isAdding={isAdding}
               candidates={candidates}
+              readOnly={readOnly}
               onReply={onReply}
               onCancelReply={onCancelReply}
               onSubmitReply={onSubmitReply}
@@ -478,38 +506,31 @@ function CommentItem({
 // ─── CommentsSection ──────────────────────────────────────────────────────────
 
 export default function CommentsSection({ taskId, userId, userName, avatarUrl, assignees = [] }: CommentsSectionProps) {
+  const { isSuperAdmin } = useAuth()
   const [text,        setText]        = useState('')
   const [editComment, setEditComment] = useState<Comment | null>(null)
   const [editText,    setEditText]    = useState('')
   const [replyingTo,  setReplyingTo]  = useState<string | null>(null)
   const listRef                       = useRef<HTMLDivElement>(null)
 
-  const { isSuperAdmin, isAdmin }    = useAuth()
-  const { selectedOrg }     = useOrgContext()
-
   const { data, isLoading } = useComments(taskId)
-  const { data: usersData  } = useUsers(
-    {
-      status: 'active',
-      limit:  100,
-      orgId:  isSuperAdmin && selectedOrg ? selectedOrg.id : undefined,
-    },
-    { enabled: isAdmin },
-  )
   const { mutate: addComment,    isPending: isAdding  } = useAddCommentMutation(taskId)
   const { mutate: editCommentFn, isPending: isEditing } = useEditCommentMutation(taskId)
   const { mutate: deleteComment                       } = useDeleteCommentMutation(taskId)
 
-  const topLevel  = data?.comments ?? []
+  const topLevel   = [...(data?.comments ?? [])].reverse()
+  const candidates = assignees
 
-  const fetchedUsers: MentionCandidate[] = (usersData?.users ?? []).map(u => ({ id: u.id, name: u.name, email: u.email }))
-  const seen       = new Set(fetchedUsers.map(u => u.id))
-  const candidates = [...fetchedUsers, ...assignees.filter(a => !seen.has(a.id))]
+  const scrollToBottom = () => {
+    if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight
+  }
+
+  useEffect(() => { scrollToBottom() }, [topLevel.length])
 
   const handleAdd = () => {
     const trimmed = text.trim()
     if (!trimmed || isAdding) return
-    addComment({ body: trimmed }, { onSuccess: () => setText('') })
+    addComment({ body: trimmed }, { onSuccess: () => { setText(''); scrollToBottom() } })
   }
 
   const handleReplySubmit = (body: string) => {
@@ -564,6 +585,7 @@ export default function CommentsSection({ taskId, userId, userName, avatarUrl, a
               editText={editText}
               isAdding={isAdding}
               isEditing={isEditing}
+              readOnly={isSuperAdmin}
               onReply={(id) => setReplyingTo(replyingTo === id ? null : id)}
               onCancelReply={() => setReplyingTo(null)}
               onSubmitReply={handleReplySubmit}
@@ -578,28 +600,30 @@ export default function CommentsSection({ taskId, userId, userName, avatarUrl, a
       </div>
 
       {/* Add comment */}
-      <div className="px-5 py-4 border-t border-gray-100 flex-shrink-0">
-        <div className="flex gap-3 items-center">
-          <Avatar name={userName} id={userId} avatarUrl={avatarUrl} />
-          <div className="flex-1 flex items-center gap-2 border border-gray-200 rounded-2xl px-4 py-2.5 bg-gray-50 focus-within:border-orange-400 transition-colors">
-            <MentionInput
-              value={text}
-              onChange={setText}
-              onSubmit={handleAdd}
-              placeholder="Add a comment... (type @ to mention)"
-              inputClass="bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
-              candidates={candidates}
-            />
-            <button
-              onClick={handleAdd}
-              disabled={isAdding || !text.trim()}
-              className="w-9 h-9 bg-orange-500 hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
-            >
-              <Send size={15} className="text-white" />
-            </button>
+      {!isSuperAdmin && (
+        <div className="px-5 py-4 border-t border-gray-100 flex-shrink-0">
+          <div className="flex gap-3 items-center">
+            <Avatar name={userName} id={userId} avatarUrl={avatarUrl} />
+            <div className="flex-1 flex items-center gap-2 border border-gray-200 rounded-2xl px-4 py-2.5 bg-gray-50 focus-within:border-orange-400 transition-colors">
+              <MentionInput
+                value={text}
+                onChange={setText}
+                onSubmit={handleAdd}
+                placeholder="Add a comment... (type @ to mention)"
+                inputClass="bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
+                candidates={candidates}
+              />
+              <button
+                onClick={handleAdd}
+                disabled={isAdding || !text.trim()}
+                className="w-9 h-9 bg-orange-500 hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
+              >
+                <Send size={15} className="text-white" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
     </div>
   )

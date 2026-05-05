@@ -25,6 +25,7 @@ import { Route as DashboardUsersNewRouteImport } from './routes/_dashboard/users
 import { Route as DashboardUsersUserIdRouteImport } from './routes/_dashboard/users/$userId'
 import { Route as DashboardTasksNewRouteImport } from './routes/_dashboard/tasks/new'
 import { Route as DashboardTasksTaskIdRouteImport } from './routes/_dashboard/tasks/$taskId'
+import { Route as DashboardSuperadminUsersRouteImport } from './routes/_dashboard/superadmin/users'
 import { Route as DashboardSuperadminOrganizationsRouteImport } from './routes/_dashboard/superadmin/organizations'
 import { Route as DashboardSuperadminDashboardRouteImport } from './routes/_dashboard/superadmin/dashboard'
 import { Route as DashboardProjectsNewRouteImport } from './routes/_dashboard/projects/new'
@@ -119,6 +120,12 @@ const DashboardTasksTaskIdRoute = DashboardTasksTaskIdRouteImport.update({
   path: '/tasks/$taskId',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardSuperadminUsersRoute =
+  DashboardSuperadminUsersRouteImport.update({
+    id: '/superadmin/users',
+    path: '/superadmin/users',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 const DashboardSuperadminOrganizationsRoute =
   DashboardSuperadminOrganizationsRouteImport.update({
     id: '/superadmin/organizations',
@@ -215,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/projects/new': typeof DashboardProjectsNewRoute
   '/superadmin/dashboard': typeof DashboardSuperadminDashboardRoute
   '/superadmin/organizations': typeof DashboardSuperadminOrganizationsRouteWithChildren
+  '/superadmin/users': typeof DashboardSuperadminUsersRoute
   '/tasks/$taskId': typeof DashboardTasksTaskIdRoute
   '/tasks/new': typeof DashboardTasksNewRoute
   '/users/$userId': typeof DashboardUsersUserIdRoute
@@ -244,6 +252,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId': typeof DashboardProjectsProjectIdRoute
   '/projects/new': typeof DashboardProjectsNewRoute
   '/superadmin/dashboard': typeof DashboardSuperadminDashboardRoute
+  '/superadmin/users': typeof DashboardSuperadminUsersRoute
   '/tasks/$taskId': typeof DashboardTasksTaskIdRoute
   '/tasks/new': typeof DashboardTasksNewRoute
   '/users/$userId': typeof DashboardUsersUserIdRoute
@@ -277,6 +286,7 @@ export interface FileRoutesById {
   '/_dashboard/projects/new': typeof DashboardProjectsNewRoute
   '/_dashboard/superadmin/dashboard': typeof DashboardSuperadminDashboardRoute
   '/_dashboard/superadmin/organizations': typeof DashboardSuperadminOrganizationsRouteWithChildren
+  '/_dashboard/superadmin/users': typeof DashboardSuperadminUsersRoute
   '/_dashboard/tasks/$taskId': typeof DashboardTasksTaskIdRoute
   '/_dashboard/tasks/new': typeof DashboardTasksNewRoute
   '/_dashboard/users/$userId': typeof DashboardUsersUserIdRoute
@@ -309,6 +319,7 @@ export interface FileRouteTypes {
     | '/projects/new'
     | '/superadmin/dashboard'
     | '/superadmin/organizations'
+    | '/superadmin/users'
     | '/tasks/$taskId'
     | '/tasks/new'
     | '/users/$userId'
@@ -338,6 +349,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId'
     | '/projects/new'
     | '/superadmin/dashboard'
+    | '/superadmin/users'
     | '/tasks/$taskId'
     | '/tasks/new'
     | '/users/$userId'
@@ -370,6 +382,7 @@ export interface FileRouteTypes {
     | '/_dashboard/projects/new'
     | '/_dashboard/superadmin/dashboard'
     | '/_dashboard/superadmin/organizations'
+    | '/_dashboard/superadmin/users'
     | '/_dashboard/tasks/$taskId'
     | '/_dashboard/tasks/new'
     | '/_dashboard/users/$userId'
@@ -505,6 +518,13 @@ declare module '@tanstack/react-router' {
       path: '/tasks/$taskId'
       fullPath: '/tasks/$taskId'
       preLoaderRoute: typeof DashboardTasksTaskIdRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/superadmin/users': {
+      id: '/_dashboard/superadmin/users'
+      path: '/superadmin/users'
+      fullPath: '/superadmin/users'
+      preLoaderRoute: typeof DashboardSuperadminUsersRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/superadmin/organizations': {
@@ -649,6 +669,7 @@ interface DashboardRouteChildren {
   DashboardProjectsNewRoute: typeof DashboardProjectsNewRoute
   DashboardSuperadminDashboardRoute: typeof DashboardSuperadminDashboardRoute
   DashboardSuperadminOrganizationsRoute: typeof DashboardSuperadminOrganizationsRouteWithChildren
+  DashboardSuperadminUsersRoute: typeof DashboardSuperadminUsersRoute
   DashboardTasksTaskIdRoute: typeof DashboardTasksTaskIdRoute
   DashboardTasksNewRoute: typeof DashboardTasksNewRoute
   DashboardUsersUserIdRoute: typeof DashboardUsersUserIdRoute
@@ -676,6 +697,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardSuperadminDashboardRoute: DashboardSuperadminDashboardRoute,
   DashboardSuperadminOrganizationsRoute:
     DashboardSuperadminOrganizationsRouteWithChildren,
+  DashboardSuperadminUsersRoute: DashboardSuperadminUsersRoute,
   DashboardTasksTaskIdRoute: DashboardTasksTaskIdRoute,
   DashboardTasksNewRoute: DashboardTasksNewRoute,
   DashboardUsersUserIdRoute: DashboardUsersUserIdRoute,

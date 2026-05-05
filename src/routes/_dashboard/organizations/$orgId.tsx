@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router'
 import {
-  ArrowLeft, Hash, Users, ShieldCheck, Code2,
+  ArrowLeft, Users, ShieldCheck, Code2,
   Plus, Trash2, AlertTriangle, UserPlus,
 } from 'lucide-react'
 import { useOrg, useOrgs, useRemoveMemberMutation, useDeleteOrgMutation } from '../../../queries/orgs.queries'
@@ -33,7 +33,7 @@ function OrgDetailPage() {
   const { orgId: slug } = Route.useParams()
   const { view, from }  = Route.useSearch()
   const navigate        = useNavigate()
-  const { isSuperAdmin, isAdmin } = useAuth()
+  const { isSuperAdmin, isOrgAdmin } = useAuth()
 
   const goBack = () => {
     if (from === 'superadmin') {
@@ -119,11 +119,8 @@ function OrgDetailPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <h2 className="text-lg font-bold text-gray-800 leading-tight">{org.name}</h2>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <Hash size={11} className="text-gray-400" />
-                  <span className="text-xs text-gray-400">{org.slug}</span>
-                </div>
-                <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-3 mb-0.5">Description</p>
+                <p className="text-sm text-gray-500 leading-relaxed">
                   {org.description ?? <span className="text-gray-300 italic">No description provided</span>}
                 </p>
               </div>
@@ -218,7 +215,7 @@ function OrgDetailPage() {
                   {developers.length}
                 </span>
               </h3>
-              {isAdmin && (
+              {isOrgAdmin && (
                 <button
                   onClick={() => navigate({ to: '/organizations/$orgId/add-member', params: { orgId: slug }, search: { mode: 'developer' } })}
                   className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-green-200 text-green-600 hover:bg-green-50 transition-colors"
@@ -234,7 +231,7 @@ function OrgDetailPage() {
                 <EmptySlot
                   icon={Code2}
                   label="No developers assigned"
-                  sublabel={isAdmin ? 'Use the Add Developer button to assign one.' : undefined}
+                  sublabel={isOrgAdmin ? 'Use the Add Developer button to assign one.' : undefined}
                 />
               ) : (
                 <div className="space-y-1">
@@ -243,7 +240,7 @@ function OrgDetailPage() {
                       key={m.memberId}
                       member={m}
                       index={devStart + i}
-                      canRemove={isAdmin}
+                      canRemove={isOrgAdmin}
                       isRemoving={isRemoving && confirmRemove === m.userId}
                       confirming={confirmRemove === m.userId}
                       onRemoveClick={() => setConfirmRemove(m.userId)}
@@ -322,14 +319,6 @@ function OrgDetailPage() {
               <div>
                 <p className="text-xs text-gray-400">Name</p>
                 <p className="text-sm font-medium text-gray-700 mt-0.5 truncate">{org.name}</p>
-              </div>
-
-              <div>
-                <p className="text-xs text-gray-400">Slug</p>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <Hash size={11} className="text-gray-400 flex-shrink-0" />
-                  <p className="text-xs font-medium text-gray-600 truncate">{org.slug}</p>
-                </div>
               </div>
 
               <div>

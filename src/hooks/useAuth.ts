@@ -15,6 +15,7 @@ export function useAuth() {
     // Role checks — use these in components to show/hide UI
     isSuperAdmin:  user?.role === 'superadmin',
     isAdmin:       user?.role === 'admin' || user?.role === 'superadmin',
+    isOrgAdmin:    user?.role === 'admin',   // pure admin only — excludes superadmin
     isDeveloper:   user?.role === 'developer',
 
     // Org context

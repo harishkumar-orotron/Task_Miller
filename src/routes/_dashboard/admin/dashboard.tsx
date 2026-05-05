@@ -39,7 +39,7 @@ export const Route = createFileRoute('/_dashboard/admin/dashboard')({
 })
 
 function AdminDashboard() {
-  const { isAdmin, isSuperAdmin } = useAuth()
+  const { isOrgAdmin, isSuperAdmin } = useAuth()
   const { selectedOrg } = useOrgContext()
   const orgId = isSuperAdmin && selectedOrg ? selectedOrg.id : undefined
   const navigate = Route.useNavigate()
@@ -196,9 +196,8 @@ function AdminDashboard() {
           ) : (
             <TaskTable
               tasks={tasks}
-              projects={projects}
               startEntry={startEntry}
-              isAdmin={isAdmin}
+              isAdmin={isOrgAdmin}
               sorting={sorting}
               onSortingChange={(updater: any) => {
                 const next: SortingState = typeof updater === 'function' ? updater(sorting) : updater

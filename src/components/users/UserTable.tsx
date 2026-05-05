@@ -17,6 +17,7 @@ interface UserTableProps {
   myId:            string | undefined
   sorting:         SortingState
   onSortingChange: OnChangeFn<SortingState>
+  showActions?:    boolean
 }
 
 const columnHelper = createColumnHelper<User>()
@@ -99,6 +100,7 @@ export default function UserTable({
   myId,
   sorting,
   onSortingChange,
+  showActions = true,
 }: UserTableProps) {
   const navigate = useNavigate()
   const { mutate: toggleStatus, isPending: isToggling } = useToggleUserStatusMutation()
@@ -222,7 +224,7 @@ export default function UserTable({
       ),
     }),
 
-    columnHelper.display({
+    ...(showActions ? [columnHelper.display({
       id:     'actions',
       header: 'Actions',
       meta:   { align: 'center' },
@@ -236,9 +238,9 @@ export default function UserTable({
           onView={() => navigate({ to: '/users/$userId', params: { userId: row.original.id }, search: {} as any })}
         />
       ),
-    }),
+    })] : []),
 
-  ], [activePage, activeLimit, isAdmin, myId, isToggling, navigate, handleToggle])
+  ], [activePage, activeLimit, isAdmin, myId, isToggling, navigate, handleToggle, showActions])
 
   return (
     <DataTable

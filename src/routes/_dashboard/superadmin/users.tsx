@@ -1,61 +1,51 @@
-import { useEffect } from 'react'
+import { useState } from 'react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { authStore } from '../../../store/auth.store'
-import { Plus, Search, ChevronDown } from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 import { type SortingState } from '@tanstack/react-table'
 import { useUsers } from '../../../queries/users.queries'
-import { useOrgContext } from '../../../store/orgContext.store'
 import { useDebounce } from '../../../hooks/useDebounce'
 import { useAuth } from '../../../hooks/useAuth'
 import UserTable from '../../../components/users/UserTable'
 import Pagination from '../../../components/ui/Pagination'
+import UserForm from '../../../components/users/UserForm'
 import { TableSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
 import type { ApiError } from '../../../types/api.types'
-import type { UserStatus } from '../../../types/user.types'
 
-export const Route = createFileRoute('/_dashboard/users/')({
+export const Route = createFileRoute('/_dashboard/superadmin/users')({
   beforeLoad: () => {
     const role = authStore.state.user?.role
-    if (role === 'developer') throw redirect({ to: '/dashboard', search: {} as any })
+    if (role === 'admin')     throw redirect({ to: '/admin/dashboard',  search: {} as any })
+    if (role === 'developer') throw redirect({ to: '/dashboard',        search: {} as any })
   },
   validateSearch: (search: Record<string, unknown>) => ({
     search:  (search.search as string) || undefined,
-    filter:  ((search.filter as string) || undefined) as UserFilter | undefined,
     sortBy:  (search.sortBy as string) || undefined,
     sortDir: (search.sortDir as string) === 'desc' ? 'desc' as const : undefined,
     page:    Number(search.page)  > 1  ? Number(search.page)  : undefined,
     limit:   Number(search.limit) > 0 && Number(search.limit) !== 10 ? Number(search.limit) : undefined,
   }),
-  component: UsersPage,
+  component: SuperAdminUsersPage,
 })
 
-type UserFilter = UserStatus | 'unassigned' | ''
-
-function UsersPage() {
-  const { isSuperAdmin, isOrgAdmin, user: me } = useAuth()
-  const { selectedOrg } = useOrgContext()
+function SuperAdminUsersPage() {
+  const { user: me } = useAuth()
   const navigate = Route.useNavigate()
-  const { search = '', filter = '' as UserFilter, sortBy = '', sortDir = 'asc', page = 1, limit = 10 } = Route.useSearch()
+  const { search = '', sortBy = '', sortDir = 'asc', page = 1, limit = 10 } = Route.useSearch()
+  const [showForm, setShowForm] = useState(false)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setParams = (params: Record<string, any>) =>
     navigate({ search: (prev) => ({ ...prev, ...params }) as any })
 
   const sorting: SortingState = sortBy ? [{ id: sortBy, desc: sortDir === 'desc' }] : []
-
-  useEffect(() => { setParams({ page: undefined }) }, [selectedOrg?.id])
-
-
   const debouncedSearch = useDebounce(search, 400)
-
   const sortOrder = sortBy ? sortDir : undefined
 
   const { data, isLoading, isFetching, error } = useUsers({
     search:     debouncedSearch || undefined,
-    status:     filter === 'active' || filter === 'inactive' ? filter : undefined,
-    unassigned: filter === 'unassigned' ? true : undefined,
-    orgId:      isSuperAdmin && selectedOrg ? selectedOrg.id : undefined,
+    unassigned: true,
     sortBy:     sortBy || undefined,
     sortOrder,
     page,
@@ -72,61 +62,48 @@ function UsersPage() {
   const startEntry   = totalRecords === 0 ? 0 : (activePage - 1) * activeLimit + 1
   const endEntry     = Math.min(activePage * activeLimit, totalRecords)
 
-  const handleSearch  = (val: string)     => setParams({ search: val || undefined, page: undefined })
-  const handleFilter  = (val: UserFilter) => setParams({ filter: val || undefined, page: undefined })
-  const handleLimit   = (val: number)     => setParams({ limit: val !== 10 ? val : undefined, page: undefined })
-  const handleSorting = (updater: any)    => {
+  const handleSorting = (updater: any) => {
     const next: SortingState = typeof updater === 'function' ? updater(sorting) : updater
     setParams({ sortBy: next[0]?.id || undefined, sortDir: next[0]?.desc ? 'desc' : undefined, page: undefined })
+  }
+
+  if (showForm) {
+    return (
+      <div className="max-w-2xl mx-auto w-full space-y-4">
+        <UserForm onClose={() => setShowForm(false)} />
+      </div>
+    )
   }
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
 
-      {/* Table card */}
       <div className="flex flex-col flex-1 overflow-hidden bg-white rounded-xl border border-gray-100">
 
         {/* Header */}
         <div className="flex-shrink-0 flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
           <h2 className="font-semibold text-gray-800">
-            {isSuperAdmin && selectedOrg ? selectedOrg.name : 'All'}{' '}
-            <span className="text-gray-400 font-normal ml-1">({totalRecords})</span>
+            Unassigned Users
+            <span className="text-gray-400 font-normal ml-1.5">({totalRecords})</span>
           </h2>
           <div className="flex items-center gap-2">
 
-            {/* Status / Unassigned filter */}
-            <div className="relative">
-              <select
-                value={filter}
-                onChange={(e) => handleFilter(e.target.value as UserFilter)}
-                className="appearance-none border border-gray-200 rounded-lg pl-3 pr-7 py-1.5 text-xs text-gray-600 bg-gray-50 outline-none cursor-pointer"
-              >
-                <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-              <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
-            </div>
-
-            {/* Search */}
             <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-1.5 bg-gray-50">
               <input
                 value={search}
-                onChange={(e) => handleSearch(e.target.value)}
+                onChange={(e) => setParams({ search: e.target.value || undefined, page: undefined })}
                 placeholder="Search by name"
                 className="bg-transparent outline-none w-36 text-gray-700 placeholder-gray-400 text-xs"
               />
               <Search size={13} className={isFetching ? 'text-orange-400 animate-pulse' : 'text-gray-400'} />
             </div>
 
-            {isOrgAdmin && (
-              <button
-                onClick={() => navigate({ to: '/users/new' })}
-                className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors cursor-pointer"
-              >
-                <Plus size={13} /> Add User
-              </button>
-            )}
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors cursor-pointer"
+            >
+              <Plus size={13} /> Add Admin
+            </button>
 
           </div>
         </div>
@@ -143,17 +120,18 @@ function UsersPage() {
             </div>
           ) : users.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-              <p className="text-sm">No users found</p>
+              <p className="text-sm">No unassigned users</p>
             </div>
           ) : (
             <UserTable
               users={users}
               activePage={activePage}
               activeLimit={activeLimit}
-              isAdmin={isOrgAdmin}
+              isAdmin={false}
               myId={me?.id}
               sorting={sorting}
               onSortingChange={handleSorting}
+              showActions={false}
             />
           )}
         </div>
@@ -172,7 +150,7 @@ function UsersPage() {
           hasPrevPage={pagination?.hasPrevPage}
           hasNextPage={pagination?.hasNextPage}
           onPageChange={(p) => setParams({ page: p > 1 ? p : undefined })}
-          onLimitChange={handleLimit}
+          onLimitChange={(val) => setParams({ limit: val !== 10 ? val : undefined, page: undefined })}
         />
       )}
 

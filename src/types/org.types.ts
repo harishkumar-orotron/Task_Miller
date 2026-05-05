@@ -20,12 +20,20 @@ export interface OrgsResponse {
   pagination:    OrgsPagination
 }
 
+export interface OrgOwner {
+  id:        string
+  name:      string
+  email:     string
+  avatarUrl: string | null
+}
+
 export interface Organization {
-  id: string
-  name: string
-  slug: string
-  ownerId: string | null
+  id:        string
+  name:      string
+  slug:      string
+  ownerId:   string | null
   createdAt: string
+  owner:     OrgOwner | null
 }
 
 export interface OrgMember {

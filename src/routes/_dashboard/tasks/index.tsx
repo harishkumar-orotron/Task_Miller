@@ -38,7 +38,7 @@ export const Route = createFileRoute('/_dashboard/tasks/')({
 })
 
 function TasksPage() {
-  const { isAdmin, isSuperAdmin, isDeveloper, user } = useAuth()
+  const { isSuperAdmin, isDeveloper, isOrgAdmin, user } = useAuth()
   const { selectedOrg }                     = useOrgContext()
 
   const orgId          = isSuperAdmin && selectedOrg ? selectedOrg.id : undefined
@@ -197,7 +197,7 @@ function TasksPage() {
               onChange={handleDateRange}
             />
 
-            {isAdmin && (
+            {isOrgAdmin && (
               <button
                 onClick={() => navigate({ to: '/tasks/new' })}
                 className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 cursor-pointer"
@@ -222,12 +222,12 @@ function TasksPage() {
           ) : (
             <TaskTable
               tasks={tasks}
-              projects={projects}
               startEntry={startEntry}
-              isAdmin={isAdmin}
+              isAdmin={isOrgAdmin}
               sorting={sorting}
               onSortingChange={handleSorting}
               onEdit={(task) => navigate({ to: '/tasks/$taskId/edit', params: { taskId: task.id } })}
+
               onDelete={setDeleteTask}
             />
           )}

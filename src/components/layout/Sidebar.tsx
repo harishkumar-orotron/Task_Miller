@@ -66,6 +66,7 @@ export default function Sidebar({ isCollapsed }: SidebarProps) {
   const superadminNav: NavItem[] = [
     { label: 'Dashboard',     icon: LayoutDashboard, to: '/superadmin/dashboard'     },
     { label: 'Organizations', icon: Building2,       to: '/superadmin/organizations' },
+    { label: 'Users',         icon: Users,           to: '/superadmin/users'         },
   ]
 
   const adminNav: NavItem[] = [
@@ -92,8 +93,9 @@ export default function Sidebar({ isCollapsed }: SidebarProps) {
   }
 
   const isActive = (to: string) => {
-    if (to === '/superadmin/dashboard')     return pathname === '/superadmin/dashboard' || pathname.startsWith('/superadmin/') && !pathname.startsWith('/superadmin/organizations')
+    if (to === '/superadmin/dashboard')     return pathname === '/superadmin/dashboard'
     if (to === '/superadmin/organizations') return pathname.startsWith('/superadmin/organizations') || (pathname.startsWith('/organizations/') && fromParam === 'superadmin')
+    if (to === '/superadmin/users')         return pathname === '/superadmin/users'
     if (to === '/admin/dashboard')          return pathname.startsWith('/admin')
     return pathname === to || pathname.startsWith(to + '/')
   }

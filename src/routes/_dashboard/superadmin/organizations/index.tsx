@@ -6,6 +6,7 @@ import { setSelectedOrg } from '../../../../store/orgContext.store'
 import { formatDate, userColor, getInitials } from '../../../../lib/utils'
 import { CardSkeleton, TableSkeleton } from '../../../../components/ui/Skeleton'
 import Pagination from '../../../../components/ui/Pagination'
+import S3Image from '../../../../components/ui/S3Image'
 import type { Organization } from '../../../../types/org.types'
 
 export const Route = createFileRoute('/_dashboard/superadmin/organizations/')({
@@ -132,7 +133,7 @@ function SuperAdminOrganizations() {
             view === 'list' ? (
               <div className="p-5"><TableSkeleton rows={8} cols={4} /></div>
             ) : (
-              <div className="p-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => <CardSkeleton key={i} />)}
               </div>
             )
@@ -150,7 +151,7 @@ function SuperAdminOrganizations() {
                 <tr className="border-b border-gray-200 text-xs text-gray-600 font-semibold uppercase tracking-wide">
                   <th className="px-5 py-3 text-left w-10 bg-[#ccfbf1]">S.no</th>
                   <th className="px-5 py-3 text-left bg-[#ccfbf1]">Organization</th>
-                  <th className="px-5 py-3 text-left bg-[#ccfbf1]">Slug</th>
+                  <th className="px-5 py-3 text-left bg-[#ccfbf1]">Owner</th>
                   <th className="px-5 py-3 text-left bg-[#ccfbf1]">Created</th>
                   <th className="px-5 py-3 w-12 bg-[#ccfbf1]" />
                 </tr>
@@ -173,7 +174,22 @@ function SuperAdminOrganizations() {
                           <p className="font-medium text-gray-800">{org.name}</p>
                         </div>
                       </td>
-                      <td className="px-5 py-3 text-xs text-gray-400 font-mono">/{org.slug}</td>
+                      <td className="px-5 py-3">
+                        {org.owner ? (
+                          <div className="flex items-center gap-2">
+                            <div className={`w-6 h-6 rounded-full ${userColor(org.owner.id)} flex items-center justify-center flex-shrink-0 overflow-hidden`}>
+                              {org.owner.avatarUrl ? (
+                                <S3Image storageKey={org.owner.avatarUrl} fallbackInitials={getInitials(org.owner.name)} className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-white text-[9px] font-semibold">{getInitials(org.owner.name)}</span>
+                              )}
+                            </div>
+                            <span className="text-xs text-gray-700">{org.owner.name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">—</span>
+                        )}
+                      </td>
                       <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">{formatDate(org.createdAt)}</td>
                       <td className="px-5 py-3">
                         <ArrowRight size={14} className="text-gray-300 group-hover:text-orange-400 transition-colors ml-auto" />
@@ -184,25 +200,36 @@ function SuperAdminOrganizations() {
               </tbody>
             </table>
           ) : (
-            <div className="p-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {orgs.map((org) => {
                 const color = userColor(org.id)
                 return (
                   <div
                     key={org.id}
                     onClick={() => handleOrgClick(org)}
-                    className="group relative bg-white border border-gray-100 rounded-xl p-4 hover:border-orange-200 hover:shadow-md cursor-pointer transition-all"
+                    className="group relative bg-white border border-gray-100 rounded-xl p-5 hover:border-orange-200 hover:shadow-md cursor-pointer transition-all"
                   >
                     <ArrowRight size={13} className="absolute top-3.5 right-3.5 text-gray-300 group-hover:text-orange-400 transition-colors" />
                     <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center mb-3`}>
                       <span className="text-white font-bold text-sm">{getInitials(org.name)}</span>
                     </div>
                     <p className="font-semibold text-gray-800 text-sm leading-snug">{org.name}</p>
-                    <p className="text-xs text-gray-400 mt-0.5 mb-3">/{org.slug}</p>
-                    <div className="flex items-center gap-1.5 text-xs text-gray-400 border-t border-gray-50 pt-2.5">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-2">
                       <Calendar size={11} />
                       <span>{formatDate(org.createdAt)}</span>
                     </div>
+                    {org.owner && (
+                      <div className="flex items-center gap-1.5 border-t border-gray-50 pt-2.5 mt-2.5">
+                        <div className={`w-5 h-5 rounded-full ${userColor(org.owner.id)} flex items-center justify-center flex-shrink-0 overflow-hidden`}>
+                          {org.owner.avatarUrl ? (
+                            <S3Image storageKey={org.owner.avatarUrl} fallbackInitials={getInitials(org.owner.name)} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-white text-[9px] font-semibold">{getInitials(org.owner.name)}</span>
+                          )}
+                        </div>
+                        <span className="text-xs text-gray-500 truncate">{org.owner.name}</span>
+                      </div>
+                    )}
                   </div>
                 )
               })}

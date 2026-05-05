@@ -31,7 +31,6 @@ export default function OrgTable({ orgs, view, startEntry }: OrgTableProps) {
           <tr className="border-b border-gray-200 text-xs text-gray-600 font-semibold uppercase tracking-wide">
             <th className="px-5 py-3 text-left w-10 bg-[#ccfbf1]">S.no</th>
             <th className="px-5 py-3 text-left bg-[#ccfbf1]">Organization</th>
-            <th className="px-5 py-3 text-left bg-[#ccfbf1]">Slug</th>
             <th className="px-5 py-3 text-left bg-[#ccfbf1]">Created</th>
             <th className="px-5 py-3 w-12 bg-[#ccfbf1]" />
           </tr>
@@ -54,7 +53,6 @@ export default function OrgTable({ orgs, view, startEntry }: OrgTableProps) {
                     <p className="font-medium text-gray-800">{org.name}</p>
                   </div>
                 </td>
-                <td className="px-5 py-3 text-xs text-gray-400 font-mono">/{org.slug}</td>
                 <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">{formatDate(org.createdAt)}</td>
                 <td className="px-5 py-3">
                   <ArrowRight size={14} className="text-gray-300 group-hover:text-orange-400 transition-colors ml-auto" />
@@ -82,8 +80,7 @@ export default function OrgTable({ orgs, view, startEntry }: OrgTableProps) {
               <span className="text-white font-bold text-sm">{getInitials(org.name)}</span>
             </div>
             <p className="font-semibold text-gray-800 text-sm leading-snug">{org.name}</p>
-            <p className="text-xs text-gray-400 mt-0.5 mb-3">/{org.slug}</p>
-            <div className="flex items-center gap-1.5 text-xs text-gray-400 border-t border-gray-50 pt-2.5">
+            <div className="flex items-center gap-1.5 text-xs text-gray-400 border-t border-gray-50 pt-2.5 mt-3">
               <Calendar size={11} />
               <span>{formatDate(org.createdAt)}</span>
             </div>
