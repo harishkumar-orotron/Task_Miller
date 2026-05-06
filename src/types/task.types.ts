@@ -35,6 +35,7 @@ export interface Task {
   id:           string
   projectId:    string
   projectTitle: string | null
+  projectName:  string | null
   parentTaskId: string | null
   title:        string
   description:  string | null

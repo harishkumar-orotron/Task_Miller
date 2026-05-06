@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Building2, Search, ArrowRight, Calendar, List, LayoutGrid, ChevronDown, Plus } from 'lucide-react'
+import { Building2, Search, ArrowRight, Calendar, List, LayoutGrid, ChevronDown, Plus, Download } from 'lucide-react'
 import { useOrgs } from '../../../../queries/orgs.queries'
 import { useDebounce } from '../../../../hooks/useDebounce'
 import { setSelectedOrg } from '../../../../store/orgContext.store'
@@ -7,6 +7,8 @@ import { formatDate, userColor, getInitials } from '../../../../lib/utils'
 import { CardSkeleton, TableSkeleton } from '../../../../components/ui/Skeleton'
 import Pagination from '../../../../components/ui/Pagination'
 import S3Image from '../../../../components/ui/S3Image'
+import { useExportMutation } from '../../../../queries/export.queries'
+import { MoreMenu } from '../../../../components/common/MoreMenu'
 import type { Organization } from '../../../../types/org.types'
 
 export const Route = createFileRoute('/_dashboard/superadmin/organizations/')({
@@ -31,6 +33,7 @@ const sortOptions = [
 function SuperAdminOrganizations() {
   const navigate = Route.useNavigate()
   const { search = '', sortBy = 'createdAt', order = 'desc', page = 1, limit = 10, view = 'grid' } = Route.useSearch()
+  const { mutate: exportOrgs, isPending: isExporting } = useExportMutation()
   const setParams = (params: Record<string, any>) =>
     navigate({ search: (prev) => ({ ...prev, ...params }) as any })
 
@@ -124,6 +127,16 @@ function SuperAdminOrganizations() {
             >
               <Plus size={13} /> Add Organization
             </button>
+            <MoreMenu>
+              <button
+                onClick={() => exportOrgs({ type: 'organizations', filePrefix: 'superadmin', name: search || undefined })}
+                disabled={isExporting}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <Download size={13} className="text-gray-400" />
+                {isExporting ? 'Exporting...' : 'Export Organizations (CSV)'}
+              </button>
+            </MoreMenu>
           </div>
         </div>
 

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { authStore } from '../../../store/auth.store'
-import { Plus, Search } from 'lucide-react'
+import { Plus, Search, Download } from 'lucide-react'
 import { type SortingState } from '@tanstack/react-table'
 import { useUsers } from '../../../queries/users.queries'
 import { useDebounce } from '../../../hooks/useDebounce'
@@ -11,6 +11,8 @@ import Pagination from '../../../components/ui/Pagination'
 import UserForm from '../../../components/users/UserForm'
 import { TableSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
+import { useExportMutation } from '../../../queries/export.queries'
+import { MoreMenu } from '../../../components/common/MoreMenu'
 import type { ApiError } from '../../../types/api.types'
 
 export const Route = createFileRoute('/_dashboard/superadmin/users')({
@@ -34,6 +36,7 @@ function SuperAdminUsersPage() {
   const navigate = Route.useNavigate()
   const { search = '', sortBy = '', sortDir = 'asc', page = 1, limit = 10 } = Route.useSearch()
   const [showForm, setShowForm] = useState(false)
+  const { mutate: exportUsers, isPending: isExporting } = useExportMutation()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setParams = (params: Record<string, any>) =>
@@ -104,6 +107,16 @@ function SuperAdminUsersPage() {
             >
               <Plus size={13} /> Add Admin
             </button>
+            <MoreMenu>
+              <button
+                onClick={() => exportUsers({ type: 'users', filePrefix: 'superadmin', name: search || undefined })}
+                disabled={isExporting}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <Download size={13} className="text-gray-400" />
+                {isExporting ? 'Exporting...' : 'Export Users (CSV)'}
+              </button>
+            </MoreMenu>
 
           </div>
         </div>

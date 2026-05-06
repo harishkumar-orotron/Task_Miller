@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import {
-  Plus, Search, ChevronDown,
+  Plus, Search, ChevronDown, Download,
   CheckCircle2, ListTodo, Timer, AlertCircle, PauseCircle,
 } from 'lucide-react'
 import { type SortingState } from '@tanstack/react-table'
@@ -18,6 +18,8 @@ import TaskTable from '../../../components/tasks/TaskTable'
 import ConfirmDeleteModal from '../../../components/common/ConfirmDeleteModal'
 import { StatsSkeleton, TableSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
+import { useExportMutation } from '../../../queries/export.queries'
+import { MoreMenu } from '../../../components/common/MoreMenu'
 import type { Task, TaskStatus, TaskPriority } from '../../../types/task.types'
 import type { ApiError } from '../../../types/api.types'
 
@@ -38,8 +40,9 @@ export const Route = createFileRoute('/_dashboard/tasks/')({
 })
 
 function TasksPage() {
-  const { isSuperAdmin, isDeveloper, isOrgAdmin, user } = useAuth()
+  const { isSuperAdmin, isDeveloper, isOrgAdmin, orgName, user } = useAuth()
   const { selectedOrg }                     = useOrgContext()
+  const { mutate: exportTasks, isPending: isExporting } = useExportMutation()
 
   const orgId          = isSuperAdmin && selectedOrg ? selectedOrg.id : undefined
   const assignedUserId = isDeveloper ? (user?.id ?? undefined) : undefined
@@ -204,6 +207,18 @@ function TasksPage() {
               >
                 <Plus size={13} /> Add Task
               </button>
+            )}
+            {isOrgAdmin && (
+              <MoreMenu>
+                <button
+                  onClick={() => exportTasks({ type: 'tasks', filePrefix: `${orgName ?? 'admin'}`, title: search || undefined, status: status || undefined, priority: priority || undefined, projectId: projectId || undefined, dueDateFrom: dueDateFrom || undefined, dueDateTo: dueDateTo || undefined })}
+                  disabled={isExporting}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <Download size={13} className="text-gray-400" />
+                  {isExporting ? 'Exporting...' : 'Export Tasks (CSV)'}
+                </button>
+              </MoreMenu>
             )}
 
           </div>

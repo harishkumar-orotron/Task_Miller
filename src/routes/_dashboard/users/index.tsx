@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { authStore } from '../../../store/auth.store'
-import { Plus, Search, ChevronDown } from 'lucide-react'
+import { Plus, Search, ChevronDown, Download } from 'lucide-react'
 import { type SortingState } from '@tanstack/react-table'
 import { useUsers } from '../../../queries/users.queries'
 import { useOrgContext } from '../../../store/orgContext.store'
@@ -11,6 +11,8 @@ import UserTable from '../../../components/users/UserTable'
 import Pagination from '../../../components/ui/Pagination'
 import { TableSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
+import { useExportMutation } from '../../../queries/export.queries'
+import { MoreMenu } from '../../../components/common/MoreMenu'
 import type { ApiError } from '../../../types/api.types'
 import type { UserStatus } from '../../../types/user.types'
 
@@ -33,10 +35,11 @@ export const Route = createFileRoute('/_dashboard/users/')({
 type UserFilter = UserStatus | 'unassigned' | ''
 
 function UsersPage() {
-  const { isSuperAdmin, isOrgAdmin, user: me } = useAuth()
+  const { isSuperAdmin, isOrgAdmin, orgName, user: me } = useAuth()
   const { selectedOrg } = useOrgContext()
   const navigate = Route.useNavigate()
   const { search = '', filter = '' as UserFilter, sortBy = '', sortDir = 'asc', page = 1, limit = 10 } = Route.useSearch()
+  const { mutate: exportUsers, isPending: isExporting } = useExportMutation()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setParams = (params: Record<string, any>) =>
@@ -126,6 +129,18 @@ function UsersPage() {
               >
                 <Plus size={13} /> Add User
               </button>
+            )}
+            {isOrgAdmin && (
+              <MoreMenu>
+                <button
+                  onClick={() => exportUsers({ type: 'users', filePrefix: `${orgName ?? 'admin'}`, name: search || undefined, status: (filter === 'active' || filter === 'inactive') ? filter : undefined })}
+                  disabled={isExporting}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <Download size={13} className="text-gray-400" />
+                  {isExporting ? 'Exporting...' : 'Export Users (CSV)'}
+                </button>
+              </MoreMenu>
             )}
 
           </div>

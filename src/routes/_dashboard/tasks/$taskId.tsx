@@ -309,7 +309,7 @@ function TaskViewPage() {
             {/* Project */}
             <div>
               <p className="text-xs text-gray-400 mb-0.5">Project</p>
-              <p className="text-sm font-bold text-gray-800">{task.projectTitle ?? '—'}</p>
+              <p className="text-sm font-bold text-gray-800">{task.projectName ?? '—'}</p>
             </div>
 
             <hr className="border-gray-300" />

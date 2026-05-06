@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Plus, Search, ChevronDown, LayoutGrid, List } from 'lucide-react'
+import { Plus, Search, ChevronDown, LayoutGrid, List, Download } from 'lucide-react'
 import { useProjects } from '../../../queries/projects.queries'
 import { useOrgContext } from '../../../store/orgContext.store'
 import { useDebounce } from '../../../hooks/useDebounce'
@@ -8,6 +8,8 @@ import ProjectList from '../../../components/projects/ProjectList'
 import Pagination from '../../../components/ui/Pagination'
 import { CardSkeleton, TableSkeleton } from '../../../components/ui/Skeleton'
 import ErrorMessage from '../../../components/common/ErrorMessage'
+import { useExportMutation } from '../../../queries/export.queries'
+import { MoreMenu } from '../../../components/common/MoreMenu'
 import type { ApiError } from '../../../types/api.types'
 import type { ProjectStatus } from '../../../types/project.types'
 
@@ -23,10 +25,11 @@ export const Route = createFileRoute('/_dashboard/projects/')({
 })
 
 function ProjectsPage() {
-  const { isSuperAdmin, isOrgAdmin } = useAuth()
+  const { isSuperAdmin, isOrgAdmin, orgName } = useAuth()
   const { selectedOrg } = useOrgContext()
   const navigate = Route.useNavigate()
   const { search = '', status = '', page = 1, limit = 10, view = 'grid' } = Route.useSearch()
+  const { mutate: exportProjects, isPending: isExporting } = useExportMutation()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setParams = (params: Record<string, any>) =>
     navigate({ search: (prev) => ({ ...prev, ...params }) as any })
@@ -121,6 +124,18 @@ function ProjectsPage() {
               >
                 <Plus size={13} /> Add Project
               </button>
+            )}
+            {isOrgAdmin && (
+              <MoreMenu>
+                <button
+                  onClick={() => exportProjects({ type: 'projects', filePrefix: `${orgName ?? 'admin'}`, title: search || undefined, status: status || undefined })}
+                  disabled={isExporting}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <Download size={13} className="text-gray-400" />
+                  {isExporting ? 'Exporting...' : 'Export Projects (CSV)'}
+                </button>
+              </MoreMenu>
             )}
 
           </div>
